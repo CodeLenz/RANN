@@ -21,12 +21,12 @@ struct Treino
     function Treino(topologia::Vector{Int64})
 
         # Lê os dados de treino
-        imagens_treino_unint = read_images("train-images-idx3-ubyte.gz")
-        labels_treino_unint = read_labels("train-labels-idx1-ubyte.gz")
+        imagens_treino_unint = read_images("data/train-images-idx3-ubyte.gz")
+        labels_treino_unint = read_labels("data/train-labels-idx1-ubyte.gz")
 
         # Lê os dados de teste
-        imagens_teste_unint = read_images("t10k-images-idx3-ubyte.gz")
-        labels_teste_unint = read_labels("t10k-labels-idx1-ubyte.gz")
+        imagens_teste_unint = read_images("data/t10k-images-idx3-ubyte.gz")
+        labels_teste_unint = read_labels("data/t10k-labels-idx1-ubyte.gz")
 
         # Converte labels para Int64
         labels_treino = Int64.(labels_treino_unint)
