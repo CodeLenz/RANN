@@ -18,6 +18,7 @@ include("RNA.jl")
 include("adam.jl")
 include("ativ.jl")
 include("acuracia.jl")
+include("main.jl")
 
 # Exporta as rotinas 
 export roda
