@@ -35,7 +35,7 @@ function roda()
     # Define os dados do problema: topologia e funções de ativação
     # A última função deve ser a identidade (i.e. não altera os logits),
     # pois a função de ativação softmax já está embutida dentro da função objetivo
-    topologia = [784; 30; 30; 10]
+    topologia = [784; 100; 100; 10]
     ativ = (ReLU, ReLU, identity)
 
     # Roda a função main

@@ -8,7 +8,7 @@
 # δ (critério de convergência, default = 1E-8)
 # mbs (mini-batch size, default = 100)
 function Adam(rede::Rede, treino::Treino, α = 0.01, β1 = 0.9, β2 = 0.999,
-              ϵ = 1E-8, nepoch = 8, δ = 1E-8, mbs = 100)
+              ϵ = 1E-8, nepoch = 15, δ = 1E-8, mbs = 100)
               
     # Aloca objetivo
     obj_treino = 0.0
@@ -31,6 +31,9 @@ function Adam(rede::Rede, treino::Treino, α = 0.01, β1 = 0.9, β2 = 0.999,
     # Aloca um array para monitorar o objetivo
     vetor_obj_treino = zeros(nepoch * iter)
     vetor_obj_teste = zeros(nepoch)
+
+    # Aloca vetor gradiente
+    G = zeros(length(x))
 
     # Aloca vetores de primeiro (m) e segundo (v) momento do otimizador Adam
     m = zeros(Float64, rede.n_projeto)
@@ -82,8 +85,8 @@ function Adam(rede::Rede, treino::Treino, α = 0.01, β1 = 0.9, β2 = 0.999,
             # Define função objetivo em função das variáveis de projeto para a diferenciação
             f(rede, entradas_treino_iter, saidas_esperadas_treino_iter, mbs, x) = Objetivo(rede, entradas_treino_iter, saidas_esperadas_treino_iter, mbs, x)
 
-            # Aloca vetor gradiente
-            G = zeros(length(x))
+            # Zera o vetor gradiente para novo cálculo
+            G .= 0.0
 
             # Derivada automática em relação a x (pesos e bias) com o Enzyme
             #f, G = value_and_gradient(f, AutoEnzyme(; function_annotation=Enzyme.Duplicated), x)
