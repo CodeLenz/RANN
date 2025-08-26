@@ -42,7 +42,7 @@ struct Rede
 
     # Função que inicializa todas as variáveis calculadas na struct
     # Topologia e funções de ativações são os parâmetros informados pelo usuário
-    function Rede(topologia, ativ=Function[])
+    function Rede(topologia, ativ)
 
         # Validações dos dados de entrada topologia e ativ
         if length(topologia) < 2

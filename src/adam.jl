@@ -83,7 +83,7 @@ function Adam(rede::Rede, treino::Treino, α = 0.01, β1 = 0.9, β2 = 0.999,
             f(rede, entradas_treino_iter, saidas_esperadas_treino_iter, mbs, x) = Objetivo(rede, entradas_treino_iter, saidas_esperadas_treino_iter, mbs, x)
 
             # Aloca vetor gradiente
-            G = similar(x)
+            G = zeros(length(x))
 
             # Derivada automática em relação a x (pesos e bias) com o Enzyme
             #f, G = value_and_gradient(f, AutoEnzyme(; function_annotation=Enzyme.Duplicated), x)
