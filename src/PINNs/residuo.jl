@@ -3,7 +3,7 @@
 # Cálculo do deslocamento usando a rede neural, para um dado conjunto 
 # de parâmetros x da rede e um tempo t
 #
-function resposta(x,t)
+function resposta(x::Vector,t::Vector)
 
     ctes = [1.0;2.0;3.0;4.0;6.0]
     (t[1]^2)*dot(ctes,x)
@@ -27,9 +27,20 @@ function residuo(x::Vector, tempo::Float64)
     c = ζ*2*sqrt(k*m)
     f(t) = 10*cos(t)
 
-    # Calcula o deslocamento usando a rede
-    u(x,t) = resposta(x,t)
+    # Derivadas da função u
+    u,du,du2 = Derivadas(resposta,tempo,x)
+    
+    # O resíduo no tempo t, para a rede x será 
+    r = m*du2[1] + c*du[1] + k*u - f(tempo)                
 
+end
+
+#
+# Calcula a resposta, a primeira derivada e a segunda derivada em 
+# relação ao tempo para um conjunto x de parâmetros fixos da rede
+#
+function Derivadas(u::Function,tempo::Float64,x::Vector)
+    
     # Aloca as derivadas
     du = zeros(1)
     du2 = zeros(1)
@@ -62,9 +73,8 @@ function residuo(x::Vector, tempo::Float64)
                     Enzyme.BatchDuplicated(zeros(1), (du2,)), 
                     Enzyme.BatchDuplicated(t, (v,))) 
 
-    
-    # O resíduo no tempo t, para a rede x será 
-    r = m*du2[1] + c*du[1] + k*u(x,t) - f(tempo)                
+
+    return u(x,t), du, du2
 
 end
 
