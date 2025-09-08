@@ -67,3 +67,10 @@ function residuo(x::Vector, tempo::Float64)
     r = m*du2[1] + c*du[1] + k*u(x,t) - f(tempo)                
 
 end
+
+
+#
+# x = rand(5)
+# r = [residuo(x,t) for t in 0:0.1:1.0]
+# norm(r)
+#
