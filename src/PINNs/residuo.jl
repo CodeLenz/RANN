@@ -1,12 +1,16 @@
 
+using LinearAlgebra
+using Enzyme
+using Random; Random.seed!(42)
+
 #
 # Cálculo do deslocamento usando a rede neural, para um dado conjunto 
 # de parâmetros x da rede e um tempo t
 #
 function resposta(x::Vector,t::Vector)
 
-    ctes = [1.0;2.0;3.0;4.0;6.0]
-    (t[1]^2)*dot(ctes,x)
+    ctes = [1.0; 2.0; 3.0; 4.0; 6.0]
+    (t[1]^2) * dot(ctes, x)
 
 end
 
@@ -31,8 +35,8 @@ function residuo(x::Vector, tempo::Float64)
     u,du,du2 = Derivadas(resposta,tempo,x)
     
     # O resíduo no tempo t, para a rede x será 
-    r = m*du2[1] + c*du[1] + k*u - f(tempo)                
-
+    r = m*du2[1] + c*du[1] + k*u - f(tempo)
+     
 end
 
 #
@@ -68,7 +72,8 @@ function Derivadas(u::Function,tempo::Float64,x::Vector)
     du2 = zeros(1)
 
     # Calcula a segunda derivada em relação ao tempo
-    Enzyme.autodiff(Enzyme.Forward, derivada!,
+    Enzyme.autodiff(Enzyme.Forward, 
+                    derivada!,
                     Const(x),
                     Enzyme.BatchDuplicated(zeros(1), (du2,)), 
                     Enzyme.BatchDuplicated(t, (v,))) 
@@ -77,7 +82,6 @@ function Derivadas(u::Function,tempo::Float64,x::Vector)
     return u(x,t), du, du2
 
 end
-
 
 #
 # x = rand(5)
