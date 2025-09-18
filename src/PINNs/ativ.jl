@@ -4,7 +4,7 @@
 function ReLU(x::T) where T
 
     # Retorna o valor máximo entre x e 0
-    return max(0, x)
+    return max(zero(T), x)
 
 end
 

@@ -7,17 +7,17 @@
 # nepoch (Número de épocas, default = 10)
 # δ (critério de convergência, default = 1E-8)
 # mbs (mini-batch size, default = 100)
-function Adam(rede::Rede, treino::Treino, α = 0.01, β1 = 0.9, β2 = 0.999,
+function Adam(rede::Rede, treino::Treino; α = 0.01, β1 = 0.9, β2 = 0.999,
               ϵ = 1E-8, nepoch = 15_000, δ = 1E-8)
               
     # Aloca objetivo
     obj_treino = 0.0
 
     # Acessa os termos em Treino por apelidos
-    t_contorno_ess = treino.t_contorno_ess
-    u_contorno_ess = treino.u_contorno_ess
-    t_contorno_nat = treino.t_contorno_nat
-    du_contorno_nat = treino.du_contorno_nat
+    t_inicial = treino.t_inicial
+    u_inicial = treino.u_inicial
+    du_inicial = treino.du_inicial
+
     t_fisica =  treino.t_fisica
     t_teste = treino.t_teste
     x = rede.x
@@ -39,7 +39,7 @@ function Adam(rede::Rede, treino::Treino, α = 0.01, β1 = 0.9, β2 = 0.999,
     @showprogress "Otimizando..." for t = 1:nepoch
 
         # Calcula o objetivo da rede para o treino 
-        obj_treino = Objetivo(rede, treino, t_contorno_ess, u_contorno_ess, t_contorno_nat, du_contorno_nat, n_fisica, t_fisica, x)
+        obj_treino = Objetivo(rede, treino, t_inicial, u_inicial, du_inicial, n_fisica, t_fisica, x)
 
         # Armazena o objetivo
         vetor_obj_treino[t] = obj_treino
@@ -53,22 +53,24 @@ function Adam(rede::Rede, treino::Treino, α = 0.01, β1 = 0.9, β2 = 0.999,
         end
             
         # Define função objetivo em função das variáveis de projeto para a diferenciação
-        f(rede, treino, t_contorno_ess, u_contorno_ess, t_contorno_nat, du_contorno_nat, n_fisica, t_fisica, x) = 
-            Objetivo(rede, treino, t_contorno_ess, u_contorno_ess, t_contorno_nat, du_contorno_nat, n_fisica, t_fisica, x)
+        #
+        # aqui podemos utilizar Objetivo direto 
+        #
+        #f(rede, treino, t_contorno_ess, u_contorno_ess, t_contorno_nat, du_contorno_nat, n_fisica, t_fisica, x) = 
+        #    Objetivo(rede, treino, t_contorno_ess, u_contorno_ess, t_contorno_nat, du_contorno_nat, n_fisica, t_fisica, x)
 
         # Zera o vetor gradiente para novo cálculo
         G .= 0.0
 
         # Derivada automática em relação a x (pesos e bias) com o Enzyme
         Enzyme.autodiff(
-            Enzyme.Reverse,
-            f,
+            set_runtime_activity(Reverse),
+            Objetivo,
             Const(rede),
             Const(treino),
-            Const(t_contorno_ess),
-            Const(u_contorno_ess),
-            Const(t_contorno_nat),
-            Const(du_contorno_nat),
+            Const(t_inicial),
+            Const(u_inicial),
+            Const(du_inicial),
             Const(n_fisica),
             Const(t_fisica),
             Duplicated(x, G)
