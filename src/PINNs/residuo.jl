@@ -49,7 +49,6 @@ function Derivadas(u::Function,tempo::Vector{Float64},x::Vector)
     du = zeros(1)
     du2 = zeros(1)
 
-
     # Driver para calcular a derivada em relação a t
     function derivada!(x::Vector,saida::Vector,ponto::Vector)
             # Criei uma variável auxiliar aqui...não vamos usar
@@ -97,13 +96,14 @@ end
  # O problema que estamos tendo é derivada em relação a x (parâmetros da rede)
  # considerando que já estamos utilizando o Enzyme para calcular as derivadas 
  # da EDO
- 
- dx = ones(5)
+ #=
+ dx = similar(x)
  ponto = [1.0]
- dponto = [0.0]
+ dponto = [1.0]
  Enzyme.autodiff(
                         Enzyme.set_runtime_activity(Enzyme.Reverse),
                         residuo,
                         Duplicated(x,dx),
                         Duplicated(ponto,dponto)
                     )
+=#
