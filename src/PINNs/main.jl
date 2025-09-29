@@ -31,17 +31,25 @@ function main(topologia::Vector{Int64}, ativ::Tuple, m::Float64, δ::Float64, ω
     treino = Treino(m, δ, ω0)
 
     # Chama a rotina de otimização do Adam
-    x, objetivo_treino = Adam(rede, treino, nepoch=10)
+    x, objetivo_treino = Adam(rede, treino, nepoch=5000)
 
     # Atualiza pesos e bias com o resultado da otimização
     pesos, bias = Atualiza_pesos_bias(rede, x)
     
+
+    # Agora vamos calcular a resposta em cada tempo 
+    u_test_pred = zeros(size(treino.u_an,2))
+
+
     # Obtém a resposta da rede neural para os pontos de teste
-    #u_test_pred = RNA(rede, pesos, bias, treino.t_teste)
+    for i=1:size(treino.u_an,2)
+        t = treino.t_teste[1,i]
+        u_test_pred[i] = RNA(rede, pesos, bias, [t])
+    end
 
     # Retorna as variáveis de projeto, função objetivo ao longo do tempo,
     # resposta analítica nos pontos de teste e resposta calculada pela rede neural
-    return x, objetivo_treino, treino.u_an#, u_test_pred
+    return x, objetivo_treino, treino.u_an, u_test_pred
 
 end
 
@@ -50,8 +58,9 @@ function roda()
 
     # Define os dados do problema: topologia e funções de ativação
     #topologia = [1; 100; 100; 1]
-    topologia = [1; 2; 2    ; 1]
-    ativ = (ReLU, ReLU, identity)
+    topologia = [1; 32; 32 ; 32; 1]
+    #ativ = (ReLU, ReLU, ReLU, identity)
+    ativ = (tanh, tanh, tanh, identity)
 
     # Parâmetros do sistema
     m = 1.0
@@ -60,12 +69,14 @@ function roda()
 
     # Roda a função main
     #x, objetivo_treino, u_an, u_test_pred = main(topologia, ativ, m, δ, ω0)
-    x, objetivo_treino, u_an = main(topologia, ativ, m, δ, ω0)
+    x, objetivo_treino, u_an, u_test_pred = main(topologia, ativ, m, δ, ω0)
 
     # Acompanha a evolução do objetivo ao longo do tempo
     display(plot([objetivo_treino], title = "Objetivo", label = ["Treino"]))
 
     # Compara a resposta analítica com a calculada pela rede neural
     #display(plot([u_an, u_test_pred], title = "Deslocamento", label = ["Analítico" "Rede neural"]))
+
+   return x, objetivo_treino, u_an, u_test_pred
 
 end

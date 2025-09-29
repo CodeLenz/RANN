@@ -68,7 +68,7 @@ end
 
 
 # Rede neural
-function RNA(rede::Rede, pesos::Vector{Vector{Float64}}, bias::Vector{Vector{Float64}}, entrada_i::Vector{Float64})::Float64
+function RNA(rede::Rede, pesos, bias, entrada_i::Vector{Float64})::Float64
 
     # Acessa os termos em Rede por apelidos 
     topologia = rede.topologia
@@ -79,7 +79,7 @@ function RNA(rede::Rede, pesos::Vector{Vector{Float64}}, bias::Vector{Vector{Flo
 
     # Inicializa sinais    
     # Incluí o vetor de entradas na primeira linha de sinais
-    sinais[1] = entrada_i
+    sinais[1] = copy(entrada_i)
 
     # Loop pelas camadas
     for c = 2:(n_camadas+1)
@@ -105,7 +105,7 @@ function RNA(rede::Rede, pesos::Vector{Vector{Float64}}, bias::Vector{Vector{Flo
                         ]
 
         # Concatena os sinais da camada na matriz geral de sinais (vetor de vetores)
-        sinais[c] = camada_sinais
+        sinais[c] = copy(camada_sinais)
 
     end
 
@@ -113,8 +113,11 @@ function RNA(rede::Rede, pesos::Vector{Vector{Float64}}, bias::Vector{Vector{Flo
     # Como não aplicamos a ativação Softmax na última camada, ainda é um logit
     logits_saida = sinais[end]
 
+    # Assegura float
+    a::Float64 = logits_saida[1]
+
     # Retorna os logits de saída
-    return logits_saida[1]
+    return a
 
 end
 

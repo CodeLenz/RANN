@@ -29,7 +29,7 @@ function Adam(rede::Rede, treino::Treino; α = 0.01, β1 = 0.9, β2 = 0.999,
     vetor_obj_treino = zeros(nepoch)
 
     # Aloca vetor gradiente
-    G = zeros(length(x))
+    G = Vector{Float64}(undef,length(x)) # zeros(length(x))
 
     # Aloca vetores de primeiro (m) e segundo (v) momento do otimizador Adam
     m = zeros(Float64, rede.n_projeto)
@@ -60,7 +60,7 @@ function Adam(rede::Rede, treino::Treino; α = 0.01, β1 = 0.9, β2 = 0.999,
         #    Objetivo(rede, treino, t_contorno_ess, u_contorno_ess, t_contorno_nat, du_contorno_nat, n_fisica, t_fisica, x)
 
         # Zera o vetor gradiente para novo cálculo
-        G .= 0.0
+        fill!(G,0.0)
 
         # Derivada automática em relação a x (pesos e bias) com o Enzyme
         Enzyme.autodiff(

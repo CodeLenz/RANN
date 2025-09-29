@@ -1,32 +1,57 @@
 # Função para obtenção da primeira derivada da rede neural
-function PrimeiraDerivada!(u::Function, rede, pesos, bias, du::Vector{Float64}, t::Vector{Float64})
+function Derivadas!(u::Function, rede, pesos,bias, u0, du::Vector{Float64}, d2u::Vector{Float64},t::Vector{Float64},ϵ=1E-8)
 
+    # Calcula a primeira e a segunda derivada em relação ao tempo utilizando DFC
+    # u0 = u(rede,x,t)
+    uf = u(rede,pesos,bias,t.+ϵ)
+    ut = u(rede,pesos,bias,t.-ϵ)
+    
+    # Primeira derivada
+    du[1] = (uf-ut)/(2*ϵ)
+
+    # Segunda derivada 
+    d2u[1] = (uf - 2*u0 + ut)/(ϵ^2)
+
+end
+    
+
+#=
+# Função para obtenção da primeira derivada da rede neural
+function PrimeiraDerivada!(u::Function, rede, x::Vector, du::Vector{Float64}, t::Vector{Float64},ϵ=1E-8)
+
+
+    # Aproxima a primeira derivada utilizando DF
+    uf = u(rede,x,t.+ϵ)
+    ut = u(rede,x,t.-ϵ)
+    du[1] = (uf-ut)/(2*ϵ)
+    
+    #=
     # Derivação automática
     Enzyme.autodiff(
-                    Enzyme.Reverse,
+                    set_runtime_activity(Reverse),
                     u,
                     Const(rede),
-                    Const(pesos),
-                    Const(bias),
+                    Const(x),
                     Duplicated(t, du)
                 )
+    =#
 
 end
 
 # Função para obtenção da segunda derivada da rede neural
-function SegundaDerivada!(u::Function, rede,pesos,bias, du::Vector{Float64}, du2::Vector{Float64}, t::Vector{Float64})
+function SegundaDerivada!(u::Function, rede, x::Vector, du0::Vector{Float64}, du2::Vector{Float64}, t::Vector{Float64}, ϵ=1E-6)
 
-    # Calcula a primeira derivada
-    PrimeiraDerivada!(u, rede, pesos, bias, du, t)
+    # A primeira derivada no ponto atual é informada em du0
 
-    # Vetor unitário para multiplicação da matriz Hessiana
-    # Obtém valor da diagonal, que é a segunda derivada
-    v = ones(1)
+    # Com isso, podemos calcular a segunda derivada por DF
 
-    # Derivação automática para segunda derivada
-    Enzyme.autodiff(Enzyme.Forward, 
-                    PrimeiraDerivada!,
-                    Enzyme.BatchDuplicated(zeros(1), (du2,)), 
-                    Enzyme.BatchDuplicated(t, (v,))) 
+    # Calcula a primeira derivada para frente, aproveitando o vetor du2
+    #=
+    PrimeiraDerivada!(u, rede, x, du2, t.+ϵ)
+
+    # Calcula du2 aproveitando a memória
+    du2 .= (du2.-du0)./ϵ
+    =#
 
 end
+=#
