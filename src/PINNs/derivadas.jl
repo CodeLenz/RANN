@@ -1,16 +1,18 @@
 # Função para obtenção da primeira derivada da rede neural
-function Derivadas!(u::Function, rede, pesos,bias, u0, du::Vector{Float64}, d2u::Vector{Float64},t::Vector{Float64},ϵ=1E-8)
+# Método das diferenças finitas
+function Derivadas!(u::Function, rede::Rede, pesos::Vector{Float64}, bias::Vector{Float64},
+                    u0::Vector{Float64}, du::Vector{Float64}, d2u::Vector{Float64},
+                    t::Vector{Float64}, ϵ = 1E-8)
 
     # Calcula a primeira e a segunda derivada em relação ao tempo utilizando DFC
-    # u0 = u(rede,x,t)
-    uf = u(rede,pesos,bias,t.+ϵ)
-    ut = u(rede,pesos,bias,t.-ϵ)
+    uf = u(rede, pesos, bias, t .+ ϵ)
+    ut = u(rede, pesos, bias, t .- ϵ)
     
     # Primeira derivada
-    du[1] = (uf-ut)/(2*ϵ)
+    du = (uf[1] .- ut[1]) ./ (2 * ϵ)
 
     # Segunda derivada 
-    d2u[1] = (uf - 2*u0 + ut)/(ϵ^2)
+    d2u = (uf .- 2.0 .* u0[1] .+ ut[1]) ./ (ϵ^2)
 
 end
     

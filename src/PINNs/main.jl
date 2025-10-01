@@ -19,7 +19,7 @@ include("RNA.jl")
 include("adam.jl")
 include("ativ.jl")
 include("acuracia.jl")
-
+include("perdas.jl")
 
 # Função principal do código
 function main(topologia::Vector{Int64}, ativ::Tuple, m::Float64, δ::Float64, ω0::Float64)
@@ -31,20 +31,18 @@ function main(topologia::Vector{Int64}, ativ::Tuple, m::Float64, δ::Float64, ω
     treino = Treino(m, δ, ω0)
 
     # Chama a rotina de otimização do Adam
-    x, objetivo_treino = Adam(rede, treino, nepoch=5000)
+    x, objetivo_treino = Adam(rede, treino)
 
     # Atualiza pesos e bias com o resultado da otimização
     pesos, bias = Atualiza_pesos_bias(rede, x)
-    
 
     # Agora vamos calcular a resposta em cada tempo 
-    u_test_pred = zeros(size(treino.u_an,2))
-
+    u_test_pred = zeros(1, size(treino.u_an,2))
 
     # Obtém a resposta da rede neural para os pontos de teste
     for i=1:size(treino.u_an,2)
         t = treino.t_teste[1,i]
-        u_test_pred[i] = RNA(rede, pesos, bias, [t])
+        u_test_pred[:, i] = RNA(rede, pesos, bias, [t])
     end
 
     # Retorna as variáveis de projeto, função objetivo ao longo do tempo,
@@ -58,9 +56,9 @@ function roda()
 
     # Define os dados do problema: topologia e funções de ativação
     #topologia = [1; 100; 100; 1]
-    topologia = [1; 32; 32 ; 32; 1]
+    topologia = [1; 500; 500; 1]
     #ativ = (ReLU, ReLU, ReLU, identity)
-    ativ = (tanh, tanh, tanh, identity)
+    ativ = (tanh, tanh, tanh)
 
     # Parâmetros do sistema
     m = 1.0
@@ -68,14 +66,13 @@ function roda()
     ω0 = 20.0
 
     # Roda a função main
-    #x, objetivo_treino, u_an, u_test_pred = main(topologia, ativ, m, δ, ω0)
     x, objetivo_treino, u_an, u_test_pred = main(topologia, ativ, m, δ, ω0)
 
     # Acompanha a evolução do objetivo ao longo do tempo
     display(plot([objetivo_treino], title = "Objetivo", label = ["Treino"]))
 
     # Compara a resposta analítica com a calculada pela rede neural
-    #display(plot([u_an, u_test_pred], title = "Deslocamento", label = ["Analítico" "Rede neural"]))
+    display(plot([u_an', u_test_pred'], title = "Deslocamento", label = ["Analítico" "Rede neural"]))
 
    return x, objetivo_treino, u_an, u_test_pred
 

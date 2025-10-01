@@ -6,9 +6,8 @@
 # ϵ (default 10^-8) 
 # nepoch (Número de épocas, default = 10)
 # δ (critério de convergência, default = 1E-8)
-# mbs (mini-batch size, default = 100)
-function Adam(rede::Rede, treino::Treino; α = 0.01, β1 = 0.9, β2 = 0.999,
-              ϵ = 1E-8, nepoch = 15_000, δ = 1E-8)
+function Adam(rede::Rede, treino::Treino; α = 1E-3, β1 = 0.9, β2 = 0.999,
+              ϵ = 1E-8, nepoch = 1000, δ = 1E-8)
               
     # Aloca objetivo
     obj_treino = 0.0
@@ -17,19 +16,17 @@ function Adam(rede::Rede, treino::Treino; α = 0.01, β1 = 0.9, β2 = 0.999,
     t_inicial = treino.t_inicial
     u_inicial = treino.u_inicial
     du_inicial = treino.du_inicial
-
     t_fisica =  treino.t_fisica
-    t_teste = treino.t_teste
     x = rede.x
 
-    # Obtém o número de dados de treino e teste
+    # Obtém o número de dados de treino
     n_fisica = size(t_fisica, 2)
 
     # Aloca um array para monitorar o objetivo
     vetor_obj_treino = zeros(nepoch)
 
-    # Aloca vetor gradiente
-    G = Vector{Float64}(undef,length(x)) # zeros(length(x))
+    # Aloca vetor gradiente - vazio, valores serão inputados posteriormente
+    G = Vector{Float64}(undef,length(x))
 
     # Aloca vetores de primeiro (m) e segundo (v) momento do otimizador Adam
     m = zeros(Float64, rede.n_projeto)
@@ -39,7 +36,7 @@ function Adam(rede::Rede, treino::Treino; α = 0.01, β1 = 0.9, β2 = 0.999,
     @showprogress "Otimizando..." for t = 1:nepoch
 
         # Calcula o objetivo da rede para o treino 
-        obj_treino = Objetivo(rede, treino, t_inicial, u_inicial, du_inicial, n_fisica, t_fisica, x)
+        obj_treino = Objetivo(rede, treino, t_inicial, u_inicial, du_inicial, n_fisica, t_fisica, x, t)
 
         # Armazena o objetivo
         vetor_obj_treino[t] = obj_treino
@@ -51,20 +48,13 @@ function Adam(rede::Rede, treino::Treino; α = 0.01, β1 = 0.9, β2 = 0.999,
             break
 
         end
-            
-        # Define função objetivo em função das variáveis de projeto para a diferenciação
-        #
-        # aqui podemos utilizar Objetivo direto 
-        #
-        #f(rede, treino, t_contorno_ess, u_contorno_ess, t_contorno_nat, du_contorno_nat, n_fisica, t_fisica, x) = 
-        #    Objetivo(rede, treino, t_contorno_ess, u_contorno_ess, t_contorno_nat, du_contorno_nat, n_fisica, t_fisica, x)
-
+        
         # Zera o vetor gradiente para novo cálculo
-        fill!(G,0.0)
+        fill!(G, 0.0)
 
         # Derivada automática em relação a x (pesos e bias) com o Enzyme
         Enzyme.autodiff(
-            set_runtime_activity(Reverse),
+            Enzyme.Reverse,
             Objetivo,
             Const(rede),
             Const(treino),

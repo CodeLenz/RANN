@@ -2,23 +2,14 @@
 # Contém os dados para treino da rede neural: entradas e saídas
 struct Treino
 
-    #
-    # Aqui seriam as condições iniciais para a EDO de segunda ordem
-    #
-    #  t_inicial 
-    #  u_inicial
-    # du_inicial
-    #
-
     # Ponto de condição inicial
     t_inicial::Vector{Float64}
 
-    # Primeira condição incial
+    # Primeira condição incial - deslocamento
     u_inicial::Vector{Float64}
 
-    # Segunda condição inicial
+    # Segunda condição inicial - velocidade
     du_inicial::Vector{Float64}
-
 
     # Pontos de perda física
     t_fisica::Matrix{Float64}
@@ -61,7 +52,7 @@ struct Treino
         k = ω0^2
 
         # Ponto de contorno essenciais 
-        #  u(t = 0) = 1
+        # u(t = 0) = 1
         # du(t = 0) = 0
         t_inicial = zeros(1)
         u_inicial = ones(1)
@@ -77,7 +68,7 @@ struct Treino
         u_an = Deslocamento(t_teste, δ, ω, A, ϕ)
 
         # Returna os dados
-        new(t_inicial, u_inicial, du_inicial, t_fisica, t_teste, u_an, μ, k,m)
+        new(t_inicial, u_inicial, du_inicial, t_fisica, t_teste, u_an, μ, k, m)
 
     end
 
