@@ -17,7 +17,11 @@ function Objetivo(rede::Rede, treino::Treino, t_inicial::Vector{Float64}, u_inic
     du = zeros(1)
     d2u = zeros(1)
 
-    # Calcula o valor
+
+    #
+    # Condições iniciais 
+    #
+    # Calcula o valor do deslocamento no tempo t0
     u0 = RNA(rede, pesos, bias, t_inicial)
 
     # Calcula a perda relativa a primeira condição inicial: u(t0)
@@ -31,14 +35,18 @@ function Objetivo(rede::Rede, treino::Treino, t_inicial::Vector{Float64}, u_inic
     # Calcula as derivadas em t_inicial
     Derivadas!(RNA, rede, pesos, bias, u0, du, d2u, t_inicial)
 
-    # Calcula a perda
+    # Calcula a perda da velocidade inicial 
     perda_inicial_du += Fn_perda_inicial(du, du_inicial)
+
+    #
+    # Perda do resíduo da EDO
+    #
         
     # Perda física, associada ao atendimento da equação diferencial nos pontos de treino    
     # Loop pelos pontos de treino
     for coluna = 1:n_fisica
  
-        # Extraí as entradas da rede
+        # Extrai as entradas da rede
         t_i = t_fisica[:, coluna]
 
         # Valores 

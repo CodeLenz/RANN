@@ -82,7 +82,7 @@ struct Rede
         n_projeto = n_total_conect + n_neuronios
 
         # Inicializa o vetor de variáveis de projeto (pesos e bias)
-        x = IniciaXHe(n_projeto::Int64, n_camadas::Int64, topologia::Vector{Int64}, conexoes::Vector{Int64})
+        x = IniciaXHe(n_projeto, n_camadas, topologia, conexoes)
 
         # Cria o tipo e passa todos os dados da rede
         new(topologia, ativ, n_entradas, n_saidas, n_camadas, n_neuronios, conexoes, 
