@@ -1,6 +1,6 @@
 # Função para obtenção da primeira derivada da rede neural
 # Método das diferenças finitas
-function Derivadas!(u::Function, rede::Rede, pesos::Vector{Float64}, bias::Vector{Float64},
+function Derivadas!(u::Function, rede::Rede,  pesos::Vector{Vector{Float64}}, bias::Vector{Vector{Float64}},
                     u0::Vector{Float64}, du::Vector{Float64}, d2u::Vector{Float64},
                     t::Vector{Float64}, ϵ = 1E-8)
 

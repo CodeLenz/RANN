@@ -63,7 +63,8 @@ function Adam(rede::Rede, treino::Treino; α = 1E-3, β1 = 0.9, β2 = 0.999,
             Const(du_inicial),
             Const(n_fisica),
             Const(t_fisica),
-            Duplicated(x, G)
+            Duplicated(x, G),
+            Const(t)
             )
 
         # Atualiza os momentos
