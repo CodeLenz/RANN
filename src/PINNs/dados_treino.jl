@@ -43,13 +43,13 @@ struct Treino
         ϕ = atan(- δ / ω)
 
         # Ampltitude
-        A = 1.0 / (2 * cos(ϕ))
+        A = 1.0 / (2.0 * cos(ϕ))
 
         # Constante de amortecimento
-        μ = 2 * δ
+        μ = 2.0 * m * δ
 
         # Rigidez
-        k = ω0^2
+        k = ω0^2 * m
 
         # Ponto de contorno essenciais 
         # u(t = 0) = 1
@@ -59,15 +59,13 @@ struct Treino
         du_inicial = zeros(1)
 
         # Pontos de perda física
-        t_fisica = Matrix(collect(range(0.0, 1.0, 30))')
+        t_fisica = Matrix(collect(range(0.0, 1.0, 300))')
 
         # Pontos de teste
         t_teste = Matrix(collect(range(0.0, 1.0, 300))')
 
         # Deslocamento analítico nos pontos de teste
         u_an = Deslocamento(t_teste, δ, ω, A, ϕ)
-
-        @show μ,k,m
 
         # Returna os dados
         new(t_inicial, u_inicial, du_inicial, t_fisica, t_teste, u_an, μ, k, m)

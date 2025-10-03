@@ -9,10 +9,10 @@ function Derivadas!(u::Function, rede::Rede,  pesos::Vector{Vector{Float64}}, bi
     ut = u(rede, pesos, bias, t .- ϵ)
     
     # Primeira derivada
-    du[1] = (uf[1] .- ut[1]) ./ (2 * ϵ)
+    du[1] = (uf[1] - ut[1]) / (2 * ϵ)
 
     # Segunda derivada 
-    d2u[1] = (uf[1] .- 2.0 .* u0[1] .+ ut[1]) ./ (ϵ^2)
+    d2u[1] = (uf[1] - 2.0 * u0[1] + ut[1]) / (ϵ^2)
 
 end
     

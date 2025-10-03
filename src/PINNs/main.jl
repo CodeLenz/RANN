@@ -55,7 +55,6 @@ end
 function roda()
 
     # Define os dados do problema: topologia e funções de ativação
-    #topologia = [1; 100; 100; 1]
     topologia = [1; 100; 100; 1]
     #ativ = (ReLU, ReLU, ReLU, identity)
     ativ = (tanh, tanh, tanh)
@@ -73,6 +72,9 @@ function roda()
 
     # Compara a resposta analítica com a calculada pela rede neural
     display(plot([u_an', u_test_pred'], title = "Deslocamento", label = ["Analítico" "Rede neural"]))
+
+        #display(plot([u_test_pred'], title = "Deslocamento", label = ["Rede neural"]))
+
 
    return x, objetivo_treino, u_an, u_test_pred
 

@@ -7,7 +7,7 @@
 # nepoch (Número de épocas, default = 10)
 # δ (critério de convergência, default = 1E-8)
 function Adam(rede::Rede, treino::Treino; α = 1E-3, β1 = 0.9, β2 = 0.999,
-              ϵ = 1E-8, nepoch = 1000, δ = 1E-8)
+              ϵ = 1E-8, nepoch = 15_000, conv = 1E-8)
               
     # Aloca objetivo
     obj_treino = 0.0
@@ -42,7 +42,7 @@ function Adam(rede::Rede, treino::Treino; α = 1E-3, β1 = 0.9, β2 = 0.999,
         vetor_obj_treino[t] = obj_treino
 
         # Testa se a otimização convergiu ao longo das iterações
-        if obj_treino <= δ
+        if obj_treino <= conv
 
             println("Convergiu em $t épocas")
             break

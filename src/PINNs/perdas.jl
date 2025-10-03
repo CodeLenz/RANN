@@ -1,7 +1,7 @@
 # Define a função de perda para a condição inicial
 function Fn_perda_inicial(y_pred::Vector{Float64}, y_esperado::Vector{Float64})
 
-    return abs(y_pred[1] .- y_esperado[1])
+    return abs(y_pred[1] - y_esperado[1])
 
 end
 
