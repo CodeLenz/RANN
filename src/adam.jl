@@ -111,6 +111,27 @@ function Adam(rede::Rede, treino::Treino, α = 0.01, β1 = 0.9, β2 = 0.999,
             # Atualiza as variáveis de projeto
             x = x .- α_t * m ./ (v.^(1/2) .+ ϵ)
 
+ 
+            # A cada 100 iterações vamos monitorar o comportamento da rede 
+            if i % 100 == 0
+
+                # Agora vamos calcular a resposta em cada tempo 
+                u_test_pred = zeros(1, size(treino.u_an,2))
+
+                # Desenrola os pesos e bias 
+                pesos, bias = Atualiza_pesos_bias(rede, x)
+
+                # Obtém a resposta da rede neural para os pontos de teste
+                for j=1:size(treino.u_an,2)
+                    t = treino.t_teste[1,j]
+                    u_test_pred[:, j] = RNA(rede, pesos, bias, [t])
+                end
+
+                # Grava em um arquivo para monitoramento 
+                writedlm("teste_rede_$i.txt",u_test_pred)
+
+            end
+
         end
 
     end

@@ -9,6 +9,7 @@ using Plots # Gráficos
 using Random; Random.seed!(1234) # define um seed para as variáveis aleatórias 
 using Enzyme # diferenciação automática
 using ProgressMeter # Barra de progresso ao rodar o código
+using DelimitedFiles
 
 # Adiciona demais arquivos do programa
 include("struct_rede.jl")
@@ -55,9 +56,9 @@ end
 function roda()
 
     # Define os dados do problema: topologia e funções de ativação
-    topologia = [1; 100; 100; 1]
+    topologia = [1; 500; 500; 500; 1]
     #ativ = (ReLU, ReLU, ReLU, identity)
-    ativ = (tanh, tanh, tanh)
+    ativ = (tanh, tanh, tanh, tanh)
 
     # Parâmetros do sistema
     m = 1.0
