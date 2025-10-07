@@ -59,10 +59,10 @@ struct Treino
         du_inicial = zeros(1)
 
         # Pontos de perda física
-        t_fisica = Matrix(collect(range(0.0, 1.0, 300))')
+        t_fisica = Matrix(collect(range(0.0, 1.0, 100))')
 
         # Pontos de teste
-        t_teste = Matrix(collect(range(0.0, 1.0, 300))')
+        t_teste = Matrix(collect(range(0.0, 1.0, 100))')
 
         # Deslocamento analítico nos pontos de teste
         u_an = Deslocamento(t_teste, δ, ω, A, ϕ)

@@ -57,9 +57,9 @@ end
 function roda()
 
     # Define os dados do problema: topologia e funções de ativação
-    topologia = [1; 100; 50; 50; 1]
+    topologia = [1; 50; 50; 50; 50; 50 ; 1]
     #ativ = (ReLU, ReLU, ReLU, identity)
-    ativ = (tanh, tanh, tanh, tanh)
+    ativ = (tanh, tanh, tanh, tanh, tanh, tanh)
 
     # Parâmetros do sistema
     m = 1.0
