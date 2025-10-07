@@ -1,6 +1,7 @@
 # 
 # Algoritmo para cálculo de rede neural
 #
+using MKL
 
 using StatsFuns # função sigmoide (logística)
 using StatsBase # Função Sample
@@ -56,7 +57,7 @@ end
 function roda()
 
     # Define os dados do problema: topologia e funções de ativação
-    topologia = [1; 30; 30; 1]
+    topologia = [1; 100; 100; 1]
     #ativ = (ReLU, ReLU, ReLU, identity)
     ativ = (tanh, tanh, tanh)
 

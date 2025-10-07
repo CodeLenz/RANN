@@ -17,7 +17,9 @@ function Adam(rede::Rede, treino::Treino; α = 1E-3, β1 = 0.9, β2 = 0.999,
     u_inicial = treino.u_inicial
     du_inicial = treino.du_inicial
     t_fisica =  treino.t_fisica
-    x = rede.x
+
+    # Copia rede.x para uma outra memória
+    x = copy(rede.x)
 
     # Obtém o número de dados de treino
     n_fisica = size(t_fisica, 2)
@@ -76,7 +78,29 @@ function Adam(rede::Rede, treino::Treino; α = 1E-3, β1 = 0.9, β2 = 0.999,
         α_t = α * sqrt(1 - β2^t) / (1 - β1^t)
 
         # Atualiza as variáveis de projeto
-        x = x .- α_t * m ./ (v.^(1/2) .+ ϵ)
+        x .= x .- α_t * m ./ (v.^(1/2) .+ ϵ)
+
+        # A cada 100 epochs vamos monitorar o comportamento da rede 
+        if t % 100 == 0
+
+            @show "Atingimos a iteração $t"
+
+            # Agora vamos calcular a resposta em cada tempo 
+            u_test_pred = zeros(1, size(treino.u_an,2))
+
+            # Desenrola os pesos e bias 
+            pesos, bias = Atualiza_pesos_bias(rede, x)
+
+            # Obtém a resposta da rede neural para os pontos de teste
+            for j=1:size(treino.u_an,2)
+                t = treino.t_teste[1,j]
+                u_test_pred[:, j] = RNA(rede, pesos, bias, [t])
+            end
+
+            # Grava em um arquivo para monitoramento 
+            writedlm("teste_rede_$(t).txt",u_test_pred)
+
+        end
 
     end
 

@@ -29,7 +29,7 @@ function Adam(rede::Rede, treino::Treino, α = 0.01, β1 = 0.9, β2 = 0.999,
 
     # Calcula o número de iterações em uma época
     iter = Int(ceil(n_treinos / mbs))
-
+   
     # Aloca um array para monitorar o objetivo
     vetor_obj_treino = zeros(nepoch * iter)
     vetor_obj_teste = zeros(nepoch)
@@ -84,17 +84,13 @@ function Adam(rede::Rede, treino::Treino, α = 0.01, β1 = 0.9, β2 = 0.999,
 
             end
             
-            # Define função objetivo em função das variáveis de projeto para a diferenciação
-            f(rede, entradas_treino_iter, saidas_esperadas_treino_iter, mbs, x) = Objetivo(rede, entradas_treino_iter, saidas_esperadas_treino_iter, mbs, x)
-
             # Zera o vetor gradiente para novo cálculo
             fill!(G,0.0) # .= 0.0
 
             # Derivada automática em relação a x (pesos e bias) com o Enzyme
-            #f, G = value_and_gradient(f, AutoEnzyme(; function_annotation=Enzyme.Duplicated), x)
             Enzyme.autodiff(
                 Enzyme.set_runtime_activity(Enzyme.Reverse),
-                f,
+                Objetivo,
                 Const(rede),
                 Const(entradas_treino_iter),
                 Const(saidas_esperadas_treino_iter),
@@ -112,27 +108,28 @@ function Adam(rede::Rede, treino::Treino, α = 0.01, β1 = 0.9, β2 = 0.999,
 
             # Atualiza as variáveis de projeto
             x .= x .- α_t * m ./ (v.^(1/2) .+ ϵ)
-
  
-            # A cada 100 iterações vamos monitorar o comportamento da rede 
-            if i % 100 == 0
+        end
 
-                # Agora vamos calcular a resposta em cada tempo 
-                u_test_pred = zeros(1, size(treino.u_an,2))
+        # A cada 100 epochs vamos monitorar o comportamento da rede 
+        if t % 100 == 0
 
-                # Desenrola os pesos e bias 
-                pesos, bias = Atualiza_pesos_bias(rede, x)
+            @show "Atingimos a iteração $t"
 
-                # Obtém a resposta da rede neural para os pontos de teste
-                for j=1:size(treino.u_an,2)
-                    t = treino.t_teste[1,j]
-                    u_test_pred[:, j] = RNA(rede, pesos, bias, [t])
-                end
+            # Agora vamos calcular a resposta em cada tempo 
+            u_test_pred = zeros(1, size(treino.u_an,2))
 
-                # Grava em um arquivo para monitoramento 
-                writedlm("teste_rede_$i.txt",u_test_pred)
+            # Desenrola os pesos e bias 
+            pesos, bias = Atualiza_pesos_bias(rede, x)
 
+            # Obtém a resposta da rede neural para os pontos de teste
+            for j=1:size(treino.u_an,2)
+                t = treino.t_teste[1,j]
+                u_test_pred[:, j] = RNA(rede, pesos, bias, [t])
             end
+
+            # Grava em um arquivo para monitoramento 
+            writedlm("teste_rede_$t.txt",u_test_pred)
 
         end
 
