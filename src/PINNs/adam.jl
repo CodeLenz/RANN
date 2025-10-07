@@ -84,7 +84,7 @@ function Adam(rede::Rede, treino::Treino; α = 1E-3, β1 = 0.9, β2 = 0.999,
         x .= x .- α_t * m ./ (v.^(1/2) .+ ϵ)
 
         # A cada 100 epochs vamos monitorar o comportamento da rede 
-        if t % 100 == 0
+        if t % 1000 == 0
 
             # Agora vamos calcular a resposta em cada tempo 
             u_test_pred = zeros(1, size(treino.u_an,2))
