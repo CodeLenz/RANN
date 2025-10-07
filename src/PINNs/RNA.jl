@@ -92,11 +92,25 @@ function RNA(rede::Rede, pesos::Vector{Vector{Float64}}, bias::Vector{Vector{Flo
         n_in = topologia[c - 1]
         n_out = topologia[c]
 
+        # Vamos tentar otimizar o código, transformando os pesos em uma matriz por 
+        # camada
+        W = reshape(pesos[c-1], n_out, n_in) 
+        b = bias[c-1]
+        ϕ = ativ[c-1]
+
+        # Faz o forward (agora é só um produto de matriz por vetor)
+        z = W * camada_anterior .+ b
+
+        # Armazena
+        sinais[c] = ϕ.(z)
+
+
         # Calcula os sinais da camada
         # Loop em i pelos neurônios das camadas
         # Loop em j pelos neurônios da camada anterior
         # Somatório do produto entre entradas da camada anterior e pesos + bias
         # Passa pela função de ativação
+        #=
         camada_sinais = [ativ[c - 1](
                                     sum(
                                         pesos[c - 1][(i - 1) * n_in + j] * camada_anterior[j]  for j in 1:n_in
@@ -107,6 +121,7 @@ function RNA(rede::Rede, pesos::Vector{Vector{Float64}}, bias::Vector{Vector{Flo
 
         # Concatena os sinais da camada na matriz geral de sinais (vetor de vetores)
         sinais[c] = copy(camada_sinais)
+        =#
 
     end
 

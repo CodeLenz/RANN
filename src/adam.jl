@@ -19,7 +19,9 @@ function Adam(rede::Rede, treino::Treino, α = 0.01, β1 = 0.9, β2 = 0.999,
     saidas_esperadas_treino = treino.saidas_esperadas_treino
     entradas_teste          =  treino.entradas_teste
     saidas_esperadas_teste = treino.saidas_esperadas_teste
-    x = rede.x
+
+    # Não sei pq estamos usando x dentro da estrutura de rede...
+    x = copy(rede.x)
 
     # Obtém o número de dados de treino e teste
     n_treinos = size(entradas_treino, 2)
@@ -86,7 +88,7 @@ function Adam(rede::Rede, treino::Treino, α = 0.01, β1 = 0.9, β2 = 0.999,
             f(rede, entradas_treino_iter, saidas_esperadas_treino_iter, mbs, x) = Objetivo(rede, entradas_treino_iter, saidas_esperadas_treino_iter, mbs, x)
 
             # Zera o vetor gradiente para novo cálculo
-            G .= 0.0
+            fill!(G,0.0) # .= 0.0
 
             # Derivada automática em relação a x (pesos e bias) com o Enzyme
             #f, G = value_and_gradient(f, AutoEnzyme(; function_annotation=Enzyme.Duplicated), x)
@@ -109,7 +111,7 @@ function Adam(rede::Rede, treino::Treino, α = 0.01, β1 = 0.9, β2 = 0.999,
             α_t = α * sqrt(1 - β2^t) / (1 - β1^t)
 
             # Atualiza as variáveis de projeto
-            x = x .- α_t * m ./ (v.^(1/2) .+ ϵ)
+            x .= x .- α_t * m ./ (v.^(1/2) .+ ϵ)
 
  
             # A cada 100 iterações vamos monitorar o comportamento da rede 
