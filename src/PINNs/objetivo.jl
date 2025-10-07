@@ -68,12 +68,14 @@ function Objetivo(rede::Rede, treino::Treino, t_inicial::Vector{Float64}, u_inic
     # Calcula a perda física média
     perda_fisica /= n_fisica
 
+    #=
     if t % 100 == 0
         @show t
         @show perda_inicial_du
         @show perda_inicial_u
         @show perda_fisica
     end
+    =#
 
     # Retorna a perda total ponderada pelos hiperparâmetros λ
     return perda_inicial_u + λ1 * perda_inicial_du + λ2 * perda_fisica

@@ -34,6 +34,9 @@ function Adam(rede::Rede, treino::Treino; α = 1E-3, β1 = 0.9, β2 = 0.999,
     m = zeros(Float64, rede.n_projeto)
     v = zeros(Float64, rede.n_projeto)
 
+    # Contador para o numero do arquivo de acompanhamento
+    contador = 1
+
     # Loop de otimização pelas épocas
     @showprogress "Otimizando..." for t = 1:nepoch
 
@@ -83,8 +86,6 @@ function Adam(rede::Rede, treino::Treino; α = 1E-3, β1 = 0.9, β2 = 0.999,
         # A cada 100 epochs vamos monitorar o comportamento da rede 
         if t % 100 == 0
 
-            @show "Atingimos a iteração $t"
-
             # Agora vamos calcular a resposta em cada tempo 
             u_test_pred = zeros(1, size(treino.u_an,2))
 
@@ -98,7 +99,10 @@ function Adam(rede::Rede, treino::Treino; α = 1E-3, β1 = 0.9, β2 = 0.999,
             end
 
             # Grava em um arquivo para monitoramento 
-            writedlm("teste_rede_$(t).txt",u_test_pred)
+            writedlm("teste_rede_$(contador).txt",u_test_pred)
+
+            # Incrementa o contador 
+            contador += 1
 
         end
 
