@@ -7,7 +7,7 @@ using StatsFuns # função sigmoide (logística)
 using StatsBase # Função Sample
 using LinearAlgebra # cálculo de norma
 using Plots # Gráficos
-using Random; Random.seed!(1234) # define um seed para as variáveis aleatórias 
+using Random; # Random.seed!(1234) # define um seed para as variáveis aleatórias 
 using Enzyme # diferenciação automática
 using ProgressMeter # Barra de progresso ao rodar o código
 using DelimitedFiles
@@ -46,7 +46,7 @@ end
 function roda()
 
     # Define os dados do problema: topologia e funções de ativação
-    topologia = [1; 50; 50; 50; 50; 1]
+    topologia = [1; 100; 50; 50; 50; 1]
     ativ = (tanh, tanh, tanh, tanh, tanh)
 
     # Número de épocas
