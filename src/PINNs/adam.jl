@@ -6,8 +6,8 @@
 # ϵ (default 10^-8) 
 # nepoch (Número de épocas, default = 10)
 # δ (critério de convergência, default = 1E-8)
-function Adam(rede::Rede, treino::Treino; α = 1E-3, β1 = 0.9, β2 = 0.999,
-              ϵ = 1E-8, nepoch = 15_000, conv = 1E-8)
+function Adam(rede::Rede, treino::Treino, nepoch::Int64; α = 1E-3, β1 = 0.9, β2 = 0.999,
+              ϵ = 1E-8, conv = 1E-8)
               
     # Aloca objetivo
     obj_treino = 0.0
@@ -27,6 +27,9 @@ function Adam(rede::Rede, treino::Treino; α = 1E-3, β1 = 0.9, β2 = 0.999,
     # Aloca um array para monitorar o objetivo
     vetor_obj_treino = zeros(nepoch)
 
+    # Aloca a resposta estimada para os pontos de teste
+    u_test_pred = zeros(1, size(treino.u_an, 2))
+
     # Aloca vetor gradiente - vazio, valores serão inputados posteriormente
     G = Vector{Float64}(undef,length(x))
 
@@ -34,22 +37,19 @@ function Adam(rede::Rede, treino::Treino; α = 1E-3, β1 = 0.9, β2 = 0.999,
     m = zeros(Float64, rede.n_projeto)
     v = zeros(Float64, rede.n_projeto)
 
-    # Contador para o numero do arquivo de acompanhamento
-    contador = 1
-
     # Loop de otimização pelas épocas
-    @showprogress "Otimizando..." for t = 1:nepoch
+    @showprogress "Otimizando..." for epoch = 1:nepoch
 
         # Calcula o objetivo da rede para o treino 
-        obj_treino = Objetivo(rede, treino, t_inicial, u_inicial, du_inicial, n_fisica, t_fisica, x, t)
+        obj_treino = Objetivo(rede, treino, t_inicial, u_inicial, du_inicial, n_fisica, t_fisica, x, epoch)
 
         # Armazena o objetivo
-        vetor_obj_treino[t] = obj_treino
+        vetor_obj_treino[epoch] = obj_treino
 
         # Testa se a otimização convergiu ao longo das iterações
         if obj_treino <= conv
 
-            println("Convergiu em $t épocas")
+            println("Convergiu em $epoch épocas")
             break
 
         end
@@ -69,7 +69,7 @@ function Adam(rede::Rede, treino::Treino; α = 1E-3, β1 = 0.9, β2 = 0.999,
             Const(n_fisica),
             Const(t_fisica),
             Duplicated(x, G),
-            Const(t)
+            Const(epoch)
             )
 
         # Atualiza os momentos
@@ -78,37 +78,22 @@ function Adam(rede::Rede, treino::Treino; α = 1E-3, β1 = 0.9, β2 = 0.999,
 
         # Corrige o bias dos momentos devido a inicialização com zeros
         # Diretamente pela correção do alpha
-        α_t = α * sqrt(1 - β2^t) / (1 - β1^t)
+        α_t = α * sqrt(1 - β2 ^ epoch) / (1 - β1 ^ epoch)
 
         # Atualiza as variáveis de projeto
         x .= x .- α_t * m ./ (v.^(1/2) .+ ϵ)
 
-        # A cada 100 epochs vamos monitorar o comportamento da rede 
-        if t % 1000 == 0
-
-            # Agora vamos calcular a resposta em cada tempo 
-            u_test_pred = zeros(1, size(treino.u_an,2))
-
-            # Desenrola os pesos e bias 
-            pesos, bias = Atualiza_pesos_bias(rede, x)
+        # A cada 1000 epochs vamos monitorar o comportamento da rede 
+        if (epoch % 1000 == 0) | (epoch == nepoch)
 
             # Obtém a resposta da rede neural para os pontos de teste
-            for j=1:size(treino.u_an,2)
-                t = treino.t_teste[1,j]
-                u_test_pred[:, j] = RNA(rede, pesos, bias, [t])
-            end
-
-            # Grava em um arquivo para monitoramento 
-            writedlm("teste_rede_$(contador).txt",u_test_pred)
-
-            # Incrementa o contador 
-            contador += 1
+            u_test_pred = Deslocamento_Teste(rede, x, treino.u_an, treino.t_teste, vetor_obj_treino, epoch)
 
         end
 
     end
 
     # Retorna as variáveis de projeto e a função objetivo ao longo do tempo
-    return x, vetor_obj_treino
+    return x, vetor_obj_treino, u_test_pred
 
 end

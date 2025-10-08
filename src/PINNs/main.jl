@@ -1,8 +1,8 @@
 # 
 # Algoritmo para cálculo de rede neural
 #
-using MKL
 
+using MKL
 using StatsFuns # função sigmoide (logística)
 using StatsBase # Função Sample
 using LinearAlgebra # cálculo de norma
@@ -20,11 +20,12 @@ include("objetivo.jl")
 include("RNA.jl")
 include("adam.jl")
 include("ativ.jl")
-include("acuracia.jl")
+include("resultados.jl")
 include("perdas.jl")
 
 # Função principal do código
-function main(topologia::Vector{Int64}, ativ::Tuple, m::Float64, δ::Float64, ω0::Float64)
+function main(topologia::Vector{Int64}, ativ::Tuple, m::Float64, δ::Float64, ω0::Float64,
+              nepoch::Int64)
 
     # Cria a rede
     rede = Rede(topologia, ativ)
@@ -33,19 +34,7 @@ function main(topologia::Vector{Int64}, ativ::Tuple, m::Float64, δ::Float64, ω
     treino = Treino(m, δ, ω0)
 
     # Chama a rotina de otimização do Adam
-    x, objetivo_treino = Adam(rede, treino)
-
-    # Atualiza pesos e bias com o resultado da otimização
-    pesos, bias = Atualiza_pesos_bias(rede, x)
-
-    # Agora vamos calcular a resposta em cada tempo 
-    u_test_pred = zeros(1, size(treino.u_an,2))
-
-    # Obtém a resposta da rede neural para os pontos de teste
-    for i=1:size(treino.u_an,2)
-        t = treino.t_teste[1,i]
-        u_test_pred[:, i] = RNA(rede, pesos, bias, [t])
-    end
+    x, objetivo_treino, u_test_pred = Adam(rede, treino, nepoch)
 
     # Retorna as variáveis de projeto, função objetivo ao longo do tempo,
     # resposta analítica nos pontos de teste e resposta calculada pela rede neural
@@ -57,9 +46,11 @@ end
 function roda()
 
     # Define os dados do problema: topologia e funções de ativação
-    topologia = [1; 50; 50; 50; 50; 50 ; 1]
-    #ativ = (ReLU, ReLU, ReLU, identity)
-    ativ = (tanh, tanh, tanh, tanh, tanh, tanh)
+    topologia = [1; 50; 50; 50; 50; 1]
+    ativ = (tanh, tanh, tanh, tanh, tanh)
+
+    # Número de épocas
+    nepoch = 15_000
 
     # Parâmetros do sistema
     m = 1.0
@@ -67,16 +58,7 @@ function roda()
     ω0 = 20.0
 
     # Roda a função main
-    x, objetivo_treino, u_an, u_test_pred = main(topologia, ativ, m, δ, ω0)
-
-    # Acompanha a evolução do objetivo ao longo do tempo
-    display(plot([objetivo_treino], title = "Objetivo", label = ["Treino"]))
-
-    # Compara a resposta analítica com a calculada pela rede neural
-    display(plot([u_an', u_test_pred'], title = "Deslocamento", label = ["Analítico" "Rede neural"]))
-
-        #display(plot([u_test_pred'], title = "Deslocamento", label = ["Rede neural"]))
-
+    x, objetivo_treino, u_an, u_test_pred = main(topologia, ativ, m, δ, ω0, nepoch)
 
    return x, objetivo_treino, u_an, u_test_pred
 
