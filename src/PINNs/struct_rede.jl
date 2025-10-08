@@ -131,17 +131,20 @@ function IniciaXHe(n_projeto::Int64, n_camadas::Int64, topologia::Vector{Int64},
         # Variância de He
         std = sqrt(2 / topologia[i])
 
-        # Define valores aleatórios conforme distribuição normal (randn) e escala multiplicando pela variância
+        # Pesos: Define valores aleatórios conforme distribuição normal (randn) e escala multiplicando pela variância
         x[k:(k+conexoes[i]-1)] = randn(conexoes[i]) * std
 
-        # Atualiza o contador para a próxima camada
+        # Atualiza o contador para os biases
         k = k + conexoes[i]
 
-    end
+        # Biases: Define valores bem pequenos para iniciar
+        # Início neutro, sem empurrar neurônios para valores muito negativos (morrem) ou positivos (acendem)
+        x[k:(k+topologia[i+1]-1)] .= 0.01
 
-    # Biases: Define valores bem pequenos para iniciar
-    # Início neutro, sem empurrar neurônios para valores muito negativos (morrem) ou positivos (acendem)
-    x[k:end] .= 0.01
+        # Atualiza o contador para a próxima camada
+        k = k + topologia[i+1]
+
+    end
 
     # Retorna o vetor inicial
     return x

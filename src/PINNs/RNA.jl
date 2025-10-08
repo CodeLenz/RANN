@@ -9,28 +9,7 @@ function Atualiza_pesos_bias(rede::Rede, x::Vector{Float64})
     # Pesos: Vetor de vetores ("matriz") com os pesos de cada conexão da rede neural
     # Cada vetor representa uma camada oculta
     # Copia os primeiros valores de x na matriz de pesos através das conexões
-
-    pesos = Vector{Vector{Float64}}(undef,n_camadas)
-
-    # Inicializa a matriz de pesos pela primeira camada, incluindo as variáveis de projeto
-    pesos[1]  =  x[1:conexoes[1]] 
-
-    # Inicializa contador k que busca os pesos dentro de x
-    k = 1 + conexoes[1]
-    
-    # Loop pelas linhas da matriz (camadas da rede)
-    for i = 2:n_camadas
-
-        # Seleciona as variáveis de projeto da camada e aloca em um vetor
-        pesos_linha = x[k:(k+conexoes[i]-1)]
-
-        # Atualiza o contador para a próxima camada
-        k = k + conexoes[i]
-
-        # Concatena os pesos da camada i no vetor geral de pesos
-        pesos[i] = pesos_linha
-
-    end
+    pesos = Vector{Matrix{Float64}}(undef, n_camadas)
 
     # Bias: Vetor de vetores ("matriz") com os bias de cada neurônio da rede neural
     # Cada linha representa uma camada oculta
@@ -38,26 +17,25 @@ function Atualiza_pesos_bias(rede::Rede, x::Vector{Float64})
     # Passa os ultimos n_neuronios valores de x para a matriz 
     # de bias, usando topologia como guia para saber quantos
     # valores gravamos por linha
-
     bias = Vector{Vector{Float64}}(undef,n_camadas)
 
-    # Inicializa a matriz de bias pela primeira camada, incluindo as variáveis de projeto
-    bias[1] = x[k:(k+topologia[2]-1)]
-
-    # Atualiza o contador
-    k = k + topologia[2]
+    # Inicializa contador k que busca os pesos e biases dentro de x
+    k = 1
 
     # Loop pelas linhas da matriz (camadas da rede)
-    for i = 2:n_camadas
+    for i = 1:n_camadas
 
-        # Seleciona as variáveis de projeto da camada e aloca em um vetor
-        bias_linha = x[k:(k+topologia[i+1]-1)]
+        # Seleciona as variáveis de projeto da camada e aloca na matriz de pesos
+        pesos[i] = reshape(x[k:(k+conexoes[i]-1)], topologia[i+1], topologia[i])
 
-        # Atualiza o contador; já está contando desde os pesos
+        # Atualiza o contador para os biases
+        k = k + conexoes[i]
+
+        # Seleciona as variáveis de projeto e aloca no vetor de biases
+        bias[i] = x[k:(k+topologia[i+1]-1)]
+
+        # Atualiza o contador para a próxima camada
         k = k + topologia[i+1]
-
-        # Concatena os bias da camada i no vetor geral de pesos
-        bias[i] = bias_linha
 
     end
 
@@ -68,7 +46,7 @@ end
 
 
 # Rede neural
-function RNA(rede::Rede, pesos::Vector{Vector{Float64}}, bias::Vector{Vector{Float64}}, 
+function RNA(rede::Rede, pesos::Vector{Matrix{Float64}}, bias::Vector{Vector{Float64}}, 
              entrada_i::Vector{Float64})::Vector{Float64}
 
     # Acessa os termos em Rede por apelidos 
@@ -94,7 +72,7 @@ function RNA(rede::Rede, pesos::Vector{Vector{Float64}}, bias::Vector{Vector{Flo
 
         # Vamos tentar otimizar o código, transformando os pesos em uma matriz por 
         # camada
-        W = reshape(pesos[c-1], n_out, n_in) 
+        W = pesos[c-1] 
         b = bias[c-1]
         ϕ = ativ[c-1]
 
@@ -103,25 +81,6 @@ function RNA(rede::Rede, pesos::Vector{Vector{Float64}}, bias::Vector{Vector{Flo
 
         # Armazena
         sinais[c] = ϕ.(z)
-
-
-        # Calcula os sinais da camada
-        # Loop em i pelos neurônios das camadas
-        # Loop em j pelos neurônios da camada anterior
-        # Somatório do produto entre entradas da camada anterior e pesos + bias
-        # Passa pela função de ativação
-        #=
-        camada_sinais = [ativ[c - 1](
-                                    sum(
-                                        pesos[c - 1][(i - 1) * n_in + j] * camada_anterior[j]  for j in 1:n_in
-                                        ) 
-                                    + bias[c - 1][i]
-                                    ) for i in 1:n_out
-                        ]
-
-        # Concatena os sinais da camada na matriz geral de sinais (vetor de vetores)
-        sinais[c] = copy(camada_sinais)
-        =#
 
     end
 
