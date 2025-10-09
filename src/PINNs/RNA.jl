@@ -3,8 +3,10 @@ function Atualiza_pesos_bias(rede::Rede, x::Vector{Float64})
 
     # Acessa os termos em Rede por apelidos 
     n_camadas = rede.n_camadas
-    conexoes = rede.conexoes
+    #conexoes = rede.conexoes
     topologia = rede.topologia
+    pesos_ranges = rede.pesos_ranges
+    bias_ranges  = rede.bias_ranges
     
     # Pesos: Vetor de vetores ("matriz") com os pesos de cada conexão da rede neural
     # Cada vetor representa uma camada oculta
@@ -19,25 +21,39 @@ function Atualiza_pesos_bias(rede::Rede, x::Vector{Float64})
     # valores gravamos por linha
     bias = Vector{Vector{Float64}}(undef,n_camadas)
 
-    # Inicializa contador k que busca os pesos e biases dentro de x
-    k = 1
-
-    # Loop pelas linhas da matriz (camadas da rede)
-    for i = 1:n_camadas
-
-        # Seleciona as variáveis de projeto da camada e aloca na matriz de pesos
-        pesos[i] = reshape(x[k:(k+conexoes[i]-1)], topologia[i+1], topologia[i])
-
-        # Atualiza o contador para os biases
-        k = k + conexoes[i]
-
-        # Seleciona as variáveis de projeto e aloca no vetor de biases
-        bias[i] = x[k:(k+topologia[i+1]-1)]
-
-        # Atualiza o contador para a próxima camada
-        k = k + topologia[i+1]
-
+    #
+    # Agora só usamos os valores pré-calculados de acessos e 
+    # também usamos @views para evitar alocação de memória
+    #
+    @inbounds for i in eachindex(pesos)
+        pesos[i] = reshape(@view(x[pesos_ranges[i]]), topologia[i+1], topologia[i])
+        bias[i]  = @view(x[bias_ranges[i]])
     end
+
+    # Vamos garantir que nunca vamos acessar fora da memória alocada
+    #=
+    @inbounds begin
+        k = 1
+        for i in eachindex(pesos)
+            
+            # Teste com o uso de view (para não alocar memória)
+            w_view = @view x[k : k + conexoes[i] - 1]
+
+            # Reshape para uma matriz de pesos...
+            pesos[i] = reshape(w_view, topologia[i+1], topologia[i])
+
+            # Offset para a próxima camada em x
+            k += conexoes[i]
+
+            # Vamos testar uma view aqui também
+            b_view = @view x[k : k + topologia[i+1] - 1]
+            bias[i] = b_view
+
+            # Mais um offset
+            k += topologia[i+1]
+        end
+    end
+    =#
 
     # Retorna matrizes de pesos e bias
     return pesos, bias
@@ -50,7 +66,7 @@ function RNA(rede::Rede, pesos::Vector{Matrix{Float64}}, bias::Vector{Vector{Flo
              entrada_i::Vector{Float64})::Vector{Float64}
 
     # Acessa os termos em Rede por apelidos 
-    topologia = rede.topologia
+    #topologia = rede.topologia
     n_camadas = rede.n_camadas
     ativ      = rede.ativ
 
@@ -61,14 +77,14 @@ function RNA(rede::Rede, pesos::Vector{Matrix{Float64}}, bias::Vector{Vector{Flo
     sinais[1] = copy(entrada_i)
 
     # Loop pelas camadas
-    for c = 2:(n_camadas+1)
+    @inbounds for c = 2:(n_camadas+1)
 
         # Recupera a camada anterior de sinais
         camada_anterior = sinais[c-1]
 
         # Recupera número de neurônios da camada anterior e da nova camada
-        n_in = topologia[c - 1]
-        n_out = topologia[c]
+        #n_in = topologia[c - 1]
+        #n_out = topologia[c]
 
         # Vamos tentar otimizar o código, transformando os pesos em uma matriz por 
         # camada

@@ -40,6 +40,11 @@ struct Rede
     # Vetor de variáveis de projeto
     x::Vector{Float64}
 
+    # Vou colocar os acessos aos pesos e bias pré-calculados 
+    # aqui na rede
+    pesos_ranges::Vector{UnitRange{Int}}
+    bias_ranges::Vector{UnitRange{Int}}
+
     # Função que inicializa todas as variáveis calculadas na struct
     # Topologia e funções de ativações são os parâmetros informados pelo usuário
     function Rede(topologia, ativ)
@@ -84,9 +89,13 @@ struct Rede
         # Inicializa o vetor de variáveis de projeto (pesos e bias)
         x = IniciaXHe(n_projeto, n_camadas, topologia, conexoes)
 
+        # Pre-computa os acessos 
+        pesos_ranges, bias_ranges = Pre_computa_acessos(topologia,conexoes)  
+
         # Cria o tipo e passa todos os dados da rede
         new(topologia, ativ, n_entradas, n_saidas, n_camadas, n_neuronios, conexoes, 
-            n_maximo_pesos, n_total_conect, n_max_neuronio, n_projeto, x)
+            n_maximo_pesos, n_total_conect, n_max_neuronio, n_projeto, x, 
+            pesos_ranges, bias_ranges)
 
     end
 
@@ -148,5 +157,32 @@ function IniciaXHe(n_projeto::Int64, n_camadas::Int64, topologia::Vector{Int64},
 
     # Retorna o vetor inicial
     return x
+
+end
+
+
+#
+# Rotina que pré-computa os acessos aos pesos e bias 
+#
+function Pre_computa_acessos(topologia,conexoes)
+
+    # Número de conexoes
+    n = length(conexoes)
+
+    # Aloca os queridos...
+    pesos_ranges = Vector{UnitRange{Int}}(undef, n)
+    bias_ranges  = Vector{UnitRange{Int}}(undef, n)
+
+    # Vamos lá...
+    k = 1
+    for i in 1:n
+        pesos_ranges[i] = k : k + conexoes[i] - 1
+        k += conexoes[i]
+        bias_ranges[i]  = k : k + topologia[i+1] - 1
+        k += topologia[i+1]
+    end
+
+    # Retorna os valores pré-calculados
+    return pesos_ranges, bias_ranges
 
 end
