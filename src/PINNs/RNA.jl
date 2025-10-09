@@ -11,7 +11,10 @@ function Atualiza_pesos_bias(rede::Rede, x::Vector{Float64})
     # Pesos: Vetor de vetores ("matriz") com os pesos de cada conexão da rede neural
     # Cada vetor representa uma camada oculta
     # Copia os primeiros valores de x na matriz de pesos através das conexões
-    pesos = Vector{Matrix{Float64}}(undef, n_camadas)
+
+    pesos = [Matrix{Float64}(undef,topologia[i+1], topologia[i]) for i in 1:n_camadas]
+
+    #pesos = Vector{Matrix{Float64}}(undef, n_camadas)
 
     # Bias: Vetor de vetores ("matriz") com os bias de cada neurônio da rede neural
     # Cada linha representa uma camada oculta
@@ -19,15 +22,18 @@ function Atualiza_pesos_bias(rede::Rede, x::Vector{Float64})
     # Passa os ultimos n_neuronios valores de x para a matriz 
     # de bias, usando topologia como guia para saber quantos
     # valores gravamos por linha
-    bias = Vector{Vector{Float64}}(undef,n_camadas)
+
+    bias = [Vector{Float64}(undef,topologia[i+1]) for i in 1:n_camadas]
+
+    # bias = Vector{Vector{Float64}}(undef,n_camadas)
 
     #
     # Agora só usamos os valores pré-calculados de acessos e 
     # também usamos @views para evitar alocação de memória
     #
     @inbounds for i in eachindex(pesos)
-        pesos[i] = reshape(@view(x[pesos_ranges[i]]), topologia[i+1], topologia[i])
-        bias[i]  = @view(x[bias_ranges[i]])
+        copyto!(pesos[i], reshape(@view(x[pesos_ranges[i]]), topologia[i+1], topologia[i]))
+        copyto!(bias[i], @view(x[bias_ranges[i]]))
     end
 
     # Vamos garantir que nunca vamos acessar fora da memória alocada
@@ -66,11 +72,14 @@ function RNA(rede::Rede, pesos::Vector{Matrix{Float64}}, bias::Vector{Vector{Flo
              entrada_i::Vector{Float64})::Vector{Float64}
 
     # Acessa os termos em Rede por apelidos 
-    #topologia = rede.topologia
+    topologia = rede.topologia
     n_camadas = rede.n_camadas
     ativ      = rede.ativ
 
-    sinais = Vector{Vector{Float64}}(undef, n_camadas+1)
+    # Cria e pré-aloca o vetor de vetores
+    sinais = [Vector{Float64}(undef,topologia[i]) for i in 1:n_camadas+1]
+
+    #sinais = Vector{Vector{Float64}}(undef, n_camadas+1)
 
     # Inicializa sinais    
     # Incluí o vetor de entradas na primeira linha de sinais
@@ -93,10 +102,11 @@ function RNA(rede::Rede, pesos::Vector{Matrix{Float64}}, bias::Vector{Vector{Flo
         ϕ = ativ[c-1]
 
         # Faz o forward (agora é só um produto de matriz por vetor)
-        z = W * camada_anterior .+ b
+        # vou aproveitar a memória que já está alocada em sinais[c]
+        sinais[c] .= W * camada_anterior .+ b
 
         # Armazena
-        sinais[c] = ϕ.(z)
+        sinais[c] = ϕ.(sinais[c])
 
     end
 
