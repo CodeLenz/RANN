@@ -31,34 +31,45 @@ end
 #
 # Forward da Rede neural
 #
-function RNA(rede::Rede, sinais::Vector{Vector{Float64}},
+function RNA(rede::Rede, 
              pesos::Vector{Matrix{Float64}}, bias::Vector{Vector{Float64}}, 
              entrada_i::Vector{Float64})::Vector{Float64}
 
     # Acessa os termos em Rede por apelidos 
     n_camadas = rede.n_camadas
+    topologia = rede.topologia
     ativ      = rede.ativ
 
+    # Pré-aloca a memória para sinais, que será utilizada várias vezes nesta rotina
+    # a cada chamada de RNA
+    sinais = [Vector{Float64}(undef,tt) for tt in topologia] 
+
     # Inclui o vetor de entradas na primeira linha de sinais
-    copyto!(sinais[1],entrada_i)
+    copyto!(sinais[1], copy(entrada_i))
 
     # Loop pelas camadas
-    @inbounds for c = 2:(n_camadas+1)
+    for c = 2:(n_camadas+1)
 
         # Recupera a camada anterior de sinais
         camada_anterior = sinais[c-1]
 
         # Aliases para a matriz de pesos, vetor de bias e funções de ativação 
         W = pesos[c-1] 
-        b = bias[c-1]
+        #b = bias[c-1]
         ϕ = ativ[c-1]
+
+        # Copia os bias para sinais[c]
+        copyto!(sinais[c],bias[c-1])
+
+        # Calcula W*camada_anterior + b usando o mul! de 5 parâmetros
+        mul!(sinais[c],W,camada_anterior,1.0,1.0)
 
         # Faz o forward (agora é só um produto de matriz por vetor + vetor de bias)
         # vou aproveitar a memória que já está alocada em sinais[c]
-        sinais[c] .= W * camada_anterior .+ b
+        #copyto!(sinais[c] , W * camada_anterior .+ b)
 
-        # Armazena na mesma área de memória
-        copyto!(sinais[c], ϕ.(sinais[c]))
+        # Aplica a função de ativação e armazena na mesma área de memória
+        copyto!(sinais[c] , ϕ.(sinais[c]))
 
     end
 

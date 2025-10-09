@@ -5,10 +5,9 @@ function Objetivo(rede::Rede, treino::Treino, t_inicial::Vector{Float64}, u_inic
                   du_inicial::Vector{Float64}, n_fisica::Int64, t_fisica::Matrix{Float64},
                   x::Vector{Float64}, t, λ1 = 1.0, λ2 = 1.0E-2)
 
-    # Aliases
-    topologia = rede.topologia
-    n_camadas = rede.n_camadas               
-
+    # Alias
+    # topologia = rede.topologia
+   
     # Aloca as matrizes de pesos e bias a partir das variáveis de projeto
     pesos, bias = Atualiza_pesos_bias(rede, x)
 
@@ -21,15 +20,12 @@ function Objetivo(rede::Rede, treino::Treino, t_inicial::Vector{Float64}, u_inic
     du = zeros(1)
     d2u = zeros(1)
 
-    # Pré-aloca a memória para sinais, que será utilizada várias vezes nesta rotina
-    # a cada chamada de RNA
-    sinais = [Vector{Float64}(undef,topologia[i]) for i in 1:n_camadas+1] 
 
     #
     # Condições iniciais 
     #
     # Calcula o valor do deslocamento no tempo t0
-    u0 = RNA(rede, sinais, pesos, bias, t_inicial)
+    u0 = RNA(rede, pesos, bias, t_inicial)
 
     # Calcula a perda relativa a primeira condição inicial: u(t0)
     perda_inicial_u += Fn_perda_inicial(u0, u_inicial)
@@ -40,7 +36,7 @@ function Objetivo(rede::Rede, treino::Treino, t_inicial::Vector{Float64}, u_inic
     # PrimeiraDerivada!(RNA, rede, x, du_inicial_pred, t_inicial)
 
     # Calcula as derivadas em t_inicial
-    Derivadas!(RNA, rede, sinais, pesos, bias, u0, du, d2u, t_inicial)
+    Derivadas!(RNA, rede, pesos, bias, u0, du, d2u, t_inicial)
 
     # Calcula a perda da velocidade inicial 
     perda_inicial_du += Fn_perda_inicial(du, du_inicial)
@@ -51,22 +47,16 @@ function Objetivo(rede::Rede, treino::Treino, t_inicial::Vector{Float64}, u_inic
         
     # Perda física, associada ao atendimento da equação diferencial nos pontos de treino    
     # Loop pelos pontos de treino
-    for coluna = 1:n_fisica
+    for coluna in axes(t_fisica,2) # 1:n_fisica
  
         # Extrai as entradas da rede
         t_i = t_fisica[:, coluna]
 
         # Valores 
-        u_i_valores = RNA(rede, sinais, pesos, bias, t_i)
+        u_i_valores = RNA(rede, pesos, bias, t_i)
 
         # Obtém a primeira e segunda derivada - velocidade e aceleração
-        Derivadas!(RNA, rede, sinais, pesos, bias, u_i_valores, du, d2u, t_i)
-
-        #du_i =  [0.0]
-        #du2_i = [0.0]
-        #PrimeiraDerivada!(RNA, rede, x, du_i, t_i)
-        # Calcula a segunda derivada aproveitando o valor que já temos da primeira derivada
-        #SegundaDerivada!(RNA, rede, x, du_i, du2_i, t_i)    
+        Derivadas!(RNA, rede, pesos, bias, u_i_valores, du, d2u, t_i)
 
         # Calcula a perda
         perda_fisica += Fn_perda_fisica(treino, u_i_valores, du, d2u)

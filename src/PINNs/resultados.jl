@@ -2,9 +2,8 @@
 function Deslocamento_Teste(rede:: Rede, x::Vector{Float64}, u_an::Matrix{Float64}, t_teste::Matrix{Float64},
                             objetivo_treino::Vector{Float64}, epoch::Int64)
 
-    # Aliases 
+    # Alias
     topologia = rede.topologia
-    n_camadas = rede.n_camadas
 
     # Atualiza pesos e bias com o resultado da otimização
     pesos, bias = Atualiza_pesos_bias(rede, x)
@@ -14,7 +13,7 @@ function Deslocamento_Teste(rede:: Rede, x::Vector{Float64}, u_an::Matrix{Float6
 
     # Pré-aloca a memória para sinais, que será utilizada várias vezes nesta rotina
     # a cada chamada de RNA
-    sinais = [Vector{Float64}(undef,topologia[i]) for i in 1:n_camadas+1] 
+    # sinais = [Vector{Float64}(undef,tt) for tt in topologia] 
 
     # Loop pelos dados de teste
     for i = 1:size(u_an, 2)
@@ -23,7 +22,7 @@ function Deslocamento_Teste(rede:: Rede, x::Vector{Float64}, u_an::Matrix{Float6
         t = t_teste[1, i]
 
         # Calcula o deslocamento pela rede
-        u_test_pred[:, i] = RNA(rede, sinais, pesos, bias, [t])
+        u_test_pred[:, i] = RNA(rede, pesos, bias, [t])
     
     end
 
