@@ -68,8 +68,7 @@ function Adam(rede::Rede, treino::Treino, nepoch::Int64; α = 1E-3, β1 = 0.9, �
             Const(du_inicial),
             Const(n_fisica),
             Const(t_fisica),
-            Duplicated(x, G),
-            Const(epoch)
+            Duplicated(x, G)
             )
 
         # Atualiza os momentos
@@ -84,7 +83,7 @@ function Adam(rede::Rede, treino::Treino, nepoch::Int64; α = 1E-3, β1 = 0.9, �
         x .= x .- α_t * m ./ (v.^(1/2) .+ ϵ)
 
         # A cada 1000 epochs vamos monitorar o comportamento da rede 
-        if (epoch % 1000 == 0) | (epoch == nepoch)
+        if (epoch % 1000 == 0) || (epoch == nepoch)
 
             # Obtém a resposta da rede neural para os pontos de teste
             u_test_pred = Deslocamento_Teste(rede, x, treino.u_an, treino.t_teste, vetor_obj_treino, epoch)
