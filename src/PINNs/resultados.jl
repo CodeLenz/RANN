@@ -13,7 +13,7 @@ function Deslocamento_Teste(rede:: Rede, x::Vector{Float64}, u_an::Matrix{Float6
 
     # Pré-aloca a memória para sinais, que será utilizada várias vezes nesta rotina
     # a cada chamada de RNA
-    # sinais = [Vector{Float64}(undef,tt) for tt in topologia] 
+    sinais = [zeros(Float64,tt) for tt in topologia] 
 
     # Loop pelos dados de teste
     for i = 1:size(u_an, 2)
@@ -22,7 +22,10 @@ function Deslocamento_Teste(rede:: Rede, x::Vector{Float64}, u_an::Matrix{Float6
         t = t_teste[1, i]
 
         # Calcula o deslocamento pela rede
-        u_test_pred[:, i] = RNA(rede, pesos, bias, [t])
+        RNA!(rede, sinais, pesos, bias, [t])
+
+        # Copia o resultado para a coluna da matriz
+        u_test_pred[:, i] .= sinais[end]
     
     end
 

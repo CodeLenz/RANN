@@ -31,21 +31,16 @@ end
 #
 # Forward da Rede neural
 #
-function RNA(rede::Rede, 
+function RNA!(rede::Rede, sinais::Vector{Vector{Float64}},
              pesos::Vector{Matrix{Float64}}, bias::Vector{Vector{Float64}}, 
-             entrada_i::Vector{Float64})::Vector{Float64}
+             entrada_i::Vector{Float64}) #::Vector{Float64}
 
     # Acessa os termos em Rede por apelidos 
     n_camadas = rede.n_camadas
-    topologia = rede.topologia
     ativ      = rede.ativ
 
-    # Pré-aloca a memória para sinais, que será utilizada várias vezes nesta rotina
-    # a cada chamada de RNA
-    sinais = [Vector{Float64}(undef,tt) for tt in topologia] 
-
     # Inclui o vetor de entradas na primeira linha de sinais
-    copyto!(sinais[1], copy(entrada_i))
+    sinais[1] .= entrada_i
 
     # Loop pelas camadas
     for c = 2:(n_camadas+1)
@@ -53,28 +48,21 @@ function RNA(rede::Rede,
         # Recupera a camada anterior de sinais
         camada_anterior = sinais[c-1]
 
-        # Aliases para a matriz de pesos, vetor de bias e funções de ativação 
+        # Aliases para a matriz de pesos e funções de ativação 
         W = pesos[c-1] 
-        #b = bias[c-1]
         ϕ = ativ[c-1]
 
-        # Copia os bias para sinais[c]
-        copyto!(sinais[c],bias[c-1])
+        # Copia os bias diretamente para sinais[c]
+        sinais[c] .= bias[c-1]
 
-        # Calcula W*camada_anterior + b usando o mul! de 5 parâmetros
+        # Calcula W*camada_anterior + b usando o mul! de 5 parâmetros.
+        # O resultado é armazenado diretamente em sinais[c]
         mul!(sinais[c],W,camada_anterior,1.0,1.0)
 
-        # Faz o forward (agora é só um produto de matriz por vetor + vetor de bias)
-        # vou aproveitar a memória que já está alocada em sinais[c]
-        #copyto!(sinais[c] , W * camada_anterior .+ b)
-
         # Aplica a função de ativação e armazena na mesma área de memória
-        copyto!(sinais[c] , ϕ.(sinais[c]))
+        sinais[c] .=  ϕ.(sinais[c])
 
     end
-
-    # Retorna os dados da ultima camada de sinais (saídas)
-    return sinais[end]
 
 end
 
