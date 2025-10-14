@@ -75,7 +75,11 @@ end
 #
 # Função para obtenção das derivadas da rede neural em relação ao tempo
 #
-# Calcula a primeira e a segunda usando alta ordem...
+# Calcula a primeira e a segunda usando alta ordem...o valor da função 
+# no ponto atual é calculado antes da chamada da rotina e deve ser informado
+# via o parâmetro u0.
+#
+# A saída da rede pode ser obtida com sinais[end], após a chamada desta rotina
 #
 #
 function Derivadas_O2!(RNA!::Function, rede::Rede, sinais::Vector{Vector{Float64}},
@@ -84,8 +88,14 @@ function Derivadas_O2!(RNA!::Function, rede::Rede, sinais::Vector{Vector{Float64
                        t::Vector{Float64}, ϵ = 1E-8)
 
     
+        # 
         # Tenta calcular a perturbação em função do valor do tempo 
-        δ = ϵ
+        #
+        if t[1]>0
+           δ = ϵ*t[1]
+        else
+           δ = ϵ
+        end
 
         # Calcula a resposta para frente no tempo
         RNA!(rede, sinais, pesos, bias, t .+ δ)
