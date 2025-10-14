@@ -103,8 +103,10 @@ function Derivadas_O2!(RNA!::Function, rede::Rede, sinais::Vector{Vector{Float64
         RNA!(rede, sinais, pesos, bias, t .- 2*δ)
         utt = copy(sinais[end])
         
-        # Primeira derivada 
-        du .= -(uff .- 4*uf .+ 3*u0) ./ (2*δ)
+        # Primeira derivada (third order - five point stencil)
+        #du .= -(uff .- 4*uf .+ 3*u0) ./ (2*δ)
+        # Primeira derivada (third order)
+        du .= ( utt .- 8*ut .+ 8*uf - uff )/(12*δ)
 
         # Segunda derivada
         d2u .= (-uff .+ 16*uf .- 30*u0 .+ 16*ut .- utt) ./ (12*δ^2)
