@@ -91,12 +91,8 @@ function Derivadas_O2!(RNA!::Function, rede::Rede, sinais::Vector{Vector{Float64
         # 
         # Tenta calcular a perturbação em função do valor do tempo 
         #
-        if t[1]>0
-           δ = ϵ*t[1]
-        else
-           δ = ϵ
-        end
-
+        δ = ϵ
+    
         # Calcula a resposta para frente no tempo
         RNA!(rede, sinais, pesos, bias, t .+ δ)
         uf = copy(sinais[end])
@@ -114,12 +110,100 @@ function Derivadas_O2!(RNA!::Function, rede::Rede, sinais::Vector{Vector{Float64
         utt = copy(sinais[end])
         
         # Primeira derivada (third order - five point stencil)
-        #du .= -(uff .- 4*uf .+ 3*u0) ./ (2*δ)
-        # Primeira derivada (third order)
         du .= ( utt .- 8*ut .+ 8*uf - uff )/(12*δ)
 
         # Segunda derivada
+        # TODO: Em alguns casos esse valor está dando muito alto, pois o 
+        # a parte de cima da fração está dando na casa de 1E0 ou 1E1. 
+        # 
+        # Em um primeiro momento eu imaginei que isso seria devido a estarmos 
+        # em um ponto de mínimo ou de máximo em relação ao tempo, (velocidade 
+        # praticamente nula). Com isso, poderíamos ter uma estimativa numérica 
+        # bem ruim da segunda derivada, pois ela é uma função da variação da primeira 
+        # derivada. 
+        # Não tenho bem certeza se é isso, pois em uns testes usando a aproximação 
+        #
+        # f(x+δ) ≈ f(x) + df δ + 1/2 δ^2 d2f  e o fato de df ser nula nestes pontos 
+        #  
+        # d2f ≈ 2(f(x+δ) - f(x)) /  δ^2
+        #
+        # que acabou dando a mesma coisa do que a fórmula que estamos usando hoje.
+        #
+        # Portanto, o mais provável é que a rede não propague muito bem algumas 
+        # perturbações e isso implique em erro na segunda derivada.
+        #
         d2u .= (-uff .+ 16*uf .- 30*u0 .+ 16*ut .- utt) ./ (12*δ^2)
+
+end
+
+
+
+#
+# Função para obtenção das derivadas da rede neural em relação ao tempo
+#
+#
+# A saída da rede pode ser obtida com sinais[end], após a chamada desta rotina
+#
+# Aqui estou realmente usando a interpolação de 5 pontos
+#
+#
+function Derivadas_O3!(RNA!::Function, rede::Rede, sinais::Vector{Vector{Float64}},
+                       pesos::Vector{Matrix{Float64}}, bias::Vector{Vector{Float64}},
+                       u0::Vector{Float64}, du::Vector{Float64}, d2u::Vector{Float64},
+                       t::Vector{Float64}, ϵ = 1E-8)
+
+        δ = ϵ
+
+        # Pontos em que vamos calcular os valores da função para aproximar a 
+        # primeira e a segunda derivadas
+        # A sequência será 
+        #     1     2    3    4     5
+        #   t-2δ   t-δ   t   t+δ   t+2δ
+        #
+        #
+        # Assuminos que u3 é o valor calculado no ponto 3 (ponto atual)
+
+       
+        # Calcula a resposta para frente no tempo
+        xf = t[1]+δ
+        RNA!(rede, sinais, pesos, bias, t .+ δ)
+        uf = copy(sinais[end])
+
+        # Calcula a resposta para frente no tempo 2
+        xff = t[1]+2*δ
+        RNA!(rede, sinais, pesos, bias, t .+ 2*δ)
+        uff = copy(sinais[end])
+
+        # Posição atual 
+        x0 = t[1]
+
+        # Calcula a resposta para trás no tempo
+        xt = t[1]-δ
+        RNA!(rede, sinais, pesos, bias, t .- δ)
+        ut = copy(sinais[end])
+    
+        # Calcula a resposta para trás no tempo 2
+        xtt = t[1]-2*δ
+        RNA!(rede, sinais, pesos, bias, t .- 2*δ)
+        utt = copy(sinais[end])
+
+        # Calcula os coeficientes da aproximação polinomial de quarta 
+        # ordem 
+        A = [1 xtt xtt^2 xtt^3 xtt^4 ; 
+             1 xt  xt^2  xt^3  xt^4  ;
+             1 x0  x0^2  x0^3  x0^4  ; 
+             1 xf  xf^2  xf^3  xf^4  ;
+             1 xff xff^2 xff^3 xff^4 ] 
+        b = [utt ; ut; u0; uf; uff]     
+
+        # Os coeficientes serão 
+        coefs = A\b
+
+        # Primeira derivada
+        du .= coefs[2] + 2*coefs[3]*x0 + 3*coefs[4]*x0^2 + 4*coefs[5]*x0^3
+
+        # Segunda derivada
+        d2u .= 2*coefs[3] + 6*coefs[4]*x0 + 12*coefs[5]*x0^2
 
 end
 

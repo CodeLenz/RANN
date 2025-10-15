@@ -45,9 +45,13 @@ function Objetivo(rede::Rede, treino::Treino, t_inicial::Vector{Float64}, u_inic
     # DFC. 
     #Derivadas!(RNA!, rede, sinais, pesos, bias, u0, du, d2u, t_inicial)
 
+    # Usando aproximação polinomial...em teste
+    Derivadas_O3!(RNA!, rede, sinais, pesos, bias, u0, du, d2u, t_inicial)
+
     # Calcula a primeira e a segunda derivada ao mesmo tempo, usando aproximações 
     # de DF de alta ordem. Mais caro do que Derivadas!
-    Derivadas_O2!(RNA!, rede, sinais, pesos, bias, u0, du, d2u, t_inicial)
+    # Derivadas_O2!(RNA!, rede, sinais, pesos, bias, u0, du, d2u, t_inicial)
+    # Vamos fazer um teste aqui
 
     # Calcula somente a primeira derivada 
     # Essa abordagem, junto com Derivada2! é mais cada do que as anteriores
