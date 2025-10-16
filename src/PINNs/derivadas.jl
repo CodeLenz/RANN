@@ -137,6 +137,60 @@ function Derivadas_O2!(RNA!::Function, rede::Rede, sinais::Vector{Vector{Float64
 end
 
 
+#
+# Função para obtenção das derivadas da rede neural em relação ao tempo
+#
+# Calcula a primeira e a segunda usando alta ordem...o valor da função 
+# no ponto atual é calculado antes da chamada da rotina e deve ser informado
+# via o parâmetro u0.
+#
+# A saída da rede pode ser obtida com sinais[end], após a chamada desta rotina
+#
+#
+function Derivadas_Richard!(RNA!::Function, rede::Rede, sinais::Vector{Vector{Float64}},
+                            pesos::Vector{Matrix{Float64}}, bias::Vector{Vector{Float64}},
+                            u0::Vector{Float64}, du::Vector{Float64}, d2u::Vector{Float64},
+                            t::Vector{Float64}, ϵ = 1E-8)
+
+    
+        # 
+        # Tenta calcular a perturbação em função do valor do tempo 
+        #
+        δ = max(ϵ, t[1]*1E-6)
+    
+        # Calcula a resposta para frente no tempo: δ 
+        RNA!(rede, sinais, pesos, bias, t .+ δ)
+        uf = copy(sinais[end])
+
+        # Calcula a resposta para frente no tempo: δ/2
+        RNA!(rede, sinais, pesos, bias, t .+ δ/2)
+        uf2 = copy(sinais[end])
+
+        # Calcula a resposta para trás no tempo: -δ
+        RNA!(rede, sinais, pesos, bias, t .- δ)
+        ut = copy(sinais[end])
+    
+        # Calcula a resposta para trás no tempo: -δ/2
+        RNA!(rede, sinais, pesos, bias, t .- δ/2)
+        ut2 = copy(sinais[end])
+        
+        # Primeira derivada para frente e primeira derivada para trás
+        d1h  = (uf-ut)/(2*δ)
+        d1h2 = (uf2-ut2)/(δ)
+
+        # Primeira derivada 
+        du .= (4*d1h2 .- d1h)./3
+
+        # Segunda derivada para frente e segunda para trás
+        d2h  = (uf .- 2*u0 .+ ut)/(δ^2)
+        d2h2 = (uf2 .-2*u0 .+ ut2)/((δ/2)^2)
+
+        # Segunda derivada 
+        d2u.= (4*d2h2 .- d2h) ./ 3
+        
+end
+
+
 
 #
 # Função para obtenção das derivadas da rede neural em relação ao tempo

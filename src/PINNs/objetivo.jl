@@ -50,7 +50,9 @@ function Objetivo(rede::Rede, treino::Treino, t_inicial::Vector{Float64}, u_inic
 
     # Calcula a primeira e a segunda derivada ao mesmo tempo, usando aproximações 
     # de DF de alta ordem. Mais caro do que Derivadas!
-    Derivadas_O2!(RNA!, rede, sinais, pesos, bias, u0, du, d2u, t_inicial)
+    #Derivadas_O2!(RNA!, rede, sinais, pesos, bias, u0, du, d2u, t_inicial)
+
+    Derivadas_Richard!(RNA!, rede, sinais, pesos, bias, u0, du, d2u, t_inicial)
     
     # Vamos fazer um teste aqui
 
@@ -84,7 +86,8 @@ function Objetivo(rede::Rede, treino::Treino, t_inicial::Vector{Float64}, u_inic
      
         # Obtém a primeira e segunda derivada - velocidade e aceleração
         # Derivadas!(RNA!, rede, sinais, pesos, bias, u0, du, d2u, t_i)
-        Derivadas_O2!(RNA!, rede, sinais, pesos, bias, u0, du, d2u, t_i)
+        #Derivadas_O2!(RNA!, rede, sinais, pesos, bias, u0, du, d2u, t_i)
+        Derivadas_Richard!(RNA!, rede, sinais, pesos, bias, u0, du, d2u, t_i)
         #Derivadas_O3!(RNA!, rede, sinais, pesos, bias, u0, du, d2u, t_i)
 
         # Primeira derivada 

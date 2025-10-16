@@ -58,7 +58,7 @@ function roda()
     ω0 = 20.0
 
     # Roda a função main
-    x, objetivo_treino, treino, u_test_pred = main(topologia, ativ, m, δ, ω0, nepoch)
+   x, objetivo_treino, treino, u_test_pred, rede = main(topologia, ativ, m, δ, ω0, nepoch)
 
    return x, objetivo_treino, treino, u_test_pred, rede
 
