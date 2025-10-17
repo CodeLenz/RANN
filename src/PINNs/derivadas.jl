@@ -156,7 +156,20 @@ function Derivadas_Richard!(RNA!::Function, rede::Rede, sinais::Vector{Vector{Fl
         # 
         # Tenta calcular a perturbação em função do valor do tempo 
         #
-        δ = max(ϵ, t[1]*1E-6)
+        #
+        # Do ponto de vista numérico, um escalonamento pelo valor da variável 
+        # em relação a qual estamos derivando seria interessante. No entanto,
+        # a relação  
+        #
+        # δ = max(ϵ, t[1]*1E-6)
+        #
+        # está "matando" a parte final do ajuste. Por outro lado, o uso direto
+        #
+        δ = ϵ
+        # 
+        # está funcionando para ϵ=1E-8 no problema de vibrações livres. Testei com 
+        # 1E-9 e a resposta ficou toda em -1....muito errado.
+        # 
     
         # Calcula a resposta para frente no tempo: δ 
         RNA!(rede, sinais, pesos, bias, t .+ δ)
