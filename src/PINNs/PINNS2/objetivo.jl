@@ -8,6 +8,16 @@ function Objetivo(rede::Rede, treino::Treino, t_inicial::Vector{Float64}, u_inic
     # Alias
     topologia = rede.topologia
    
+    #
+    # Uma técnica interessante é gerar pontos aleatórios na faixa
+    # (0,1) com o mesmo número de colunas de t_fisica
+    #
+    # CUIDADO...aqui temos que ver a faixa de tempo pois estou assumindo 
+    # (0,1)
+    #
+    #t_fisica_rand = similar(t_fisica)
+    #t_fisica_rand[1,:] .= rand(size(t_fisica,2))
+   
     # Aloca as matrizes de pesos e bias a partir das variáveis de projeto
     pesos, bias = Atualiza_pesos_bias(rede, x)
 
@@ -47,6 +57,7 @@ function Objetivo(rede::Rede, treino::Treino, t_inicial::Vector{Float64}, u_inic
     for coluna in axes(t_fisica,2) # 1:n_fisica
  
         # Extrai as entradas da rede
+        #t_i = t_fisica_rand[:, coluna]
         t_i = t_fisica[:, coluna]
 
         # Valores 

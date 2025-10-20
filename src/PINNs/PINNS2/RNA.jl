@@ -63,8 +63,10 @@ function RNA(rede::Rede,
         # O resultado é armazenado diretamente em sinais[c]
         mul!(sinais[c],W,camada_anterior,1.0,1.0)
 
+        #
         # Aplica a função de ativação e armazena na mesma área de memória
-        sinais[c] .=  ϕ.(sinais[c])
+        #
+        sinais[c] .= ϕ.(sinais[c])
 
     end
 

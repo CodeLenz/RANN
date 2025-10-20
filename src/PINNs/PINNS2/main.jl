@@ -45,19 +45,19 @@ end
 # Roda a rede neural
 function roda()
 
-    # Define os dados do problema: topologia e funções de ativação
-    topologia = [1; 100; 50; 50; 50; 1]
-    ativ = (tanh, tanh, tanh, tanh, tanh)
+   # Define os dados do problema: topologia e funções de ativação
+   topologia = [1; 100; 50; 50; 50; 1]
+   ativ = (tanh, tanh, tanh, tanh, tanh)
 
-    # Número de épocas
-    nepoch = 15_000
+   # Número de épocas
+   nepoch = 15_000
 
-    # Parâmetros do sistema
-    m = 1.0
-    δ = 2.0
-    ω0 = 20.0
+   # Parâmetros do sistema
+   m = 1.0
+   δ = 2.0
+   ω0 = 20.0
 
-    # Roda a função main
+   # Roda a função main
    x, objetivo_treino, treino, u_test_pred, rede = main(topologia, ativ, m, δ, ω0, nepoch)
 
    return x, objetivo_treino, treino, u_test_pred, rede

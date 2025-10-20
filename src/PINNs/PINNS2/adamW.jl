@@ -7,7 +7,7 @@
 # nepoch (Número de épocas, default = 10)
 # δ (critério de convergência, default = 1E-8)
 function AdamW(rede::Rede, treino::Treino, nepoch::Int64; α = 1E-3, β1 = 0.9, β2 = 0.999,
-              ϵ = 1E-8, w_decay = 0.01, conv = 1E-8)
+              ϵ = 1E-8, w_decay = 0.0, conv = 1E-8)
               
     # Aloca objetivo
     obj_treino = 0.0
