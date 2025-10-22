@@ -206,4 +206,4 @@ function dRosenbrook(x)
 end
 
 # Chama 
-LBFGS(Rosenbroock, dRosenbrook, [0.0; 2.0], "NR")   
+LBFGS(Rosenbroock, dRosenbrook, [0.0; 2.0])   
