@@ -2,8 +2,8 @@
 # R^n -> R, onde n é o número total de pesos e bias da rede
 # λ1 e λ2 são hiperparâmetros para ponderação dos termos da função objetivo
 function Objetivo(rede::Rede, treino::Treino, t_inicial::Vector{Float64}, u_inicial::Vector{Float64},
-                  du_inicial::Vector{Float64}, n_fisica::Int64, t_fisica::Matrix{Float64},
-                  x::Vector{Float64},  λ1 = 1.0, λ2 = 1.0E-2)
+                  du_inicial::Vector{Float64}, n_fisica::Int64, t_fisica::Matrix{Float64}, epoch::Int64,
+                  x::Vector{Float64}, λ1 = 1.0E-1, λ2 = 1.0E-4)
 
     # Alias
     topologia = rede.topologia
@@ -74,7 +74,23 @@ function Objetivo(rede::Rede, treino::Treino, t_inicial::Vector{Float64}, u_inic
     # Calcula a perda física média
     perda_fisica /= n_fisica
 
+    # Soma as componentes de perda
+    perda = perda_inicial_u + λ1 * perda_inicial_du + λ2 * perda_fisica
+
     # Retorna a perda total ponderada pelos hiperparâmetros λ
-    return perda_inicial_u + λ1 * perda_inicial_du + λ2 * perda_fisica
+    return perda, perda_inicial_u, perda_inicial_du, perda_fisica
+
+end
+
+# Cria um wrapper para enganar o Enzyme
+# Retorna apenas o valor float que queremos diferenciar da função objetivo, visto que ele não consegue
+# diferenciar mais de um parâmetro (tupla)
+function ObjetivoFloat(rede::Rede, treino::Treino, t_inicial::Vector{Float64}, u_inicial::Vector{Float64},
+                       du_inicial::Vector{Float64}, n_fisica::Int64, t_fisica::Matrix{Float64}, epoch::Int64,
+                       x::Vector{Float64}, λ1 = 1.0, λ2 = 1.0E-2)
+
+    perda, _ = Objetivo(rede, treino, t_inicial, u_inicial, du_inicial, n_fisica, t_fisica, epoch, x)
+
+    return perda
 
 end

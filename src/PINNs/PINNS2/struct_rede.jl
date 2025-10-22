@@ -87,7 +87,7 @@ struct Rede
         n_projeto = n_total_conect + n_neuronios
 
         # Inicializa o vetor de variáveis de projeto (pesos e bias)
-        x = IniciaXHe(n_projeto, n_camadas, topologia, conexoes)
+        x = randn(n_projeto) #IniciaXHe(n_projeto, n_camadas, topologia, conexoes)
 
         # Pre-computa os acessos 
         pesos_ranges, bias_ranges = Pre_computa_acessos(topologia,conexoes)  

@@ -46,11 +46,11 @@ end
 function roda()
 
    # Define os dados do problema: topologia e funções de ativação
-   topologia = [1; 100; 50; 50; 50; 1]
-   ativ = (tanh, tanh, tanh, tanh, tanh)
+   topologia = [1; 128; 64; 64; 1]
+   ativ = (tanh, tanh, tanh, tanh)
 
    # Número de épocas
-   nepoch = 15_000
+   nepoch = 5_000
 
    # Parâmetros do sistema
    m = 1.0
@@ -61,32 +61,5 @@ function roda()
    x, objetivo_treino, treino, u_test_pred, rede = main(topologia, ativ, m, δ, ω0, nepoch)
 
    return x, objetivo_treino, treino, u_test_pred, rede
-
-end
-
-#
-# Rotina para brincar com a rede, dado um vetor x 
-#
-function Brincando(arquivo_x)
-
-   # Le os pesos 
-   x = readdlm(arquivo_x)
-
-   # Define os dados do problema: topologia e funções de ativação
-   topologia = [1; 100; 50; 50; 50; 1]
-   ativ = (tanh, tanh, tanh, tanh, tanh)
-   
-   # Parâmetros do sistema
-   m = 1.0
-   δ = 2.0
-   ω0 = 20.0
-
-   # Cria a rede
-   rede = Rede(topologia, ativ)
-
-   # Inicializa os dados de treino
-   treino = Treino(m, δ, ω0)
-
-   return rede, treino, x
 
 end

@@ -9,9 +9,13 @@
 function AdamW(rede::Rede, treino::Treino, nepoch::Int64; α = 1E-3, β1 = 0.9, β2 = 0.999,
               ϵ = 1E-8, w_decay = 0.0, conv = 1E-8)
               
-    # Aloca objetivo
+    # Aloca objetivos
     obj_treino = 0.0
+    perda_inicial_u = 0.0
+    perda_inicial_du = 0.0
+    perda_fisica = 0.0
 
+    dobj_treino = 0.0 
     # Acessa os termos em Treino por apelidos
     t_inicial = treino.t_inicial
     u_inicial = treino.u_inicial
@@ -26,6 +30,9 @@ function AdamW(rede::Rede, treino::Treino, nepoch::Int64; α = 1E-3, β1 = 0.9, 
 
     # Aloca um array para monitorar o objetivo
     vetor_obj_treino = zeros(nepoch)
+    vetor_perda_inicial_u = zeros(nepoch)
+    vetor_perda_inicial_du = zeros(nepoch)
+    vetor_perda_fisica = zeros(nepoch)
 
     # Aloca a resposta estimada para os pontos de teste
     u_test_pred = zeros(1, size(treino.u_an, 2))
@@ -41,10 +48,7 @@ function AdamW(rede::Rede, treino::Treino, nepoch::Int64; α = 1E-3, β1 = 0.9, 
     @showprogress "Otimizando..." for epoch = 1:nepoch
 
         # Calcula o objetivo da rede para o treino 
-        obj_treino = Objetivo(rede, treino, t_inicial, u_inicial, du_inicial, n_fisica, t_fisica, x, epoch)
-
-        # Armazena o objetivo
-        vetor_obj_treino[epoch] = obj_treino
+        obj_treino = ObjetivoFloat(rede, treino, t_inicial, u_inicial, du_inicial, n_fisica, t_fisica, epoch, x)
 
         # Testa se a otimização convergiu ao longo das iterações
         if obj_treino <= conv
@@ -60,7 +64,7 @@ function AdamW(rede::Rede, treino::Treino, nepoch::Int64; α = 1E-3, β1 = 0.9, 
         # Derivada automática em relação a x (pesos e bias) com o Enzyme
         Enzyme.autodiff(
             Enzyme.Reverse,
-            Objetivo,
+            ObjetivoFloat,
             Const(rede),
             Const(treino),
             Const(t_inicial),
@@ -68,8 +72,19 @@ function AdamW(rede::Rede, treino::Treino, nepoch::Int64; α = 1E-3, β1 = 0.9, 
             Const(du_inicial),
             Const(n_fisica),
             Const(t_fisica),
+            Const(epoch),
             Duplicated(x, G)
             )
+
+        # Calcula o objetivo da rede para o treino 
+        obj_treino, perda_inicial_u, perda_inicial_du, perda_fisica  = 
+            Objetivo(rede, treino, t_inicial, u_inicial, du_inicial, n_fisica, t_fisica, epoch, x)
+
+        # Armazena o objetivo
+        vetor_obj_treino[epoch] = obj_treino
+        vetor_perda_inicial_u[epoch] = perda_inicial_u
+        vetor_perda_inicial_du[epoch] = perda_inicial_du
+        vetor_perda_fisica[epoch] = perda_fisica
 
         # AdamW
         # Atualiza as variáveis de projeto antes dos passos tradicionais do Adam
@@ -95,7 +110,8 @@ function AdamW(rede::Rede, treino::Treino, nepoch::Int64; α = 1E-3, β1 = 0.9, 
         if (epoch % 1000 == 0) || (epoch == nepoch)
 
             # Obtém a resposta da rede neural para os pontos de teste
-            u_test_pred = Deslocamento_Teste(rede, x, treino.u_an, treino.t_teste, vetor_obj_treino, epoch)
+            u_test_pred = Deslocamento_Teste(rede, x, treino.u_an, treino.t_teste, vetor_obj_treino, vetor_perda_inicial_u,
+                                             vetor_perda_inicial_du, vetor_perda_fisica, epoch)
 
         end
 

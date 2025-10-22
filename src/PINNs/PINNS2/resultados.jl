@@ -1,6 +1,8 @@
 # Estima os resultados da equação diferencial a partir dos pontos de teste
 function Deslocamento_Teste(rede:: Rede, x::Vector{Float64}, u_an::Matrix{Float64}, t_teste::Matrix{Float64},
-                            objetivo_treino::Vector{Float64}, epoch::Int64)
+                            objetivo_treino::Vector{Float64}, perda_inicial_u::Vector{Float64},
+                            perda_inicial_du::Vector{Float64}, perda_fisica::Vector{Float64},
+                            epoch::Int64)
 
     # Alias
     # topologia = rede.topologia
@@ -31,9 +33,16 @@ function Deslocamento_Teste(rede:: Rede, x::Vector{Float64}, u_an::Matrix{Float6
 
     # Acompanha a evolução do objetivo ao longo do tempo
     plot_obj_treino = plot([objetivo_treino[1:epoch]], title = "Objetivo", label = ["Treino"])
+    plot_perda_inicial_u = plot([perda_inicial_u[1:epoch]], title = "Perda Inicial Deslocamento", label = ["Treino"])
+    plot_perda_inicial_du = plot([perda_inicial_du[1:epoch]], title = "Perda Inicial Velocidade", label = ["Treino"])
+    plot_perda_fisica = plot([perda_fisica[1:epoch]], title = "Perda Física", label = ["Treino"])
+
+    plot_obj = plot(plot_obj_treino, plot_perda_inicial_u, 
+                    plot_perda_inicial_du, plot_perda_fisica,
+                    layout = (2, 2), size = (1000, 1000)) 
 
     # Grava o gráfico
-    savefig(plot_obj_treino, "Resultados/plot_obj_treino_$(epoch).png")
+    savefig(plot_obj, "Resultados/plot_obj_treino_$(epoch).png")
 
     # Compara a resposta analítica com a calculada pela rede neural
     plot_u_teste = plot([u_an', u_test_pred'], title = "Deslocamento", label = ["Analítico" "Rede neural"])
