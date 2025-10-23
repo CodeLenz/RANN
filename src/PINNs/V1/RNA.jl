@@ -31,17 +31,13 @@ end
 #
 # Forward da Rede neural
 #
-function RNA(rede::Rede, 
+function RNA!(rede::Rede, sinais::Vector{Vector{Float64}},
              pesos::Vector{Matrix{Float64}}, bias::Vector{Vector{Float64}}, 
-             entrada_i::Vector{T})::Vector{T} where T
+             entrada_i::Vector{Float64}) #::Vector{Float64}
 
     # Acessa os termos em Rede por apelidos 
     n_camadas = rede.n_camadas
-    topologia = rede.topologia
     ativ      = rede.ativ
-
-    # Aloca sinais aqui fora
-    sinais = [zeros(T,tt) for tt in topologia] 
 
     # Inclui o vetor de entradas na primeira linha de sinais
     sinais[1] .= entrada_i
@@ -63,14 +59,11 @@ function RNA(rede::Rede,
         # O resultado é armazenado diretamente em sinais[c]
         mul!(sinais[c],W,camada_anterior,1.0,1.0)
 
-        #
         # Aplica a função de ativação e armazena na mesma área de memória
-        #
-        sinais[c] .= ϕ.(sinais[c])
+        sinais[c] .=  ϕ.(sinais[c])
 
     end
 
-    return sinais[end]
 end
 
 

@@ -87,8 +87,7 @@ struct Rede
         n_projeto = n_total_conect + n_neuronios
 
         # Inicializa o vetor de variáveis de projeto (pesos e bias)
-        x = randn(n_projeto) 
-        #x = IniciaXavier(n_projeto, n_camadas, topologia, conexoes)
+        x = IniciaXHe(n_projeto, n_camadas, topologia, conexoes)
 
         # Pre-computa os acessos 
         pesos_ranges, bias_ranges = Pre_computa_acessos(topologia,conexoes)  
@@ -123,8 +122,8 @@ function Conexoes(topologia::Vector{Int64}, n_camadas::Int64)
 
 end
 
-# Inicializa o vetor de variáveis de projeto X conforme a inicialização Xavier
-function IniciaXavier(n_projeto::Int64, n_camadas::Int64, topologia::Vector{Int64}, conexoes::Vector{Int64})
+# Inicializa o vetor de variáveis de projeto X conforme a inicialização He
+function IniciaXHe(n_projeto::Int64, n_camadas::Int64, topologia::Vector{Int64}, conexoes::Vector{Int64})
 
     # Aloca vetor de variáveis de projeto
     x = zeros(n_projeto)
@@ -138,15 +137,18 @@ function IniciaXavier(n_projeto::Int64, n_camadas::Int64, topologia::Vector{Int6
     # Loop pelas camadas
     for i = 1:n_camadas
 
-        # Pesos: Define valores aleatórios conforme distribuição normal (randn) e escala multiplicando pela variância de Glorot
-        x[k:(k+conexoes[i]-1)] = randn(conexoes[i]) * sqrt(2 / (topologia[i] + topologia[i+1]))
+        # Variância de He
+        std = sqrt(2 / topologia[i])
+
+        # Pesos: Define valores aleatórios conforme distribuição normal (randn) e escala multiplicando pela variância
+        x[k:(k+conexoes[i]-1)] = randn(conexoes[i]) * std
 
         # Atualiza o contador para os biases
         k = k + conexoes[i]
 
-        # Biases: Valores nulos para iniciar
+        # Biases: Define valores bem pequenos para iniciar
         # Início neutro, sem empurrar neurônios para valores muito negativos (morrem) ou positivos (acendem)
-        x[k:(k+topologia[i+1]-1)] .= 0.0
+        x[k:(k+topologia[i+1]-1)] .= 0.01
 
         # Atualiza o contador para a próxima camada
         k = k + topologia[i+1]
