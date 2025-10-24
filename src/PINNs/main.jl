@@ -2,7 +2,7 @@
 # Algoritmo para cálculo de rede neural
 #
 
-using MKL
+using MKL # Cálculo matricial
 using StatsFuns # função sigmoide (logística)
 using StatsBase # Função Sample
 using LinearAlgebra # cálculo de norma
@@ -10,7 +10,7 @@ using Plots # Gráficos
 using Random; # Random.seed!(1234) # define um seed para as variáveis aleatórias 
 using Enzyme # diferenciação automática
 using ProgressMeter # Barra de progresso ao rodar o código
-using DelimitedFiles
+using DelimitedFiles # Escrever e ler arquivos
 
 # Adiciona demais arquivos do programa
 include("struct_rede.jl")
@@ -22,10 +22,12 @@ include("adamW.jl")
 include("ativ.jl")
 include("resultados.jl")
 include("perdas.jl")
+include("LBFGS.jl")
+include("line_search.jl")
 
 # Função principal do código
 function main(topologia::Vector{Int64}, ativ::Tuple, m::Float64, δ::Float64, ω0::Float64,
-              nepoch::Int64)
+              nepoch_ADAM::Int64, nepoch_LBFGS::Int64)
 
     # Cria a rede
     rede = Rede(topologia, ativ)
@@ -34,7 +36,10 @@ function main(topologia::Vector{Int64}, ativ::Tuple, m::Float64, δ::Float64, ω
     treino = Treino(m, δ, ω0)
 
     # Chama a rotina de otimização do AdamW
-    x, objetivo_treino, u_test_pred = AdamW(rede, treino, nepoch)
+    x, objetivo_treino, u_test_pred = AdamW(rede, treino, nepoch_ADAM)
+
+    # Chama a rotina de otimização do LBFGS
+    x, objetivo_treino, u_test_pred = LBFGS(rede, treino, x, nepoch_LBFGS)
 
     # Retorna as variáveis de projeto, função objetivo ao longo do tempo,
     # resposta analítica nos pontos de teste e resposta calculada pela rede neural
@@ -46,11 +51,12 @@ end
 function roda()
 
    # Define os dados do problema: topologia e funções de ativação
-   topologia = [1; 100; 50; 50; 1]
+   topologia = [1; 50; 50; 50; 1]
    ativ = (tanh, tanh, tanh, tanh)
 
    # Número de épocas
-   nepoch = 10_000
+   nepoch_ADAM = 3_000
+   nepoch_LBFGS = 3_000
 
    # Parâmetros do sistema
    m = 1.0
@@ -58,7 +64,7 @@ function roda()
    ω0 = 20.0
 
    # Roda a função main
-   x, objetivo_treino, treino, u_test_pred, rede = main(topologia, ativ, m, δ, ω0, nepoch)
+   x, objetivo_treino, treino, u_test_pred, rede = main(topologia, ativ, m, δ, ω0, nepoch_ADAM, nepoch_LBFGS)
 
    return x, objetivo_treino, treino, u_test_pred, rede
 

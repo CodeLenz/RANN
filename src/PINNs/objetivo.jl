@@ -75,7 +75,9 @@ function Objetivo(rede::Rede, treino::Treino, t_inicial::Vector{Float64}, u_inic
     perda_fisica /= n_fisica
 
     # Soma as componentes de perda
-    perda = perda_inicial_u + λ1 * perda_inicial_du + λ2 * perda_fisica
+    # TODO: utilizar fator_fis somente no ADAM
+    fator_fis = min(epoch / 500, 1.0)
+    perda = perda_inicial_u + λ1 * perda_inicial_du + λ2 * fator_fis * perda_fisica
 
     # Retorna a perda total ponderada pelos hiperparâmetros λ
     return perda, perda_inicial_u, perda_inicial_du, perda_fisica
@@ -87,7 +89,7 @@ end
 # diferenciar mais de um parâmetro (tupla)
 function ObjetivoFloat(rede::Rede, treino::Treino, t_inicial::Vector{Float64}, u_inicial::Vector{Float64},
                        du_inicial::Vector{Float64}, n_fisica::Int64, t_fisica::Matrix{Float64}, epoch::Int64,
-                       x::Vector{Float64}, λ1 = 1.0, λ2 = 1.0E-2)
+                       x::Vector{Float64})
 
     perda, _ = Objetivo(rede, treino, t_inicial, u_inicial, du_inicial, n_fisica, t_fisica, epoch, x)
 

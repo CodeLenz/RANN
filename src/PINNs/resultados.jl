@@ -2,10 +2,7 @@
 function Deslocamento_Teste(rede:: Rede, x::Vector{Float64}, u_an::Matrix{Float64}, t_teste::Matrix{Float64},
                             objetivo_treino::Vector{Float64}, perda_inicial_u::Vector{Float64},
                             perda_inicial_du::Vector{Float64}, perda_fisica::Vector{Float64},
-                            epoch::Int64)
-
-    # Alias
-    # topologia = rede.topologia
+                            epoch::Int64, otimizador::String)
 
     # Atualiza pesos e bias com o resultado da otimização
     pesos, bias = Atualiza_pesos_bias(rede, x)
@@ -29,7 +26,7 @@ function Deslocamento_Teste(rede:: Rede, x::Vector{Float64}, u_an::Matrix{Float6
     end
 
     # Grava deslocamento calculado em um arquivo para monitoramento 
-    writedlm("Resultados/teste_rede_$(epoch).txt", u_test_pred)
+    writedlm("Resultados/teste_rede_$(epoch)_$otimizador.txt", u_test_pred)
 
     # Acompanha a evolução do objetivo ao longo do tempo
     plot_obj_treino = plot([objetivo_treino[1:epoch]], title = "Objetivo", label = ["Treino"])
@@ -42,13 +39,13 @@ function Deslocamento_Teste(rede:: Rede, x::Vector{Float64}, u_an::Matrix{Float6
                     layout = (2, 2), size = (1000, 1000)) 
 
     # Grava o gráfico
-    savefig(plot_obj, "Resultados/plot_obj_treino_$(epoch).png")
+    savefig(plot_obj, "Resultados/plot_obj_treino_$(epoch)_$otimizador.png")
 
     # Compara a resposta analítica com a calculada pela rede neural
     plot_u_teste = plot([u_an', u_test_pred'], title = "Deslocamento", label = ["Analítico" "Rede neural"])
 
     # Grava o gráfico
-    savefig(plot_u_teste, "Resultados/plot_u_teste_$(epoch).png")
+    savefig(plot_u_teste, "Resultados/plot_u_teste_$(epoch)_$otimizador.png")
 
     # Retorna o deslocamento estimado
     return u_test_pred

@@ -1,70 +1,4 @@
-using LinearAlgebra
-
-#
-# Line-Search por Newton-Raphson
-#
-# alpha = arg min f(x + alpha*d)
-#
-# Utilizamos diferenças finitas centrais para calcular as derivadas 
-# de f(x + alpha*d) em relação a alpha
-#
-#
-function LineSearch_NR(x::Vector,d::Vector,f::Function,delta=1E-6,tol=1E-8; verbose=false)
-
-    # Estimativa inicial do alpha
-    alpha = 1.0
-
-    # Loop para encontrar a raiz 
-    for iter=1:100
-
-        # Função no ponto atual 
-        f0 = f(x .+ alpha*d)
-
-        # Perturba para frente
-        ff = f(x .+ (alpha+delta)*d)
-
-        # Perturba para tras
-        ft = f(x .+ (alpha-delta)*d)
-
-        # Estimativa da primeira derivada
-        d1 = (ff-ft)/(2*delta)
-
-        # Estimativa da segunda derivada
-        d2 = (ff -2*f0 + ft)/(delta^2)
-
-        # Nova estimativa do alpha. Aqui temos que evitar a 
-        # divisão por zero. Na verdade, isso é um problema não só 
-        # numérico, mas também para a convergência do NR. Acho que o 
-        # correto aqui seria devolver um erro e usar o Armijo neste caso
-        if abs(d2)>=tol
-           alphan = alpha - d1/d2
-        else
-           return -1
-        end
-
-        # Diferença na estimativa
-        difalpha = abs(alphan-alpha)
-
-        # Testa se atingimos a tolerância 
-        if  difalpha < tol 
-            verbose && println("LineSearch_NR:: atingimos a tolerância $(difalpha) em $(iter) iterações")
-            alpha = alphan
-            break
-        end
-
-        # Atualiza a estimativa do alpha 
-        alpha = alphan  
-
-    end
-
-    # Retorna a estimativa do alpha 
-    return alpha
-
-end
-
-#
 # L-BFGS 
-#
 #     f:: função a otimizar
 #    df:: derivada da função 
 #    x0:: ponto inicial 
@@ -73,16 +7,59 @@ end
 #   tol:: tolerância de parada pelo gradiente 
 #    α0:: Passo inicial do backtracking (como H é escalonada, 1.0 é uma boa aproximação)
 #
-function LBFGS(f::Function, df::Function, x0::Vector; m=10, niter=50, tol=1e-5, α0=10.0)
+function LBFGS(rede::Rede, treino::Treino, x0::Vector, nepoch::Int64; m = 10, conv = 1E-8, α0 = 10.0, otimizador = "LBFGS")
+
+    # Aloca objetivos
+    obj_treino = 0.0
+    perda_inicial_u = 0.0
+    perda_inicial_du = 0.0
+    perda_fisica = 0.0
+
+    # Acessa os termos em Treino por apelidos
+    t_inicial = treino.t_inicial
+    u_inicial = treino.u_inicial
+    du_inicial = treino.du_inicial
+    t_fisica =  treino.t_fisica
 
     # Copia o vetor de entrada
     x = copy(x0)
 
     # Dimensão do vetor de entrada 
-    n = length(x)
+    n = rede.n_projeto
+
+    # Obtém o número de dados de treino
+    n_fisica = size(t_fisica, 2)
+
+    # Aloca um array para monitorar o objetivo
+    vetor_obj_treino = zeros(nepoch)
+    vetor_perda_inicial_u = zeros(nepoch)
+    vetor_perda_inicial_du = zeros(nepoch)
+    vetor_perda_fisica = zeros(nepoch)
+
+    # Aloca a resposta estimada para os pontos de teste
+    u_test_pred = zeros(1, size(treino.u_an, 2))
+
+    # Calcula o objetivo da rede para o treino 
+    obj_treino = ObjetivoFloat(rede, treino, t_inicial, u_inicial, du_inicial, n_fisica, t_fisica, 0, x)
+
+    # Aloca vetor gradiente - vazio, valores serão inputados posteriormente
+    G = Vector{Float64}(undef,length(x))
+    G_new = Vector{Float64}(undef,length(x))
     
     # Calcula o gradiente do objetivo em relação aos parâmetros da rede
-    g = df(x)
+    Enzyme.autodiff(
+        Enzyme.Reverse,
+        ObjetivoFloat,
+        Const(rede),
+        Const(treino),
+        Const(t_inicial),
+        Const(u_inicial),
+        Const(du_inicial),
+        Const(n_fisica),
+        Const(t_fisica),
+        Const(0),
+        Duplicated(x, G)
+    )
 
     # Vetores de vetores para guardar o histórico da otimização 
     # e fazer a atualização da "Hessiana"
@@ -91,10 +68,10 @@ function LBFGS(f::Function, df::Function, x0::Vector; m=10, niter=50, tol=1e-5, 
     ρ_hist = Vector{Float64}()
 
     # Loop principal da otimização 
-    for k in 1:niter
+    @showprogress "Otimizando com LBFGS..." for epoch in 1:nepoch
 
         # Loop para obter a direção de descida, utilizando as direções anteriores
-        q = copy(g)
+        q = copy(G)
         α = zeros(length(s_hist))
         for i in length(s_hist):-1:1
             α[i] = ρ_hist[i] * dot(s_hist[i], q)
@@ -113,8 +90,8 @@ function LBFGS(f::Function, df::Function, x0::Vector; m=10, niter=50, tol=1e-5, 
         #
         # Evita que o escalonamento seja negativo
         #
-        if  γ<0.0
-            println("Resetando o gamma ... isso não deveria acontecer")
+        if  γ < 0.0
+            println("Resetando o γ ... isso não deveria acontecer")
             γ = 1.0
         end
 
@@ -128,25 +105,26 @@ function LBFGS(f::Function, df::Function, x0::Vector; m=10, niter=50, tol=1e-5, 
         end
 
         # direção de descida
-        p = -r  
+        p = - r  
 
         # Calcula o valor atual da função 
-        fx = f(x)
-
-        @show fx
+        obj_treino = ObjetivoFloat(rede, treino, t_inicial, u_inicial, du_inicial, n_fisica, t_fisica, 0, x)
 
         # Line-search usando o método de NR
-        αk = LineSearch_NR(x,p,f)
+        αk = LineSearch_NR(x, p, ObjetivoFloat, rede, treino, t_inicial, u_inicial, du_inicial, n_fisica, t_fisica)
 
         # Caso o NR falhe, utilizamos um Armijo backtracking
-        if αk==-1  
+        if αk == -1  
             # Armijo Backtracking LS - Não tem garantia de que  γ seja estritamente 
             # positivo, o que pode dar problema no L-BFGS. O correto é garantir 
             # as condições completas de Wolff (redução do gradiente também)
             #
             αk = α0
             c = 0.1
-            while f(x + αk * p) > fx - c * αk * dot(g, p)
+        
+            obj_treino_frente = ObjetivoFloat(rede, treino, t_inicial, u_inicial, du_inicial, n_fisica, t_fisica, 0, x + αk * p)
+            
+            while obj_treino_frente > obj_treino - c * αk * dot(G, p)
                 αk *= 0.5
                 if αk < 1e-8
                     break
@@ -157,16 +135,31 @@ function LBFGS(f::Function, df::Function, x0::Vector; m=10, niter=50, tol=1e-5, 
         # Atualiza as variáveis de projeto
         x_new = x + αk * p
 
+        # Zera o vetor gradiente para novo cálculo
+        fill!(G_new, 0.0)
+
         # Gradiente na nova posição 
-        g_new = df(x_new)
+        Enzyme.autodiff(
+            Enzyme.Reverse,
+            ObjetivoFloat,
+            Const(rede),
+            Const(treino),
+            Const(t_inicial),
+            Const(u_inicial),
+            Const(du_inicial),
+            Const(n_fisica),
+            Const(t_fisica),
+            Const(epoch),
+            Duplicated(x_new, G_new)
+        )
         
         # Atualiza s, y e ρ
         s = x_new - x
-        y = g_new - g
+        y = G_new - G
         ρ = 1.0 / dot(y, s)
 
         # Atualiza histórico limitado
-        if dot(y,s)>1E-10
+        if dot(y,s) > 1E-10
             push!(s_hist, s)
             push!(y_hist, y)
             push!(ρ_hist, ρ)
@@ -179,31 +172,37 @@ function LBFGS(f::Function, df::Function, x0::Vector; m=10, niter=50, tol=1e-5, 
 
         # Substitui variáveis para a próxima iteração
         x .= x_new
-        g .= g_new
+        G .= G_new
+
+        # Calcula o objetivo da rede para o treino 
+        obj_treino, perda_inicial_u, perda_inicial_du, perda_fisica  = 
+            Objetivo(rede, treino, t_inicial, u_inicial, du_inicial, n_fisica, t_fisica, epoch, x)
+
+        # Armazena o objetivo
+        vetor_obj_treino[epoch] = obj_treino
+        vetor_perda_inicial_u[epoch] = perda_inicial_u
+        vetor_perda_inicial_du[epoch] = perda_inicial_du
+        vetor_perda_fisica[epoch] = perda_fisica
 
         # Critério de parada por derivada
-        if norm(g) < tol
-            println("Convergência atingida em $k iterações.")
+        if norm(G) < conv
+            println("Convergência atingida em $epoch iterações.")
             break
         end
+
+        # A cada 1000 epochs vamos monitorar o comportamento da rede 
+        if (epoch % 1000 == 0) || (epoch == nepoch)
+
+            # Obtém a resposta da rede neural para os pontos de teste
+            u_test_pred = Deslocamento_Teste(rede, x, treino.u_an, treino.t_teste, vetor_obj_treino, vetor_perda_inicial_u,
+                                             vetor_perda_inicial_du, vetor_perda_fisica, epoch, otimizador)
+
+        end
+
+
     end
 
     # Retorna as variáveis otimizadas
-    return x
+    return x, vetor_obj_treino, u_test_pred
+
 end
-
-
-#
-# Mínimo em 1,1
-#
-function Rosenbroock(x) 
-      100*(x[2]-x[1]^2)^2 + (1-x[1])^2
-end
-
-function dRosenbrook(x)
-    [(-400*x[1]*(x[2]-x[1]^2))-2*(1-x[1]) ; 
-     200*(x[2]-x[1]^2) ]
-end
-
-# Chama 
-LBFGS(Rosenbroock, dRosenbrook, [0.0; 2.0])   

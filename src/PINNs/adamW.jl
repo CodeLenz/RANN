@@ -7,7 +7,7 @@
 # nepoch (Número de épocas, default = 10)
 # δ (critério de convergência, default = 1E-8)
 function AdamW(rede::Rede, treino::Treino, nepoch::Int64; α = 1E-3, β1 = 0.9, β2 = 0.999,
-              ϵ = 1E-8, w_decay = 0.0, conv = 1E-8)
+              ϵ = 1E-8, w_decay = 0.0, conv = 1E-8, otimizador = "AdamW")
               
     # Aloca objetivos
     obj_treino = 0.0
@@ -15,7 +15,6 @@ function AdamW(rede::Rede, treino::Treino, nepoch::Int64; α = 1E-3, β1 = 0.9, 
     perda_inicial_du = 0.0
     perda_fisica = 0.0
 
-    dobj_treino = 0.0 
     # Acessa os termos em Treino por apelidos
     t_inicial = treino.t_inicial
     u_inicial = treino.u_inicial
@@ -45,7 +44,7 @@ function AdamW(rede::Rede, treino::Treino, nepoch::Int64; α = 1E-3, β1 = 0.9, 
     v = zeros(Float64, rede.n_projeto)
 
     # Loop de otimização pelas épocas
-    @showprogress "Otimizando..." for epoch = 1:nepoch
+    @showprogress "Otimizando com AdamW..." for epoch = 1:nepoch
 
         # Calcula o objetivo da rede para o treino 
         obj_treino = ObjetivoFloat(rede, treino, t_inicial, u_inicial, du_inicial, n_fisica, t_fisica, epoch, x)
@@ -111,7 +110,7 @@ function AdamW(rede::Rede, treino::Treino, nepoch::Int64; α = 1E-3, β1 = 0.9, 
 
             # Obtém a resposta da rede neural para os pontos de teste
             u_test_pred = Deslocamento_Teste(rede, x, treino.u_an, treino.t_teste, vetor_obj_treino, vetor_perda_inicial_u,
-                                             vetor_perda_inicial_du, vetor_perda_fisica, epoch)
+                                             vetor_perda_inicial_du, vetor_perda_fisica, epoch, otimizador)
 
         end
 
