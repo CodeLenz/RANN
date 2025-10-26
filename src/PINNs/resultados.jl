@@ -29,10 +29,10 @@ function Deslocamento_Teste(rede:: Rede, x::Vector{Float64}, u_an::Matrix{Float6
     writedlm("Resultados/teste_rede_$(epoch)_$otimizador.txt", u_test_pred)
 
     # Acompanha a evolução do objetivo ao longo do tempo
-    plot_obj_treino = plot([objetivo_treino[1:epoch]], title = "Objetivo", label = ["Treino"])
-    plot_perda_inicial_u = plot([perda_inicial_u[1:epoch]], title = "Perda Inicial Deslocamento", label = ["Treino"])
-    plot_perda_inicial_du = plot([perda_inicial_du[1:epoch]], title = "Perda Inicial Velocidade", label = ["Treino"])
-    plot_perda_fisica = plot([perda_fisica[1:epoch]], title = "Perda Física", label = ["Treino"])
+    plot_obj_treino = plot([objetivo_treino[(epoch-99):epoch]], title = "Objetivo", label = ["Treino"])
+    plot_perda_inicial_u = plot([perda_inicial_u[(epoch-99):epoch]], title = "Perda Inicial Deslocamento", label = ["Treino"])
+    plot_perda_inicial_du = plot([perda_inicial_du[(epoch-99):epoch]], title = "Perda Inicial Velocidade", label = ["Treino"])
+    plot_perda_fisica = plot([perda_fisica[(epoch-99):epoch]], title = "Perda Física", label = ["Treino"])
 
     plot_obj = plot(plot_obj_treino, plot_perda_inicial_u, 
                     plot_perda_inicial_du, plot_perda_fisica,

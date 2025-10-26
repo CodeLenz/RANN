@@ -39,7 +39,7 @@ function main(topologia::Vector{Int64}, ativ::Tuple, m::Float64, δ::Float64, ω
     x, objetivo_treino, u_test_pred = AdamW(rede, treino, nepoch_ADAM)
 
     # Chama a rotina de otimização do LBFGS
-    x, objetivo_treino, u_test_pred = LBFGS(rede, treino, x, nepoch_LBFGS)
+    #x, objetivo_treino, u_test_pred = LBFGS(rede, treino, x, nepoch_LBFGS)
 
     # Retorna as variáveis de projeto, função objetivo ao longo do tempo,
     # resposta analítica nos pontos de teste e resposta calculada pela rede neural
@@ -52,10 +52,10 @@ function roda()
 
    # Define os dados do problema: topologia e funções de ativação
    topologia = [1; 50; 50; 50; 1]
-   ativ = (tanh, tanh, tanh, tanh)
+   ativ = (tanh, tanh, tanh, identity)
 
    # Número de épocas
-   nepoch_ADAM = 3_000
+   nepoch_ADAM = 10_000
    nepoch_LBFGS = 3_000
 
    # Parâmetros do sistema
