@@ -3,7 +3,7 @@
 # λ1 e λ2 são hiperparâmetros para ponderação dos termos da função objetivo
 function Objetivo(rede::Rede, treino::Treino, t_inicial::Vector{Float64}, u_inicial::Vector{Float64},
                   du_inicial::Vector{Float64}, n_fisica::Int64, t_fisica::Matrix{Float64}, epoch::Int64,
-                  x::Vector{Float64}, λ1 = 1.0E-1, λ2 = 1.0E-2)
+                  x::Vector{Float64}, λ1 = 1.0, λ2 = 1.0E-2)
 
     # Alias
     topologia = rede.topologia

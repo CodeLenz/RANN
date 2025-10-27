@@ -51,11 +51,11 @@ end
 function roda()
 
    # Define os dados do problema: topologia e funções de ativação
-   topologia = [1; 50; 50; 50; 1]
+   topologia = [1; 32; 32; 32; 1]
    ativ = (tanh, tanh, tanh, identity)
 
    # Número de épocas
-   nepoch_ADAM = 10_000
+   nepoch_ADAM = 15_000
    nepoch_LBFGS = 3_000
 
    # Parâmetros do sistema
