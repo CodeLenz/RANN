@@ -36,15 +36,17 @@ function main(topologia::Vector{Int64}, ativ::Tuple, m::Float64, δ::Float64, ω
     treino = Treino(m, δ, ω0)
 
     # Chama a rotina de otimização do AdamW
-    x, objetivo_treino, u_test_pred = AdamW(rede, treino, nepoch_ADAM)
+    #x, objetivo_treino, u_test_pred = AdamW(rede, treino, nepoch_ADAM)
+
 
     # Chama a rotina de otimização do LBFGS
-    #x, objetivo_treino, u_test_pred = LBFGS(rede, treino, x, nepoch_LBFGS)
+    x, objetivo_treino, u_test_pred = LBFGS(rede, treino, nepoch_LBFGS)
+    
 
     # Retorna as variáveis de projeto, função objetivo ao longo do tempo,
     # resposta analítica nos pontos de teste e resposta calculada pela rede neural
     return x, objetivo_treino, treino, u_test_pred, rede
-
+    
 end
 
 # Roda a rede neural
@@ -65,7 +67,8 @@ function roda()
 
    # Roda a função main
    x, objetivo_treino, treino, u_test_pred, rede = main(topologia, ativ, m, δ, ω0, nepoch_ADAM, nepoch_LBFGS)
-
+   
+   # Retorna variáveis de projeto e outras informações   
    return x, objetivo_treino, treino, u_test_pred, rede
-
+   
 end

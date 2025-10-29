@@ -7,7 +7,10 @@
 #   tol:: tolerância de parada pelo gradiente 
 #    α0:: Passo inicial do backtracking (como H é escalonada, 1.0 é uma boa aproximação)
 #
-function LBFGS(rede::Rede, treino::Treino, x0::Vector, nepoch::Int64; m = 10, conv = 1E-8, α0 = 10.0, otimizador = "LBFGS")
+function LBFGS(rede::Rede, treino::Treino, nepoch::Int64; m = 10, conv = 1E-8, α0 = 10.0, otimizador = "LBFGS")
+
+    # Copia rede.x para uma outra memória
+    x0 = copy(rede.x)
 
     # Aloca objetivos
     obj_treino = 0.0
@@ -43,9 +46,11 @@ function LBFGS(rede::Rede, treino::Treino, x0::Vector, nepoch::Int64; m = 10, co
     obj_treino = ObjetivoFloat(rede, treino, t_inicial, u_inicial, du_inicial, n_fisica, t_fisica, 0, x)
 
     # Aloca vetor gradiente - vazio, valores serão inputados posteriormente
-    G = Vector{Float64}(undef,length(x))
+    G = zeros(length(x))
     G_new = Vector{Float64}(undef,length(x))
     
+    # Zera G 
+
     # Calcula o gradiente do objetivo em relação aos parâmetros da rede
     Enzyme.autodiff(
         Enzyme.Reverse,
@@ -60,6 +65,11 @@ function LBFGS(rede::Rede, treino::Treino, x0::Vector, nepoch::Int64; m = 10, co
         Const(0),
         Duplicated(x, G)
     )
+
+    # Testa por NaN
+    if any(isnan.(G)) 
+       error("NaN em G antes do loop do BFGS")
+    end
 
     # Vetores de vetores para guardar o histórico da otimização 
     # e fazer a atualização da "Hessiana"
@@ -78,6 +88,12 @@ function LBFGS(rede::Rede, treino::Treino, x0::Vector, nepoch::Int64; m = 10, co
             q .-= α[i] .* y_hist[i]
         end
 
+        # Testa por NaN
+        if any(isnan.(q))
+           error("Nan em q no primeiro bloco do loop") 
+        end
+
+
         #
         # Escalanomento de H = (sᵀy)/(yᵀy)
         #
@@ -95,17 +111,42 @@ function LBFGS(rede::Rede, treino::Treino, x0::Vector, nepoch::Int64; m = 10, co
             γ = 1.0
         end
 
+        # Testa por NaN
+        if isnan(γ)
+           error("Nan em γ ") 
+        end
+ 
+
         # Escalona a direção 
         r = γ .* q
+
+        # Testa por NaN
+        if any(isnan.(r))
+           error("Nan em r ") 
+        end
+
+
 
         # Atualiza β e r
         for i in 1:length(s_hist)
             β = ρ_hist[i] * dot(y_hist[i], r)
+
+            # testa por NaN
+            if isnan(β)
+               erro("β é NaN") 
+            end
+
             r .+= s_hist[i] .* (α[i] - β)
         end
 
         # direção de descida
         p = - r  
+
+        # Testa por NaN
+        if any(isnan.(p))
+           error("Nan em p") 
+        end
+ 
 
         # Calcula o valor atual da função 
         obj_treino = ObjetivoFloat(rede, treino, t_inicial, u_inicial, du_inicial, n_fisica, t_fisica, 0, x)
@@ -153,10 +194,20 @@ function LBFGS(rede::Rede, treino::Treino, x0::Vector, nepoch::Int64; m = 10, co
             Duplicated(x_new, G_new)
         )
         
+        # Testa por NaN
+        if any(isnan.(G_new))
+           error("Nan em G_new ") 
+        end
+
+
         # Atualiza s, y e ρ
         s = x_new - x
         y = G_new - G
         ρ = 1.0 / dot(y, s)
+
+        if isnan(ρ)
+            error("NaN em ρ")
+        end
 
         # Atualiza histórico limitado
         if dot(y,s) > 1E-10

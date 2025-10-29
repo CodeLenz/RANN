@@ -39,12 +39,30 @@ function Objetivo(rede::Rede, treino::Treino, t_inicial::Vector{Float64}, u_inic
     # Calcula o valor do deslocamento no tempo t0
     u0 .= RNA(rede,  pesos, bias, t_inicial)
     
+
+    # Testa por NaN
+    if any(isnan.(u0)) 
+       error("Nan em u0 ") 
+    end 
+
+
     # Calcula a perda relativa a primeira condição inicial: u(t0)
     perda_inicial_u += Fn_perda_inicial(u0, u_inicial)
 
     # Calcula a primeira e a segunda derivada ao mesmo tempo
     DerivadasC2!(RNA, rede, pesos, bias, u0, du, d2u, t_inicial)
     
+    # Testa por NaN
+    if any(isnan.(du)) 
+       error("Nan em du CI") 
+    end
+
+    # Testa por NaN
+    if any(isnan.(d2u)) 
+       error("Nan em d2u CI") 
+    end
+
+
     # Calcula a perda da velocidade inicial 
     perda_inicial_du += Fn_perda_inicial(du, du_inicial)
 
@@ -62,10 +80,27 @@ function Objetivo(rede::Rede, treino::Treino, t_inicial::Vector{Float64}, u_inic
 
         # Valores 
         u0 .= RNA(rede, pesos, bias, t_i)
-    
+
+        # Testa por NaN
+        if any(isnan.(u0)) 
+           error("Nan em u0 físico ") 
+        end 
+
+
         # Obtém a primeira e segunda derivada - velocidade e aceleração
         DerivadasC2!(RNA, rede, pesos, bias, u0, du, d2u, t_i)
-        
+    
+        # Testa por NaN
+        if any(isnan.(du)) 
+           error("Nan em du física") 
+        end
+
+        # Testa por NaN
+        if any(isnan.(d2u)) 
+           error("Nan em d2u física") 
+        end
+
+
         # Calcula a perda
         perda_fisica += Fn_perda_fisica(treino, u0, du, d2u)
 
@@ -79,6 +114,12 @@ function Objetivo(rede::Rede, treino::Treino, t_inicial::Vector{Float64}, u_inic
     fator_fis = min(epoch / 500, 1.0)
     perda = perda_inicial_u + λ1 * perda_inicial_du + λ2 * fator_fis * perda_fisica
 
+    if isnan(perda) || isnan(perda_inicial_u) || isnan(perda_inicial_du) || isnan(perda_fisica)
+       
+       error("NaN nas perdas $perda, $(perda_inicial_u), $(perda_inicial_du), $(perda_fisica)") 
+    end
+
+
     # Retorna a perda total ponderada pelos hiperparâmetros λ
     return perda, perda_inicial_u, perda_inicial_du, perda_fisica
 
@@ -89,7 +130,7 @@ end
 # diferenciar mais de um parâmetro (tupla)
 function ObjetivoFloat(rede::Rede, treino::Treino, t_inicial::Vector{Float64}, u_inicial::Vector{Float64},
                        du_inicial::Vector{Float64}, n_fisica::Int64, t_fisica::Matrix{Float64}, epoch::Int64,
-                       x::Vector{Float64})
+                       x::Vector{Float64})::Float64
 
     perda, _ = Objetivo(rede, treino, t_inicial, u_inicial, du_inicial, n_fisica, t_fisica, epoch, x)
 
