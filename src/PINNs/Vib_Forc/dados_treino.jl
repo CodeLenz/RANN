@@ -56,7 +56,7 @@ struct Treino
 
         # Constantes A e B da solução
         A = - X * cos(ϕ)
-        B = (X / ωd) * (ωf * sin(ϕ) - ζ * ω0 * cos(ϕ))
+        B = - (X / ωd) * (ωf * sin(ϕ) + ζ * ω0 * cos(ϕ))
 
         # Constante de amortecimento
         μ = 2.0 * m * ζ * ω0
@@ -69,7 +69,7 @@ struct Treino
         du_inicial = zeros(1)
 
         # Pontos de perda física
-        t_fisica = Matrix(collect(range(0.0, 1.0, 50))')
+        t_fisica = Matrix(collect(range(0.0, 1.0, 100))')
 
         # Pontos de teste
         t_teste = Matrix(collect(range(0.0, 1.0, 300))')

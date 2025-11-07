@@ -15,7 +15,7 @@ function Objetivo(rede::Rede, treino::Treino, t_inicial::Vector{Float64}, u_inic
     # CUIDADO...aqui temos que ver a faixa de tempo pois estou assumindo 
     # (0,1)
     #
-    t_fisica[1,:] .= rand(size(t_fisica,2))
+    #t_fisica[1,:] .= rand(size(t_fisica,2))
    
     # Aloca as matrizes de pesos e bias a partir das variáveis de projeto
     pesos, bias = Atualiza_pesos_bias(rede, x)

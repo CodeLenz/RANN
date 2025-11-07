@@ -51,21 +51,21 @@ end
 function roda()
 
    # Define os dados do problema: topologia e funções de ativação
-   topologia = [1; 50; 5; 50; 1]
+   topologia = [1; 50; 50; 50; 1]
    ativ = (tanh, tanh, tanh, identity)
 
    # Número de épocas
-   nepoch_ADAM = 10_000
+   nepoch_ADAM = 15_000
    nepoch_LBFGS = 3_000
 
    # Parâmetros do sistema
    m = 1.0
-   ζ = 0.2
+   ζ = 0.02
    ω0 = 30.0
    
    # Força aplicada e frequência 
    F = 100.0 
-   ωf = 10.0
+   ωf = 20.0
 
    # Roda a função main
    x, objetivo_treino, treino, u_test_pred, rede = main(topologia, ativ, m, ζ, ω0, F, ωf, nepoch_ADAM, nepoch_LBFGS)
