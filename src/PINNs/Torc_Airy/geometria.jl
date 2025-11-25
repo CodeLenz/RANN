@@ -1,0 +1,147 @@
+# Define a geometria da seção transversal
+function Geometria_Circular()
+
+    # Raio
+    R = 0.1 #[m]
+
+    # Momento polar de inércia
+    Je = π * R^4 / 2 # [m^4]
+
+    # Retorna os valores
+    return R, Je
+
+end
+
+# Define os pontos de colocação do domínio e também os pontos de teste
+function ColocDominio(prob::String)
+
+    # Caso 1: Seção transversal circular
+    if prob == "circular"
+
+        # Importa os dados da seção
+        R, _ = Geometria_Circular()
+
+        # Número de divisões em raio e ângulo
+        div_r = 10
+        div_θ = 5
+
+        # Divisões para o teste
+        div_r_teste = div_r * 3
+        div_θ_teste = div_θ * 3
+
+        # Define um range de raios 
+        raios = collect(range(R / 100.0, R, div_r))
+        raios_teste = collect(range(R / 100.0, R, div_r_teste))
+
+        # Define um range de ângulos
+        angulos = collect(range(0.0, 2.0 * pi, div_θ))
+        angulos = collect(range(0.0, 2.0 * pi, div_θ_teste))
+
+        # Define matriz para os pontos de perda física
+        XY_fisica = Matrix(Float64, 2, div_r * div_θ)
+
+        # Define matriz para os pontos de teste
+        XY_teste = Matrix(Float64, 2, div_r_teste * div_θ_teste)
+
+        # Gera os pontos de colocação
+        # Contador
+        k = 1
+
+        # Loop pelos raios
+        for r in raios
+
+            # Loop pelos ângulos
+            for θ in angulos
+
+                # Coordenada x
+                XY_fisica[1, k] = r * cos(θ)
+
+                # Coordenada y
+                XY_fisica[2, k] = r * sin(θ)
+
+                # Atualiza o contador
+                k += 1
+
+            end
+
+        end
+
+        # Gera os pontos de teste
+        # Zera o contador
+        k = 0
+
+        # Loop pelos raios
+        for r in raios_teste
+
+            # Loop pelos ângulos
+            for θ in angulos_teste
+
+                # Coordenada x
+                XY_teste[1, k] = r * cos(θ)
+
+                # Coordenada y
+                XY_teste[2, k] = r * sin(θ)
+
+                # Atualiza o contador
+                k += 1
+
+            end
+
+        end
+
+    # Caso não seja selecionado nenhum problema, define matrizes vazias
+    else
+
+        XY_fisica, XY_teste = nothing, nothing
+
+    end
+
+    # Retorna os valores
+    XY_fisica, XY_teste
+    
+end
+
+# Define os pontos de condição de contorno
+function CContorno(prob::String)
+
+    # Caso 1: Seção transversal circular
+    if prob == "circular"
+
+        # Importa os dados da seção
+        R, _ = Geometria_Circular()
+
+        # Número de pontos de contorno
+        n_contorno = 100
+
+        # Define um range de ângulos
+        θ = collect(range(0.0, 2.0 * pi, n_contorno))
+
+        # Define matriz para os pontos de contorno
+        XY_contorno = Matrix(Float64, 3, n_contorno)
+
+        # Gera os pontos de contorno
+        for i in 1:n_contorno
+
+            # Coordenada x
+            XY_contorno[1, i] = R * cos(θ[i])
+
+            # Coordenada y
+            XY_contorno[2, i] = R * sin(θ[i])
+
+            # Valor da condição de contorno no pontos
+            XY_contorno[3, i] = 0.0
+
+        end
+
+    # Caso não seja selecionado nenhum problema, define entrada vazia
+    else
+
+        XY_contorno = nothing
+
+    end
+    
+
+    # Retorna os valores
+    XY_contorno
+
+end

@@ -24,19 +24,19 @@ include("resultados.jl")
 include("perdas.jl")
 include("LBFGS.jl")
 include("line_search.jl")
+include("geometria.jl")
 
 # Função principal do código
-function main(topologia::Vector{Int64}, ativ::Tuple, m::Float64, ζ::Float64, ω0::Float64,
-              F::Float64, ωf::Float64, nepoch_ADAM::Int64, nepoch_LBFGS::Int64)
+function main(topologia::Vector{Int64}, ativ::Tuple, nepoch_ADAM::Int64, nepoch_LBFGS::Int64, prob::String)
 
     # Cria a rede
     rede = Rede(topologia, ativ)
 
     # Inicializa os dados de treino
-    treino = Treino(m, ζ, ω0, F, ωf)
+    dict_treino = Treino(prob)
 
     # Chama a rotina de otimização do AdamW
-    x, objetivo_treino, u_test_pred = AdamW(rede, treino, nepoch_ADAM)
+    x, objetivo_treino, u_test_pred = AdamW(rede, dict_treino, nepoch_ADAM)
 
     # Chama a rotina de otimização do LBFGS
     #x, objetivo_treino, u_test_pred = LBFGS(rede, treino, nepoch_LBFGS)
@@ -51,24 +51,18 @@ end
 function roda()
 
    # Define os dados do problema: topologia e funções de ativação
-   topologia = [1; 100; 100; 100; 1]
+   topologia = [1; 50; 50; 50; 1]
    ativ = (tanh, tanh, tanh, identity)
 
    # Número de épocas
    nepoch_ADAM = 15_000
    nepoch_LBFGS = 3_000
 
-   # Parâmetros do sistema
-   m = 1.0
-   ζ = 0.01
-   ω0 = 30.0
-   
-   # Força aplicada e frequência 
-   F = 100.0 
-   ωf = 10.0
+   # Problema a ser resolvido
+   prob = "circular"
 
    # Roda a função main
-   x, objetivo_treino, treino, u_test_pred, rede = main(topologia, ativ, m, ζ, ω0, F, ωf, nepoch_ADAM, nepoch_LBFGS)
+   x, objetivo_treino, treino, u_test_pred, rede = main(topologia, ativ, nepoch_ADAM, nepoch_LBFGS, prob)
    
    # Retorna variáveis de projeto e outras informações   
    return x, objetivo_treino, treino, u_test_pred, rede
