@@ -22,9 +22,11 @@ include("adamW.jl")
 include("ativ.jl")
 include("resultados.jl")
 include("perdas.jl")
-include("LBFGS.jl")
-include("line_search.jl")
 include("geometria.jl")
+include("inicial.jl")
+include("eq_diff.jl")
+#include("LBFGS.jl")
+#include("line_search.jl")
 
 # Função principal do código
 function main(topologia::Vector{Int64}, ativ::Tuple, nepoch_ADAM::Int64, nepoch_LBFGS::Int64, prob::String)

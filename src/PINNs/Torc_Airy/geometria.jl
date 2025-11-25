@@ -35,13 +35,13 @@ function ColocDominio(prob::String)
 
         # Define um range de ângulos
         angulos = collect(range(0.0, 2.0 * pi, div_θ))
-        angulos = collect(range(0.0, 2.0 * pi, div_θ_teste))
+        angulos_teste = collect(range(0.0, 2.0 * pi, div_θ_teste))
 
         # Define matriz para os pontos de perda física
-        XY_fisica = Matrix(Float64, 2, div_r * div_θ)
+        XY_fisica = zeros(Float64, 2, div_r * div_θ)
 
         # Define matriz para os pontos de teste
-        XY_teste = Matrix(Float64, 2, div_r_teste * div_θ_teste)
+        XY_teste = zeros(Float64, 2, div_r_teste * div_θ_teste)
 
         # Gera os pontos de colocação
         # Contador
@@ -60,15 +60,15 @@ function ColocDominio(prob::String)
                 XY_fisica[2, k] = r * sin(θ)
 
                 # Atualiza o contador
-                k += 1
-
+                k = k + 1
+                
             end
 
         end
 
         # Gera os pontos de teste
-        # Zera o contador
-        k = 0
+        # Reseta o contador
+        k = 1
 
         # Loop pelos raios
         for r in raios_teste
@@ -83,7 +83,7 @@ function ColocDominio(prob::String)
                 XY_teste[2, k] = r * sin(θ)
 
                 # Atualiza o contador
-                k += 1
+                k = k + 1
 
             end
 
@@ -117,7 +117,7 @@ function CContorno(prob::String)
         θ = collect(range(0.0, 2.0 * pi, n_contorno))
 
         # Define matriz para os pontos de contorno
-        XY_contorno = Matrix(Float64, 3, n_contorno)
+        XY_contorno = zeros(Float64, 3, n_contorno)
 
         # Gera os pontos de contorno
         for i in 1:n_contorno
