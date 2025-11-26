@@ -8,11 +8,11 @@ end
 
 
 # Define a função de perda física para os pontos de treino
-function Fn_perda_fisica(u::Vector{Float64}, du::Vector{Float64}, du2::Vector{Float64},
+function Fn_perda_fisica(u::Vector{Float64}, du_xy::Vector{Vector{Float64}}, du2_xy::Vector{Vector{Float64}},
                          x::Vector{Float64})
 
     # Acessa a equação diferencial e calcula o valor do resíduo no ponto
-    res = EqDiff(u, du, du2, x)
+    res = EqDiff(u, du_xy, du2_xy, x)
                        
     # Retorna a norma
     # Como é escalar, estamos usando abs para evitar o norm2

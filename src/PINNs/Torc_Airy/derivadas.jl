@@ -1,37 +1,6 @@
 #
 # Função para obtenção das derivadas da rede neural em relação ao tempo
 #
-# Muito cuidado com a perturbação, por causa da segunda derivada...
-#
-#
-function Derivadas!(RNA::Function, rede::Rede, 
-                    pesos::Vector{Matrix{Float64}}, bias::Vector{Vector{Float64}},
-                    u0::Vector{Float64}, du::Vector{Float64}, d2u::Vector{Float64},
-                    t::Vector{Float64}, ϵ = 1E-8)
-
-    #
-    # Calcula a primeira e a segunda derivadas em relação ao tempo,
-    # utilizando DFC complexas
-    #
-    
-    # Valor escalar do tempo, para propormos uma perturbação complexa
-    tt = t[1] + ϵ*im
-
-    # Calcula a resposta para frente no tempo
-    uf = RNA(rede, pesos, bias, [tt])
-       
-    # A primeira derivada pode ser obtida com 
-    du.= imag.(uf)/ϵ
-
-    # A segunda derivada pode ser obtida com 
-    d2u .= -2*(real.(uf).-u0)/(ϵ^2)
-    
-end
-    
-
-#
-# Função para obtenção das derivadas da rede neural em relação ao tempo
-#
 # Baseado na interessante proposta de Albert Chan em 
 # https://www.hpmuseum.org/forum/thread-16299.html
 #
@@ -74,8 +43,8 @@ end
 # ϵ:: perturbação 
 #
 function DerivadasPDE!(RNA::Function, rede::Rede, pesos::Vector{Matrix{Float64}}, bias::Vector{Vector{Float64}},
-                      u0::Vector{Float64}, du::Vector{Float64}, d2u::Vector{Float64}, x::Vector{Float64}, 
-                      ϵ = 1E-3)    
+                      u0::Vector{Float64}, du_xy::Vector{Vector{Float64}}, d2u_xy::Vector{Vector{Float64}},  
+                      x::Vector{Float64}, ϵ = 1E-3)    
 
     # Número de variáveis de projeto 
     nvp = length(x)
@@ -108,10 +77,10 @@ function DerivadasPDE!(RNA::Function, rede::Rede, pesos::Vector{Matrix{Float64}}
        ut = RNA(rede, pesos, bias, xc)
 
        # Primeira derivada em relação a x[i]
-       du[i] = real( (uf - ut) / (2 * h) ) 
+       du_xy[i] .= real( (uf - ut) / (2 * h) ) 
     
        # Segunda derivada em relação a x[i]
-       d2u[i] = real( (uf - 2 * u0 + ut) / h^2 )
+       d2u_xy[i] .= real( (uf - 2 * u0 + ut) / h^2 )
 
        # Restaura 
        xc[i] = bx

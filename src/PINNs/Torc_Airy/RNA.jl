@@ -31,8 +31,7 @@ end
 #
 # Forward da Rede neural
 #
-function RNA(rede::Rede, 
-             pesos::Vector{Matrix{Float64}}, bias::Vector{Vector{Float64}}, 
+function RNA(rede::Rede, pesos::Vector{Matrix{Float64}}, bias::Vector{Vector{Float64}}, 
              entrada_i::Vector{T})::Vector{T} where T
 
     # Acessa os termos em Rede por apelidos 
@@ -71,6 +70,7 @@ function RNA(rede::Rede,
     end
 
     return sinais[end]
+
 end
 
 

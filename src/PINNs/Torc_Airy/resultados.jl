@@ -1,18 +1,18 @@
 # Estima os resultados da equação diferencial a partir dos pontos de teste
-function Resposta_Teste(rede:: Rede, x::Vector{Float64}, dict_treino::Dict, objetivo_treino::Vector{Float64}, 
+function Resposta_Teste(rede:: Rede, x::Vector{Float64}, dict_treino::NamedTuple, objetivo_treino::Vector{Float64}, 
                         perda::Vector{Vector{Float64}}, epoch::Int64, otimizador::String)
 
     # Atualiza pesos e bias com o resultado da otimização
     pesos, bias = Atualiza_pesos_bias(rede, x)
 
     # Aloca a resposta estimada
-    u_test_pred = zeros(1, size(dict_treino["teste"], 2))
+    u_test_pred = zeros(1, size(dict_treino.teste, 2))
 
     # Loop pelos dados de teste
-    for i = 1:size(dict_treino["teste"], 2)
+    for i = 1:size(dict_treino.teste, 2)
 
         # Extrai o ponto para teste
-        x = dict_treino["teste"][:, i]
+        x = dict_treino.teste[:, i]
 
         # Calcula o deslocamento pela rede
         u_test_pred[:, i] .= RNA(rede,  pesos, bias, x)
@@ -41,7 +41,7 @@ function Resposta_Teste(rede:: Rede, x::Vector{Float64}, dict_treino::Dict, obje
     savefig(plot_obj, "Resultados/plot_obj_treino_$(epoch)_$otimizador.png")
 
     # Compara a resposta analítica com a calculada pela rede neural
-    plot_u_teste = plot(u_test_pred', XY_teste[1; :]', XY_teste[2; :]', title = "U", label = ["Rede neural"])
+    plot_u_teste = plot(u_test_pred', dict_treino.teste[1, :], dict_treino.teste[2, :], title = "U", label = ["Rede neural"])
 
     # Grava o gráfico
     savefig(plot_u_teste, "Resultados/plot_u_teste_$(epoch)_$otimizador.png")

@@ -12,12 +12,12 @@ function Treino(prob::String)
     t_inicial, u_inicial, du_inicial = CIniciais(prob)
         
     # Define dicionário para guardar todos os dados do problema
-    dict_treino = Dict([("fisica", XY_fisica),
-                        ("teste", XY_teste),
-                        ("contorno", XY_contorno),
-                        ("t_inicial", t_inicial),
-                        ("u_inicial", u_inicial),
-                        ("du_inicial", du_inicial)])
+    dict_treino = (fisica = XY_fisica,
+                   teste = XY_teste,
+                   contorno  = XY_contorno,
+                   t_inicial = t_inicial,
+                   u_inicial = u_inicial,
+                   du_inicial = du_inicial)
 
     # Retorna os dados
     return dict_treino

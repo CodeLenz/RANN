@@ -6,7 +6,7 @@
 # ϵ (default 10^-8) 
 # nepoch (Número de épocas, default = 10)
 # δ (critério de convergência, default = 1E-8)
-function AdamW(rede::Rede, dict_treino::Dict, nepoch::Int64; α = 1E-3, β1 = 0.9, β2 = 0.999,
+function AdamW(rede::Rede, dict_treino::NamedTuple, nepoch::Int64; α = 1E-3, β1 = 0.9, β2 = 0.999,
               ϵ = 1E-8, w_decay = 0.0, conv = 1E-8, otimizador = "AdamW")
               
     # Aloca objetivo
@@ -27,7 +27,7 @@ function AdamW(rede::Rede, dict_treino::Dict, nepoch::Int64; α = 1E-3, β1 = 0.
     vetor_perda = [zeros(nepoch) for _ in 1:4]    
 
     # Aloca a resposta estimada para os pontos de teste
-    u_test_pred = zeros(1, size(dict_treino["teste"], 2))
+    u_test_pred = zeros(1, size(dict_treino.teste, 2))
 
     # Aloca vetor gradiente - vazio, valores serão inputados posteriormente
     G = Vector{Float64}(undef, length(x))
