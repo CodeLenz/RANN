@@ -22,20 +22,20 @@ function ColocDominio(prob::String)
         R, _ = Geometria_Circular()
 
         # Número de divisões em raio e ângulo
-        div_r = 10
-        div_θ = 5
+        div_r = 5
+        div_θ = 12
 
         # Divisões para o teste
         div_r_teste = div_r * 3
         div_θ_teste = div_θ * 3
 
         # Define um range de raios 
-        raios = collect(range(R / 100.0, R, div_r))
-        raios_teste = collect(range(R / 100.0, R, div_r_teste))
+        raios = collect(range(0.1 * R, 0.95 * R, div_r))
+        raios_teste = collect(range(0.1 * R, 0.95 * R, div_r_teste))
 
         # Define um range de ângulos
-        angulos = collect(range(0.0, 2.0 * pi, div_θ))
-        angulos_teste = collect(range(0.0, 2.0 * pi, div_θ_teste))
+        angulos = collect(range(0.0, 1.875 * pi, div_θ))
+        angulos_teste = collect(range(0.0, 1.9375 * pi, div_θ_teste))
 
         # Define matriz para os pontos de perda física
         XY_fisica = zeros(Float64, 2, div_r * div_θ)
@@ -96,6 +96,14 @@ function ColocDominio(prob::String)
 
     end
 
+    # Salva um arquivo com o gráfico dos pontos de colocação e de teste
+    plot_XY = scatter(XY_fisica[1,:], XY_fisica[2, :], title = "Pontos de Colocação e Contorno", 
+                   label = "Colocação", markershape=:circle, markercolor=:blue)
+    scatter!(plot_XY, XY_teste[1,:], XY_teste[2, :], label="Teste", markershape=:cross, markercolor=:red)
+
+    # Grava o gráfico
+    savefig(plot_XY, "Resultados/pontos_colocação_teste.png")
+
     # Retorna os valores
     XY_fisica, XY_teste
     
@@ -133,13 +141,19 @@ function CContorno(prob::String)
 
         end
 
+        # Salva um arquivo com o gráfico dos pontos de colocação e de teste
+        plot_contorno = scatter(XY_contorno[1,:], XY_contorno[2, :], title = "Pontos de Contorno", 
+                                markershape=:circle, markercolor=:blue)
+
+        # Grava o gráfico
+        savefig(plot_contorno, "Resultados/pontos_contorno.png")
+
     # Caso não seja selecionado nenhum problema, define entrada vazia
     else
 
         XY_contorno = nothing
 
-    end
-    
+    end    
 
     # Retorna os valores
     XY_contorno

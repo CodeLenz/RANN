@@ -6,7 +6,7 @@
 # ϵ (default 10^-8) 
 # nepoch (Número de épocas, default = 10)
 # δ (critério de convergência, default = 1E-8)
-function AdamW(rede::Rede, dict_treino::NamedTuple, nepoch::Int64; α = 1E-3, β1 = 0.9, β2 = 0.999,
+function AdamW(rede::Rede, treino::NamedTuple, nepoch::Int64, prob::String; α = 1E-3, β1 = 0.9, β2 = 0.999,
               ϵ = 1E-8, w_decay = 0.0, conv = 1E-8, otimizador = "AdamW")
               
     # Aloca objetivo
@@ -27,7 +27,7 @@ function AdamW(rede::Rede, dict_treino::NamedTuple, nepoch::Int64; α = 1E-3, β
     vetor_perda = [zeros(nepoch) for _ in 1:4]    
 
     # Aloca a resposta estimada para os pontos de teste
-    u_test_pred = zeros(1, size(dict_treino.teste, 2))
+    u_test_pred = zeros(1, size(treino.teste, 2))
 
     # Aloca vetor gradiente - vazio, valores serão inputados posteriormente
     G = Vector{Float64}(undef, length(x))
@@ -40,7 +40,7 @@ function AdamW(rede::Rede, dict_treino::NamedTuple, nepoch::Int64; α = 1E-3, β
     @showprogress "Otimizando com AdamW..." for epoch = 1:nepoch
 
         # Calcula o objetivo da rede para o treino 
-        obj_treino = ObjetivoFloat(rede, dict_treino, epoch, x)
+        obj_treino = ObjetivoFloat(rede, treino, epoch, x)
 
         # Testa se a otimização convergiu ao longo das iterações
         if obj_treino <= conv
@@ -58,14 +58,13 @@ function AdamW(rede::Rede, dict_treino::NamedTuple, nepoch::Int64; α = 1E-3, β
             Enzyme.Reverse,
             ObjetivoFloat,
             Const(rede),
-            Const(dict_treino),
+            Const(treino),
             Const(epoch),
             Duplicated(x, G)
             )
 
         # Calcula o objetivo da rede para o treino 
-        obj_treino, perda  = 
-            Objetivo(rede, dict_treino, epoch, x)
+        obj_treino, perda  = Objetivo(rede, treino, epoch, x)
 
         # Armazena o objetivo
         vetor_obj_treino[epoch] = obj_treino
@@ -79,9 +78,7 @@ function AdamW(rede::Rede, dict_treino::NamedTuple, nepoch::Int64; α = 1E-3, β
         # Atualiza as variáveis de projeto antes dos passos tradicionais do Adam
         x .= x .- α * w_decay * x
 
-        #
-        # Atualiza os momentos
-        
+        # Atualiza os momentos        
         # Primeiro momento (média)
         m .= β1 * m .+ (1 - β1) * G
 
@@ -98,8 +95,8 @@ function AdamW(rede::Rede, dict_treino::NamedTuple, nepoch::Int64; α = 1E-3, β
         # A cada 1000 epochs vamos monitorar o comportamento da rede 
         if (epoch % 1000 == 0) || (epoch == nepoch)
 
-            # Obtém a resposta da rede neural para os pontos de teste
-            u_test_pred = Resposta_Teste(rede, x, dict_treino, vetor_obj_treino, vetor_perda, epoch, otimizador)
+            # Obtém a resposta da rede neural para os pontos de teste e gera gráficos para monitoramento
+            u_test_pred = Resposta_Teste(rede, x, treino, vetor_obj_treino, vetor_perda, epoch, prob, otimizador)
 
         end
 

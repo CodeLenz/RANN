@@ -1,11 +1,8 @@
 # Função objetivo que depende das entradas da rede neural
 # R^n -> R, onde n é o número total de pesos e bias da rede
 # λ1 e λ2 são hiperparâmetros para ponderação dos termos da função objetivo
-function Objetivo(rede::Rede, dict_treino::NamedTuple, epoch::Int64, x::Vector{Float64},
-                  λ1 = 1.0E-1, λ2 = 1.0E-1, λ3 = 1.0E-3)
-
-	# Alias
-   	topologia = rede.topologia
+function Objetivo(rede::Rede, treino::NamedTuple, epoch::Int64, x::Vector{Float64},
+                  λ1 = 1.0E-1, λ2 = 1.0E-1, λ3 = 1.0E-2)
    
    	# Aloca as matrizes de pesos e bias a partir das variáveis de projeto
    	pesos, bias = Atualiza_pesos_bias(rede, x)
@@ -15,10 +12,10 @@ function Objetivo(rede::Rede, dict_treino::NamedTuple, epoch::Int64, x::Vector{F
    	perda = zeros(4)
 
    	# Aloca as derivadas em relação as variáveis (x, y) 
-	# du/dx du/dy
+	# Primeira derivada: du/dx du/dy
    	du_xy = [zeros(1) for _ in 1:2]
 
-	# d2u/dx2 d2u/dxdy d2u/dydx d2u/dy2
+	# Segunda derivada: d2u/dx2 d2u/dxdy; d2u/dydx d2u/dy2
    	d2u_xy = [zeros(2) for _ in 1:2]
 
 	# Aloca as derivadas em relação a variável (t)
@@ -26,29 +23,29 @@ function Objetivo(rede::Rede, dict_treino::NamedTuple, epoch::Int64, x::Vector{F
 	d2u_t = zeros(1)
 
    	# Aloca vetor de saída da rede
-   	u0 = zeros(topologia[end])
+   	u0 = zeros(rede.topologia[end])
 
    	# 
    	# Condições de contorno
    	#
 	# Verifica a existência das condições de contorno
-	if !isnothing(dict_treino.contorno)
+	if !isnothing(treino.contorno)
 
 		# Loop pelas condições de contorno
-   		for coluna in axes(dict_treino.contorno, 2)
+   		for coluna in axes(treino.contorno, 2)
  
     		# Extrai as entradas da rede
-      		cc_i = dict_treino.contorno[1:(end-1), coluna]
+      		cc_i = treino.contorno[1:(end-1), coluna]
 
       		# Extrai o valor esperado no contorno
-      		u0_esperado = dict_treino.contorno[end, coluna]
+      		u0_esperado = treino.contorno[end, coluna]
 
       		# Valores 
       		u0 .= RNA(rede, pesos, bias, cc_i)
 
       		# Testa por NaN
       		if any(isnan.(u0)) 
-        		error("Nan em u0 físico ") 
+        		error("Nan em u0 físico") 
       		end 
 
       		# Calcula a perda
@@ -57,7 +54,7 @@ function Objetivo(rede::Rede, dict_treino::NamedTuple, epoch::Int64, x::Vector{F
 		end
 
 		# Calcula a perda de contorno média
-    	perda[1] /= size(dict_treino.contorno, 2)
+    	perda[1] /= size(treino.contorno, 2)
 
    	end
 
@@ -65,15 +62,15 @@ function Objetivo(rede::Rede, dict_treino::NamedTuple, epoch::Int64, x::Vector{F
    	# Condições iniciais 
    	#
 	# Verifica a existência das condições iniciais
-	if !isnothing(dict_treino.t_inicial)
+	if !isnothing(treino.t_inicial)
 
 		# Extrai os valores das condições iniciais
-		t_inicial = dict_treino.t_inicial
-		u_inicial = dict_treino.u_inicial
-		du_inicial = dict_treino.du_inicial
+		t_inicial = treino.t_inicial
+		u_inicial = treino.u_inicial
+		du_inicial = treino.du_inicial
 
    		# Calcula o valor do deslocamento no tempo t0
-   		u0 .= RNA(rede, pesos, bias, t_inicial)
+   		u0 .= RNA(rede, pesos, bias, [t_inicial])
       
    		# Testa por NaN
    		if any(isnan.(u0)) 
@@ -112,14 +109,14 @@ function Objetivo(rede::Rede, dict_treino::NamedTuple, epoch::Int64, x::Vector{F
 	end
 
     #
-    # Perda física (resíduo da ED)
+    # Perda física (resíduo da equação diferencial)
     #
     # Perda física, associada ao atendimento da equação diferencial nos pontos de treino    
     # Loop pelos pontos de treino
-    for coluna in axes(dict_treino.fisica, 2)
+    for coluna in axes(treino.fisica, 2)
  
         # Extrai as entradas da rede
-        x_i = dict_treino.fisica[:, coluna]
+        x_i = treino.fisica[:, coluna]
 
         # Valores 
         u0 .= RNA(rede, pesos, bias, x_i)
@@ -148,7 +145,7 @@ function Objetivo(rede::Rede, dict_treino::NamedTuple, epoch::Int64, x::Vector{F
     end
 
     # Calcula a perda física média
-    perda[4] /= size(dict_treino.fisica, 2)
+    perda[4] /= size(treino.fisica, 2)
 
     # Soma as componentes de perda para valor do objetivo
     # TODO: utilizar fator_fis somente no ADAM
@@ -170,9 +167,9 @@ end
 # Cria um wrapper para enganar o Enzyme
 # Retorna apenas o valor float que queremos diferenciar da função objetivo, visto que ele não consegue
 # diferenciar mais de um parâmetro (tupla)
-function ObjetivoFloat(rede::Rede, dict_treino::NamedTuple, epoch::Int64, x::Vector{Float64})::Float64  
+function ObjetivoFloat(rede::Rede, treino::NamedTuple, epoch::Int64, x::Vector{Float64})::Float64  
 
-    obj, _ = Objetivo(rede, dict_treino, epoch, x)
+    obj, _ = Objetivo(rede, treino, epoch, x)
 
     return obj
 

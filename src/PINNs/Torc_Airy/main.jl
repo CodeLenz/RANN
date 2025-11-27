@@ -35,10 +35,10 @@ function main(topologia::Vector{Int64}, ativ::Tuple, nepoch_ADAM::Int64, nepoch_
     rede = Rede(topologia, ativ)
 
     # Inicializa os dados de treino
-    dict_treino = Treino(prob)
+    treino = Treino(prob)
 
     # Chama a rotina de otimização do AdamW
-    x, objetivo_treino, u_test_pred = AdamW(rede, dict_treino, nepoch_ADAM)
+    x, objetivo_treino, u_test_pred = AdamW(rede, treino, nepoch_ADAM, prob)
 
     # Chama a rotina de otimização do LBFGS
     #x, objetivo_treino, u_test_pred = LBFGS(rede, treino, nepoch_LBFGS)
@@ -53,11 +53,11 @@ end
 function roda()
 
    # Define os dados do problema: topologia e funções de ativação
-   topologia = [2; 5; 5; 5; 1]
+   topologia = [2; 100; 50; 50; 1]
    ativ = (tanh, tanh, tanh, identity)
 
    # Número de épocas
-   nepoch_ADAM = 2_000
+   nepoch_ADAM = 10_000
    nepoch_LBFGS = 3_000
 
    # Problema a ser resolvido
