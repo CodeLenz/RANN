@@ -48,9 +48,17 @@ function Resposta_Teste(rede:: Rede, x::Vector{Float64}, treino::NamedTuple, obj
     savefig(plot_obj, "Resultados/plot_obj_treino_$(epoch)_$otimizador.png")
 
     # Compara a resposta analítica com a calculada pela rede neural
-    plot_u_teste = plot([u_test_pred', u_analitico'], treino.teste[1, :], treino.teste[2, :], title = "Função de Airy Φ", 
-                        label = ["Rede neural" "Analítico"], xlabel = "x", ylabel = "y", zlabel = "Φ",
-                        size = (1000, 1000))
+    min_c = min(minimum(u_test_pred'), minimum(u_analitico))
+    max_c = max(maximum(u_test_pred'), maximum(u_analitico))
+
+    plot_u_teste_pred = scatter(treino.teste[1, :], treino.teste[2, :], marker_z = u_test_pred', clims = (min_c, max_c),
+                                color = :jet, label = "Analítico", xlabel = "x", ylabel = "y")
+                                
+    plot_u_teste_analitico = scatter(treino.teste[1, :], treino.teste[2, :], marker_z = u_analitico', clims = (min_c, max_c),
+                                     color = :jet, label = "Rede neural", xlabel = "x", ylabel = "y")
+    
+    plot_u_teste = plot(plot_u_teste_pred, plot_u_teste_analitico, plot_title = "Função de Airy Φ",
+                        size = (2000, 1000))
 
     # Grava o gráfico
     savefig(plot_u_teste, "Resultados/plot_u_teste_$(epoch)_$otimizador.png")

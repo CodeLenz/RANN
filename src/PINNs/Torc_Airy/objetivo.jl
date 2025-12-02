@@ -2,7 +2,7 @@
 # R^n -> R, onde n é o número total de pesos e bias da rede
 # λ1 e λ2 são hiperparâmetros para ponderação dos termos da função objetivo
 function Objetivo(rede::Rede, treino::NamedTuple, epoch::Int64, x::Vector{Float64},
-                  λ1 = 1.0E-1, λ2 = 1.0E-1, λ3 = 1.0E-2)
+                  λ1 = 1.0E-1, λ2 = 1.0E-1, λ3 = 1.0E-3)
    
    	# Aloca as matrizes de pesos e bias a partir das variáveis de projeto
    	pesos, bias = Atualiza_pesos_bias(rede, x)
@@ -16,7 +16,7 @@ function Objetivo(rede::Rede, treino::NamedTuple, epoch::Int64, x::Vector{Float6
    	du_xy = [zeros(1) for _ in 1:2]
 
 	# Segunda derivada: d2u/dx2 d2u/dxdy; d2u/dydx d2u/dy2
-   	d2u_xy = [zeros(2) for _ in 1:2]
+   	d2u_xy = [zeros(1) for _ in 1:2]
 
 	# Aloca as derivadas em relação a variável (t)
 	du_t = zeros(1)
@@ -130,12 +130,12 @@ function Objetivo(rede::Rede, treino::NamedTuple, epoch::Int64, x::Vector{Float6
         DerivadasPDE!(RNA, rede, pesos, bias, u0, du_xy, d2u_xy, x_i)
 
         # Testa por NaN
-        if any(isnan.(du_xy[1])) |  any(isnan.(du_xy[2]))
+        if any(isnan.(du_xy[1])) ||  any(isnan.(du_xy[2]))
            error("Nan em du física") 
         end
 
         # Testa por NaN
-        if any(isnan.(d2u_xy[1])) | any(isnan.(d2u_xy[2]))
+        if any(isnan.(d2u_xy[1])) || any(isnan.(d2u_xy[2]))
            error("Nan em d2u física") 
         end
 

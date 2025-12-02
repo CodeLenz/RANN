@@ -3,7 +3,7 @@ function EqDiff(Φ::Vector{Float64}, dΦ::Vector{Vector{Float64}}, dΦ2::Vector{
                 x::Vector{Float64})
 
     # Retorna o valor do resíduo no ponto
-    return dΦ2[1][1] + dΦ2[2][2] + 2.0
+    return dΦ2[1][1] + dΦ2[2][1] + 2.0
 
 end
 
