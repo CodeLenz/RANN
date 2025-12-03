@@ -57,7 +57,7 @@ function roda()
    ativ = (tanh, tanh, tanh, identity)
 
    # Número de épocas
-   nepoch_ADAM = 10_000
+   nepoch_ADAM = 5_000
    nepoch_LBFGS = 3_000
 
    # Problema a ser resolvido

@@ -48,20 +48,38 @@ function Resposta_Teste(rede:: Rede, x::Vector{Float64}, treino::NamedTuple, obj
     savefig(plot_obj, "Resultados/plot_obj_treino_$(epoch)_$otimizador.png")
 
     # Compara a resposta analítica com a calculada pela rede neural
-    min_c = min(minimum(u_test_pred'), minimum(u_analitico))
-    max_c = max(maximum(u_test_pred'), maximum(u_analitico))
 
-    plot_u_teste_pred = scatter(treino.teste[1, :], treino.teste[2, :], marker_z = u_test_pred', clims = (min_c, max_c),
-                                color = :jet, label = "Analítico", xlabel = "x", ylabel = "y")
-                                
-    plot_u_teste_analitico = scatter(treino.teste[1, :], treino.teste[2, :], marker_z = u_analitico', clims = (min_c, max_c),
-                                     color = :jet, label = "Rede neural", xlabel = "x", ylabel = "y")
+    # Define escala única dos gráficos
+    min_c = min(minimum(u_test_pred), minimum(u_analitico))
+    max_c = max(maximum(u_test_pred), maximum(u_analitico))
+
+    # Calcula erro entre analítico e rede neural
+    erro_u = abs.((u_test_pred .- u_analitico) ./  u_analitico) .* 100.0
+
+    # Rede neural
+    plot_u_teste_pred = scatter(treino.teste[1, :], treino.teste[2, :], marker_z = u_test_pred', 
+                                clims = (min_c, max_c), title = "Rede Neural", xlabel = "x", ylabel = "y",
+                                label = false, color = :jet, markersize = 8, markerstrokecolor = :black, 
+                                markerstrokewidth = 0.2, alpha = 0.9)
+    
+    # Analítico
+    plot_u_teste_analitico = scatter(treino.teste[1, :], treino.teste[2, :], marker_z = u_analitico', 
+                                     clims = (min_c, max_c), title = "Analítico", xlabel = "x", ylabel = "y",
+                                     label = false, color = :jet, markersize = 8, markerstrokecolor = :black, 
+                                     markerstrokewidth = 0.2, alpha = 0.9)
+
+    # Erro
+    plot_erro = scatter(treino.teste[1, :], treino.teste[2, :], marker_z = erro_u', 
+                        title = "Erro entre Rede Neural e Analítico (%)", xlabel = "x", ylabel = "y",
+                        label = false, clim = (minimum(erro_u'), maximum(erro_u)), markersize = 8, markerstrokecolor = :black, 
+                        markerstrokewidth = 0.2, alpha = 0.9, size = (1000, 1000))
     
     plot_u_teste = plot(plot_u_teste_pred, plot_u_teste_analitico, plot_title = "Função de Airy Φ",
-                        size = (2000, 1000))
+                        size = (3000, 1000))
 
     # Grava o gráfico
     savefig(plot_u_teste, "Resultados/plot_u_teste_$(epoch)_$otimizador.png")
+    savefig(plot_erro, "Resultados/plot_erro_$(epoch)_$otimizador.png")
 
     # Retorna o deslocamento estimado
     return u_test_pred

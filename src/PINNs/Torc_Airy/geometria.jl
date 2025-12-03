@@ -30,12 +30,12 @@ function ColocDominio(prob::String)
         div_θ_teste = div_θ * 3
 
         # Define um range de raios 
-        raios = collect(range(0.1 * R, 0.95 * R, div_r))
-        raios_teste = collect(range(0.1 * R, 0.95 * R, div_r_teste))
+        raios = collect(range(0.0, R, div_r))
+        raios_teste = collect(range(0.0, R, div_r_teste))
 
         # Define um range de ângulos
-        angulos = collect(range(0.0, 1.875 * pi, div_θ))
-        angulos_teste = collect(range(0.0, 1.9375 * pi, div_θ_teste))
+        angulos = collect(range(0.0, 2.0 * pi, div_θ))
+        angulos_teste = collect(range(0.0, 2.0 * pi, div_θ_teste))
 
         # Define matriz para os pontos de perda física
         XY_fisica = zeros(Float64, 2, div_r * div_θ)
@@ -119,7 +119,7 @@ function CContorno(prob::String)
         R, _ = Geometria_Circular()
 
         # Número de pontos de contorno
-        n_contorno = 100
+        n_contorno = 1000
 
         # Define um range de ângulos
         θ = collect(range(0.0, 2.0 * pi, n_contorno))

@@ -2,7 +2,7 @@
 # R^n -> R, onde n é o número total de pesos e bias da rede
 # λ1 e λ2 são hiperparâmetros para ponderação dos termos da função objetivo
 function Objetivo(rede::Rede, treino::NamedTuple, epoch::Int64, x::Vector{Float64},
-                  λ1 = 1.0E-1, λ2 = 1.0E-1, λ3 = 1.0E-3)
+                  λ1 = 1000.0, λ2 = 1.0E-1, λ3 = 1.0E-3, λ4 = 1.0)
    
    	# Aloca as matrizes de pesos e bias a partir das variáveis de projeto
    	pesos, bias = Atualiza_pesos_bias(rede, x)
@@ -150,12 +150,13 @@ function Objetivo(rede::Rede, treino::NamedTuple, epoch::Int64, x::Vector{Float6
     # Soma as componentes de perda para valor do objetivo
     # TODO: utilizar fator_fis somente no ADAM
     fator_fis = max(epoch / 500, 1.0)
-    obj = perda[1] + λ1 * perda[2] + λ2 * perda[3] + λ3 * fator_fis * perda[4]
+    obj = λ1 * perda[1] + λ2 * perda[2] + λ3 * perda[3] + λ4 * fator_fis * perda[4]
 
 	# Checa termos de perda para nan
     if any(isnan.(perda)) | isnan.(obj)
        
        error("NaN nas perdas $perda, $obj") 
+	   
     end
 
 
