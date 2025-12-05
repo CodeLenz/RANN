@@ -2,7 +2,7 @@
 function Geometria_Circular()
 
     # Raio
-    R = 0.1 #[m]
+    R = 1.0 #[m]
 
     # Momento polar de inércia
     Je = π * R^4 / 2 # [m^4]
@@ -30,7 +30,7 @@ function ColocDominio(prob::String)
         div_θ_teste = div_θ * 3
 
         # Define um range de raios 
-        raios = collect(range(0.0, R, div_r))
+        raios = collect(range(0.0, 0.9 * R, div_r))
         raios_teste = collect(range(0.0, R, div_r_teste))
 
         # Define um range de ângulos
@@ -119,7 +119,7 @@ function CContorno(prob::String)
         R, _ = Geometria_Circular()
 
         # Número de pontos de contorno
-        n_contorno = 1000
+        n_contorno = 500
 
         # Define um range de ângulos
         θ = collect(range(0.0, 2.0 * pi, n_contorno))

@@ -13,11 +13,11 @@ function Treino(prob::String)
         
     # Define dicionário para guardar todos os dados do problema
     treino = (fisica = XY_fisica,
-                   teste = XY_teste,
-                   contorno  = XY_contorno,
-                   t_inicial = t_inicial,
-                   u_inicial = u_inicial,
-                   du_inicial = du_inicial)
+              teste = XY_teste,
+              contorno  = XY_contorno,
+              t_inicial = t_inicial,
+              u_inicial = u_inicial,
+              du_inicial = du_inicial)
 
     # Retorna os dados
     return treino

@@ -33,14 +33,11 @@ function Resposta_Teste(rede:: Rede, x::Vector{Float64}, treino::NamedTuple, obj
     plot_perda_inicial_du = plot([perda[3][(epoch-999):epoch]], title = "Perda Inicial dU", label = ["Treino"])
     plot_perda_fisica = plot([perda[4][(epoch-999):epoch]], title = "Perda Física", label = ["Treino"])
 
-    #=plot_obj = plot(plot_obj_treino, plot_perda_inicial_u, 
-                    plot_perda_inicial_du, plot_perda_fisica,
-                    layout = (2, 2), size = (1000, 1000)) =#
-
+    # Gráfico da função objetivo
     # Layout do gráfico
     layout = @layout [a; b c]               
 
-    # Gera o gráfico do objetivo
+    # Gera o gráfico
     plot_obj = plot(plot_obj_treino, plot_contorno, plot_perda_fisica,
                     layout = layout, size = (1000, 1000))
 
@@ -48,13 +45,12 @@ function Resposta_Teste(rede:: Rede, x::Vector{Float64}, treino::NamedTuple, obj
     savefig(plot_obj, "Resultados/plot_obj_treino_$(epoch)_$otimizador.png")
 
     # Compara a resposta analítica com a calculada pela rede neural
-
     # Define escala única dos gráficos
     min_c = min(minimum(u_test_pred), minimum(u_analitico))
     max_c = max(maximum(u_test_pred), maximum(u_analitico))
 
-    # Calcula erro entre analítico e rede neural
-    erro_u = abs.((u_test_pred .- u_analitico) ./  u_analitico) .* 100.0
+    # Calcula erro entre analítico e rede neural em MAE
+    erro_u = abs.((u_test_pred .- u_analitico)) / size(treino.teste, 2)
 
     # Rede neural
     plot_u_teste_pred = scatter(treino.teste[1, :], treino.teste[2, :], marker_z = u_test_pred', 
@@ -70,9 +66,9 @@ function Resposta_Teste(rede:: Rede, x::Vector{Float64}, treino::NamedTuple, obj
 
     # Erro
     plot_erro = scatter(treino.teste[1, :], treino.teste[2, :], marker_z = erro_u', 
-                        title = "Erro entre Rede Neural e Analítico (%)", xlabel = "x", ylabel = "y",
-                        label = false, clim = (minimum(erro_u'), maximum(erro_u)), markersize = 8, markerstrokecolor = :black, 
-                        markerstrokewidth = 0.2, alpha = 0.9, size = (1000, 1000))
+                        title = "Erro entre Rede Neural e Analítico (MAE)", xlabel = "x", ylabel = "y",
+                        label = false, clims = (0.0, maximum(erro_u')), markersize = 8, markerstrokecolor = :black, 
+                        markerstrokewidth = 0.2, alpha = 0.9, size = (1000, 1000), c = cgrad(:jet), colorbar = true)
     
     plot_u_teste = plot(plot_u_teste_pred, plot_u_teste_analitico, plot_title = "Função de Airy Φ",
                         size = (3000, 1000))

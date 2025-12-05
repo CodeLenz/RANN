@@ -2,7 +2,7 @@
 # R^n -> R, onde n é o número total de pesos e bias da rede
 # λ1 e λ2 são hiperparâmetros para ponderação dos termos da função objetivo
 function Objetivo(rede::Rede, treino::NamedTuple, epoch::Int64, x::Vector{Float64},
-                  λ1 = 1000.0, λ2 = 1.0E-1, λ3 = 1.0E-3, λ4 = 1.0)
+                  λ1 = 10.0, λ2 = 1.0E-1, λ3 = 1.0E-3, λ4 = 1.0)
    
    	# Aloca as matrizes de pesos e bias a partir das variáveis de projeto
    	pesos, bias = Atualiza_pesos_bias(rede, x)
@@ -15,7 +15,7 @@ function Objetivo(rede::Rede, treino::NamedTuple, epoch::Int64, x::Vector{Float6
 	# Primeira derivada: du/dx du/dy
    	du_xy = [zeros(1) for _ in 1:2]
 
-	# Segunda derivada: d2u/dx2 d2u/dxdy; d2u/dydx d2u/dy2
+	# Segunda derivada: d2u/dx2 d2u/dy2
    	d2u_xy = [zeros(1) for _ in 1:2]
 
 	# Aloca as derivadas em relação a variável (t)
@@ -45,7 +45,7 @@ function Objetivo(rede::Rede, treino::NamedTuple, epoch::Int64, x::Vector{Float6
 
       		# Testa por NaN
       		if any(isnan.(u0)) 
-        		error("Nan em u0 físico") 
+        		error("Nan em u0 condição de contorno") 
       		end 
 
       		# Calcula a perda
@@ -74,7 +74,7 @@ function Objetivo(rede::Rede, treino::NamedTuple, epoch::Int64, x::Vector{Float6
       
    		# Testa por NaN
    		if any(isnan.(u0)) 
-      		error("Nan em u0 ") 
+      		error("Nan em u0 condição inicial") 
    		end 
 
 		# Verifica a existência da condição inicial da variável
@@ -158,7 +158,6 @@ function Objetivo(rede::Rede, treino::NamedTuple, epoch::Int64, x::Vector{Float6
        error("NaN nas perdas $perda, $obj") 
 	   
     end
-
 
     # Retorna a perda total ponderada pelos hiperparâmetros λ
     return obj, perda
