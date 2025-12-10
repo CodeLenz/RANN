@@ -53,7 +53,7 @@ end
 function roda()
 
    # Define os dados do problema: topologia e funções de ativação
-   topologia = [2; 50; 50; 50; 1]
+   topologia = [2; 100; 50; 50; 1]
    ativ = (tanh, tanh, tanh, identity)
 
    # Número de épocas

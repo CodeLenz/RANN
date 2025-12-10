@@ -2,7 +2,7 @@
 # R^n -> R, onde n é o número total de pesos e bias da rede
 # λ1 e λ2 são hiperparâmetros para ponderação dos termos da função objetivo
 function Objetivo(rede::Rede, treino::NamedTuple, epoch::Int64, x::Vector{Float64},
-                  λ1 = 10.0, λ2 = 1.0E-1, λ3 = 1.0E-3, λ4 = 1.0)
+                  λ1 = 1.0, λ2 = 1.0E-1, λ3 = 1.0E-3, λ4 = 1.0)
    
    	# Aloca as matrizes de pesos e bias a partir das variáveis de projeto
    	pesos, bias = Atualiza_pesos_bias(rede, x)
@@ -28,6 +28,7 @@ function Objetivo(rede::Rede, treino::NamedTuple, epoch::Int64, x::Vector{Float6
    	# 
    	# Condições de contorno
    	#
+	#=
 	# Verifica a existência das condições de contorno
 	if !isnothing(treino.contorno)
 
@@ -57,6 +58,7 @@ function Objetivo(rede::Rede, treino::NamedTuple, epoch::Int64, x::Vector{Float6
     	perda[1] /= size(treino.contorno, 2)
 
    	end
+	=#
 
    	#
    	# Condições iniciais 
@@ -70,7 +72,7 @@ function Objetivo(rede::Rede, treino::NamedTuple, epoch::Int64, x::Vector{Float6
 		du_inicial = treino.du_inicial
 
    		# Calcula o valor do deslocamento no tempo t0
-   		u0 .= RNA(rede, pesos, bias, [t_inicial])
+   		u0 .= RNA_forte(rede, pesos, bias, [t_inicial])
       
    		# Testa por NaN
    		if any(isnan.(u0)) 
@@ -86,7 +88,7 @@ function Objetivo(rede::Rede, treino::NamedTuple, epoch::Int64, x::Vector{Float6
 		end
 
     	# Calcula a primeira e a segunda derivada ao mesmo tempo
-    	DerivadasC2!(RNA, rede, pesos, bias, u0, du_t, d2u_t, t_inicial)
+    	DerivadasC2!(RNA_forte, rede, pesos, bias, u0, du_t, d2u_t, t_inicial)
     
     	# Testa por NaN
     	if any(isnan.(du_t)) 
@@ -119,7 +121,7 @@ function Objetivo(rede::Rede, treino::NamedTuple, epoch::Int64, x::Vector{Float6
         x_i = treino.fisica[:, coluna]
 
         # Valores 
-        u0 .= RNA(rede, pesos, bias, x_i)
+        u0 .= RNA_forte(rede, pesos, bias, x_i)
 
         # Testa por NaN
         if any(isnan.(u0)) 
@@ -127,7 +129,7 @@ function Objetivo(rede::Rede, treino::NamedTuple, epoch::Int64, x::Vector{Float6
         end 
 
         # Obtém a primeira e segunda derivada - velocidade e aceleração
-        DerivadasPDE!(RNA, rede, pesos, bias, u0, du_xy, d2u_xy, x_i)
+        DerivadasPDE!(RNA_forte, rede, pesos, bias, u0, du_xy, d2u_xy, x_i)
 
         # Testa por NaN
         if any(isnan.(du_xy[1])) ||  any(isnan.(du_xy[2]))
@@ -149,7 +151,7 @@ function Objetivo(rede::Rede, treino::NamedTuple, epoch::Int64, x::Vector{Float6
 
     # Soma as componentes de perda para valor do objetivo
     # TODO: utilizar fator_fis somente no ADAM
-    fator_fis = max(epoch / 500, 1.0)
+    fator_fis = 1.0 #max(epoch / 500, 1.0)
     obj = λ1 * perda[1] + λ2 * perda[2] + λ3 * perda[3] + λ4 * fator_fis * perda[4]
 
 	# Checa termos de perda para nan

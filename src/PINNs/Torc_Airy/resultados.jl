@@ -16,7 +16,7 @@ function Resposta_Teste(rede:: Rede, x::Vector{Float64}, treino::NamedTuple, obj
         x = treino.teste[:, i]
 
         # Calcula o deslocamento pela rede
-        u_test_pred[:, i] .= RNA(rede, pesos, bias, x)
+        u_test_pred[:, i] .= RNA_forte(rede, pesos, bias, x)
 
         # Calcula o deslocamento Analítico
         u_analitico[:, i] .= Φ_Analitico(prob, x)

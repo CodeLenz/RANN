@@ -22,20 +22,20 @@ function ColocDominio(prob::String)
         R, _ = Geometria_Circular()
 
         # Número de divisões em raio e ângulo
-        div_r = 5
-        div_θ = 12
+        div_r = 10
+        div_θ = 16
 
         # Divisões para o teste
         div_r_teste = div_r * 3
         div_θ_teste = div_θ * 3
 
         # Define um range de raios 
-        raios = collect(range(0.0, 0.9 * R, div_r))
-        raios_teste = collect(range(0.0, R, div_r_teste))
+        raios = raios = collect(range(0, R; length = div_r + 1)[2:end])
+        raios_teste = collect(range(0, R; length = div_r_teste + 1)[2:end])
 
         # Define um range de ângulos
-        angulos = collect(range(0.0, 2.0 * pi, div_θ))
-        angulos_teste = collect(range(0.0, 2.0 * pi, div_θ_teste))
+        angulos = collect(range(0, 2π; length = div_θ + 1)[1:end-1])
+        angulos_teste = collect(range(0, 2π; length = div_θ_teste + 1)[1:end-1])
 
         # Define matriz para os pontos de perda física
         XY_fisica = zeros(Float64, 2, div_r * div_θ)
@@ -157,5 +157,16 @@ function CContorno(prob::String)
 
     # Retorna os valores
     XY_contorno
+
+end
+
+# Função para cálculo da distância de contorno para aplicação forte das condições de contorno
+function Distancia_Contorno(XY::Vector{T}) where T
+
+    # Importa os dados da seção
+    R, _ = Geometria_Circular()
+
+    # Computa e retorna a distância em relação ao contorno
+    return R - sqrt(XY[1]^2 + XY[2]^2)
 
 end

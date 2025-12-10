@@ -3,7 +3,6 @@ function Atualiza_pesos_bias(rede::Rede, x::Vector{Float64})
 
     # Acessa os termos em Rede por apelidos 
     n_camadas = rede.n_camadas
-    #conexoes = rede.conexoes
     topologia = rede.topologia
     pesos_ranges = rede.pesos_ranges
     bias_ranges  = rede.bias_ranges
@@ -73,6 +72,26 @@ function RNA(rede::Rede, pesos::Vector{Matrix{Float64}}, bias::Vector{Vector{Flo
 
 end
 
+# Reforço "forte" das condições de contorno
+# Aplica a condição de contorno diretamente no resultado da rede neural
+function RNA_forte(rede::Rede, pesos::Vector{Matrix{Float64}}, bias::Vector{Vector{Float64}}, 
+                   entrada_i::Vector{T})::Vector{T} where T
 
+    # Calcula saída da rede neural
+    ψ = RNA(rede, pesos, bias, entrada_i)
 
+    # Função de distância do contorno
+    B = Distancia_Contorno(entrada_i)
+    
+    # Função representativa do contorno - por enquanto, é zero
+    # TODO: generalizar
+    g = zeros(rede.topologia[end])
+
+    # Saída da rede neural ajustada
+    u = g + B * ψ
+
+    # Retorna a nova saída
+    return u
+
+end
 
