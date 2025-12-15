@@ -15,11 +15,15 @@ end
 # Define os pontos de colocação do domínio e também os pontos de teste
 function ColocDominio(prob::String)
 
+
     # Caso 1: Seção transversal circular
     if prob == "circular"
 
         # Importa os dados da seção
         R, _ = Geometria_Circular()
+
+        a = 2*R
+        b = 2*R 
 
         # Número de divisões em raio e ângulo
         div_r = 10
@@ -54,10 +58,10 @@ function ColocDominio(prob::String)
             for θ in angulos
 
                 # Coordenada x
-                XY_fisica[1, k] = r * cos(θ)
+                XY_fisica[1, k] = a + r * cos(θ)
 
                 # Coordenada y
-                XY_fisica[2, k] = r * sin(θ)
+                XY_fisica[2, k] = b + r * sin(θ)
 
                 # Atualiza o contador
                 k = k + 1
@@ -77,10 +81,10 @@ function ColocDominio(prob::String)
             for θ in angulos_teste
 
                 # Coordenada x
-                XY_teste[1, k] = r * cos(θ)
+                XY_teste[1, k] = a + r * cos(θ)
 
                 # Coordenada y
-                XY_teste[2, k] = r * sin(θ)
+                XY_teste[2, k] = b + r * sin(θ)
 
                 # Atualiza o contador
                 k = k + 1
@@ -118,6 +122,9 @@ function CContorno(prob::String)
         # Importa os dados da seção
         R, _ = Geometria_Circular()
 
+        a  = 2*R
+        b  = 2*R
+
         # Número de pontos de contorno
         n_contorno = 500
 
@@ -131,10 +138,10 @@ function CContorno(prob::String)
         for i in 1:n_contorno
 
             # Coordenada x
-            XY_contorno[1, i] = R * cos(θ[i])
+            XY_contorno[1, i] = a + R * cos(θ[i])
 
             # Coordenada y
-            XY_contorno[2, i] = R * sin(θ[i])
+            XY_contorno[2, i] = b + R * sin(θ[i])
 
             # Valor da condição de contorno no pontos
             XY_contorno[3, i] = 0.0
@@ -166,7 +173,10 @@ function Distancia_Contorno(XY::Vector{T}) where T
     # Importa os dados da seção
     R, _ = Geometria_Circular()
 
+    a = 2*R
+    b = 2*R
+
     # Computa e retorna a distância em relação ao contorno
-    return R - sqrt(XY[1]^2 + XY[2]^2)
+    return R - sqrt((XY[1]-a)^2 + (XY[2]-b)^2)
 
 end

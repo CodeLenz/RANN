@@ -88,3 +88,28 @@ function DerivadasPDE!(RNA::Function, rede::Rede, pesos::Vector{Matrix{Float64}}
     end
 
 end
+#=
+
+ y                 y'
+|               |  
+|               |
+|               |    x',y'
+|               |
+|            C(a,b)------------------>x'
+|
+|          negativa
+|
+|  
+|
+--------------------------------------X
+
+
+    (x-0)^2 + (y-0)^2 = R^2
+
+    (x-a)^2 + (y-b)^2 = R^2
+
+    x = r*cos(θ)   ->     x = a + r*cos(θ)
+    y = r*sin(θ)   ->     y = b + r*sin(θ)
+
+
+=#
