@@ -50,7 +50,7 @@ function Resposta_Teste(rede:: Rede, x::Vector{Float64}, treino::NamedTuple, obj
     max_c = max(maximum(u_test_pred), maximum(u_analitico))
 
     # Calcula erro entre analítico e rede neural em MAE
-    erro_u = abs.((u_test_pred .- u_analitico)) / size(treino.teste, 2)
+    erro_u = abs.((u_test_pred .- u_analitico))
 
     # Rede neural
     plot_u_teste_pred = scatter(treino.teste[1, :], treino.teste[2, :], marker_z = u_test_pred', 
@@ -66,7 +66,7 @@ function Resposta_Teste(rede:: Rede, x::Vector{Float64}, treino::NamedTuple, obj
 
     # Erro
     plot_erro = scatter(treino.teste[1, :], treino.teste[2, :], marker_z = erro_u', 
-                        title = "Erro entre Rede Neural e Analítico (MAE)", xlabel = "x", ylabel = "y",
+                        title = "Erro entre Rede Neural e Analítico (Diferença)", xlabel = "x", ylabel = "y",
                         label = false, clims = (0.0, maximum(erro_u')), markersize = 8, markerstrokecolor = :black, 
                         markerstrokewidth = 0.2, alpha = 0.9, size = (1000, 1000), c = cgrad(:jet), colorbar = true)
     

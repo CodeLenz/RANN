@@ -15,15 +15,14 @@ end
 # Define os pontos de colocação do domínio e também os pontos de teste
 function ColocDominio(prob::String)
 
-
     # Caso 1: Seção transversal circular
     if prob == "circular"
 
         # Importa os dados da seção
         R, _ = Geometria_Circular()
 
-        a = 2*R
-        b = 2*R 
+        a = 2 * R
+        b = 2 * R 
 
         # Número de divisões em raio e ângulo
         div_r = 10
@@ -122,8 +121,8 @@ function CContorno(prob::String)
         # Importa os dados da seção
         R, _ = Geometria_Circular()
 
-        a  = 2*R
-        b  = 2*R
+        a = 2 * R
+        b = 2 * R 
 
         # Número de pontos de contorno
         n_contorno = 500
@@ -173,8 +172,8 @@ function Distancia_Contorno(XY::Vector{T}) where T
     # Importa os dados da seção
     R, _ = Geometria_Circular()
 
-    a = 2*R
-    b = 2*R
+    a = 2 * R
+    b = 2 * R
 
     # Computa e retorna a distância em relação ao contorno
     return R - sqrt((XY[1]-a)^2 + (XY[2]-b)^2)

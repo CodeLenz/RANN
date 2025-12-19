@@ -88,6 +88,7 @@ function DerivadasPDE!(RNA::Function, rede::Rede, pesos::Vector{Matrix{Float64}}
     end
 
 end
+
 #=
 
  y                 y'
