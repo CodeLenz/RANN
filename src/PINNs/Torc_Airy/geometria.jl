@@ -21,8 +21,9 @@ function ColocDominio(prob::String)
         # Importa os dados da seção
         R, _ = Geometria_Circular()
 
-        a = 2 * R
-        b = 2 * R 
+        #a = 2 * R
+        #b = 2 * R 
+        a = b = 0.0
 
         # Número de divisões em raio e ângulo
         div_r = 10
@@ -121,8 +122,9 @@ function CContorno(prob::String)
         # Importa os dados da seção
         R, _ = Geometria_Circular()
 
-        a = 2 * R
-        b = 2 * R 
+        #a = 2 * R
+        #b = 2 * R 
+        a = b = 0.0
 
         # Número de pontos de contorno
         n_contorno = 500
@@ -172,10 +174,18 @@ function Distancia_Contorno(XY::Vector{T}) where T
     # Importa os dados da seção
     R, _ = Geometria_Circular()
 
-    a = 2 * R
-    b = 2 * R
+    #a = 2 * R
+    #b = 2 * R 
+    a = b = 0.0
+
+    # Para facilitar 
+    x = XY[1]
+    y = XY[2]
+
+    # calcula uma função que vai rápido para zero
+    saida = exp(-((x^2+y^2)/R^2)^8)
 
     # Computa e retorna a distância em relação ao contorno
-    return R - sqrt((XY[1]-a)^2 + (XY[2]-b)^2)
+    return saida
 
 end

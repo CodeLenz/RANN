@@ -1,0 +1,14 @@
+
+Rede inicializada toda com uns para mitigar a questão da assimetria dos resultados
+
+
+1) Verificar se o shift das coordenadas não está dando algum erro na comparação 
+   da solução da PINN com a analítica
+
+2) 
+      x -> Rede --
+                  |____ saída  
+                  |
+      y -> Rede --
+
+
