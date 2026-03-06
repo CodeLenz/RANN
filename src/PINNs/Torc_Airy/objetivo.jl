@@ -72,7 +72,8 @@ function Objetivo(rede::Rede, treino::NamedTuple, epoch::Int64, x::Vector{Float6
 		du_inicial = treino.du_inicial
 
    		# Calcula o valor do deslocamento no tempo t0
-   		u0 .= RNA_forte(rede, pesos, bias, [t_inicial])
+		# Não estou usando .= para evitar o warning do Enzyme
+   		u0 = RNA_forte(rede, pesos, bias, [t_inicial])
       
    		# Testa por NaN
    		if any(isnan.(u0)) 
@@ -121,7 +122,8 @@ function Objetivo(rede::Rede, treino::NamedTuple, epoch::Int64, x::Vector{Float6
         x_i = treino.fisica[:, coluna]
 
         # Valores 
-        u0 .= RNA_forte(rede, pesos, bias, x_i)
+		# Não estou usando .= para evitar o warning do Enzyme
+        u0 = RNA_forte(rede, pesos, bias, x_i)
 
         # Testa por NaN
         if any(isnan.(u0)) 
