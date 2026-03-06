@@ -88,13 +88,17 @@ function RNA_forte(rede::Rede, pesos::Vector{Matrix{Float64}}, bias::Vector{Vect
     
     # Função representativa do contorno - por enquanto, é zero
     # TODO: generalizar
-    g = zeros(rede.topologia[end])
+    g = zeros(T,rede.topologia[end])
 
     # Saída da rede neural ajustada
-    u = g + B * ψ
+    # Loop explícito para evitar avisos do Enzyme
+    # Reaproveita g
+    for i in eachindex(g)
+        g[i] = g[i] + B * ψ[i]
+    end
 
-    # Retorna a nova saída
-    return u
-
+    # retorna g (antigo u)
+    return g
+    
 end
 
