@@ -48,7 +48,7 @@ function main(topologia::Vector{Int64}, ativ::Tuple, nepoch_ADAM::Int64, nepoch_
     println("***********************")
 
     # Chama a rotina de otimização do LBFGS
-    x, objetivo_treino_lbfgs, u_test_pred = LBFGS(rede, treino, nepoch_LBFGS)
+    x, objetivo_treino_lbfgs, u_test_pred = LBFGS(rede, treino, nepoch_LBFGS,prob)
 
     # (Opcional) Você pode concatenar os históricos de objetivo se quiser plotar o gráfico completo
     objetivo_treino_total = vcat(objetivo_treino_adam, objetivo_treino_lbfgs)

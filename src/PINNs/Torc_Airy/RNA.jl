@@ -54,14 +54,18 @@ function RNA(rede::Rede, pesos::Vector{Matrix{Float64}}, bias::Vector{Vector{Flo
         W = pesos[c-1] 
         ϕ = ativ[c-1]
 
-        # Copia os bias diretamente para sinais[c]
-        sinais[c] .= bias[c-1]
+        # Copia os bias diretamente para sinais[c] 
+        # Loop explícito para evitar avisos do Enzyme
+        for i in eachindex(bias[c-1])
+            sinais[c][i] = bias[c-1][i]
+        end
 
         # Calcula W*camada_anterior + b usando o mul! de 5 parâmetros.
         # O resultado é armazenado diretamente em sinais[c]
         mul!(sinais[c],W,camada_anterior,1.0,1.0)
 
-        # Aplica a função de ativação com loop explícito para evitar avisos do Enzyme no LLVM
+        # Aplica a função de ativação
+        # Loop explícito para evitar avisos do Enzyme 
         for i in eachindex(sinais[c])
            sinais[c][i] = ϕ(sinais[c][i])
         end
