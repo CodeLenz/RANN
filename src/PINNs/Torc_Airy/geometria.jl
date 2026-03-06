@@ -182,8 +182,8 @@ function Distancia_Contorno(XY::Vector{T}) where T
     x = XY[1]
     y = XY[2]
 
-    # calcula uma função que vai rápido para zero
-    saida = exp(-((x^2+y^2)/R^2)^8)
+    # calcula a função distância suave
+    saida = 1.0 - (x^2 + y^2) / R^2
 
     # Computa e retorna a distância em relação ao contorno
     return saida

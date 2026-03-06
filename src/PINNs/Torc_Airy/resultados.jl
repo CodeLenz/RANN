@@ -1,6 +1,7 @@
 # Estima os resultados da equação diferencial a partir dos pontos de teste
 function Resposta_Teste(rede:: Rede, x::Vector{Float64}, treino::NamedTuple, objetivo_treino::Vector{Float64}, 
-                        perda::Vector{Vector{Float64}}, epoch::Int64, prob::String, otimizador::String)
+                        perda::Vector{Vector{Float64}}, epoch::Int64, prob::String, otimizador::String,
+                        intervalo_monitor::Int64)
 
     # Atualiza pesos e bias com o resultado da otimização
     pesos, bias = Atualiza_pesos_bias(rede, x)
@@ -27,11 +28,11 @@ function Resposta_Teste(rede:: Rede, x::Vector{Float64}, treino::NamedTuple, obj
     writedlm("Resultados/teste_rede_$(epoch)_$otimizador.txt", u_test_pred)
 
     # Acompanha a evolução do objetivo ao longo do tempo
-    plot_obj_treino = plot([objetivo_treino[(epoch-999):epoch]], title = "Objetivo", label = ["Treino"])
-    plot_contorno = plot([perda[1][(epoch-999):epoch]], title = "Perda Contorno", label = ["Treino"])
-    plot_perda_inicial_u = plot([perda[2][(epoch-999):epoch]], title = "Perda Inicial U", label = ["Treino"])
-    plot_perda_inicial_du = plot([perda[3][(epoch-999):epoch]], title = "Perda Inicial dU", label = ["Treino"])
-    plot_perda_fisica = plot([perda[4][(epoch-999):epoch]], title = "Perda Física", label = ["Treino"])
+    plot_obj_treino = plot([objetivo_treino[(epoch-(intervalo_monitor-1)):epoch]], title = "Objetivo", label = ["Treino"])
+    plot_contorno = plot([perda[1][(epoch-(intervalo_monitor-1)):epoch]], title = "Perda Contorno", label = ["Treino"])
+    plot_perda_inicial_u = plot([perda[2][(epoch-(intervalo_monitor-1)):epoch]], title = "Perda Inicial U", label = ["Treino"])
+    plot_perda_inicial_du = plot([perda[3][(epoch-(intervalo_monitor-1)):epoch]], title = "Perda Inicial dU", label = ["Treino"])
+    plot_perda_fisica = plot([perda[4][(epoch-(intervalo_monitor-1)):epoch]], title = "Perda Física", label = ["Treino"])
 
     # Gráfico da função objetivo
     # Layout do gráfico

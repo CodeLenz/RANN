@@ -9,6 +9,9 @@
 function AdamW(rede::Rede, treino::NamedTuple, nepoch::Int64, prob::String; α = 1E-3, β1 = 0.9, β2 = 0.999,
               ϵ = 1E-8, w_decay = 0.0, conv = 1E-8, otimizador = "AdamW")
               
+    # Intervalo para gerar as respostas (acompanhamento)
+    intervalo_monitor = 1000
+
     # Aloca objetivo
     obj_treino = 0.0
 
@@ -92,11 +95,11 @@ function AdamW(rede::Rede, treino::NamedTuple, nepoch::Int64, prob::String; α =
         # Atualiza as variáveis de projeto
         x .= x .- α_t * m ./ (v.^(1/2) .+ ϵ)
 
-        # A cada 1000 epochs vamos monitorar o comportamento da rede 
-        if (epoch % 1000 == 0) || (epoch == nepoch)
+        # A cada <intervalo_monitor> epochs vamos monitorar o comportamento da rede 
+        if (epoch % intervalo_monitor == 0) || (epoch == nepoch)
 
             # Obtém a resposta da rede neural para os pontos de teste e gera gráficos para monitoramento
-            u_test_pred = Resposta_Teste(rede, x, treino, vetor_obj_treino, vetor_perda, epoch, prob, otimizador)
+            u_test_pred = Resposta_Teste(rede, x, treino, vetor_obj_treino, vetor_perda, epoch, prob, otimizador,intervalo_monitor)
 
         end
 

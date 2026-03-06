@@ -61,11 +61,10 @@ function RNA(rede::Rede, pesos::Vector{Matrix{Float64}}, bias::Vector{Vector{Flo
         # O resultado é armazenado diretamente em sinais[c]
         mul!(sinais[c],W,camada_anterior,1.0,1.0)
 
-        #
-        # Aplica a função de ativação e armazena na mesma área de memória
-        #
-        sinais[c] .= ϕ.(sinais[c])
-
+        # Aplica a função de ativação com loop explícito para evitar avisos do Enzyme no LLVM
+        for i in eachindex(sinais[c])
+           sinais[c][i] = ϕ(sinais[c][i])
+        end
     end
 
     return sinais[end]

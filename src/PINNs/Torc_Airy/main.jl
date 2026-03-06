@@ -25,8 +25,7 @@ include("perdas.jl")
 include("geometria.jl")
 include("inicial.jl")
 include("eq_diff.jl")
-#include("LBFGS.jl")
-#include("line_search.jl")
+include("LBFGS.jl") 
 
 # Função principal do código
 function main(topologia::Vector{Int64}, ativ::Tuple, nepoch_ADAM::Int64, nepoch_LBFGS::Int64, prob::String)
@@ -38,14 +37,25 @@ function main(topologia::Vector{Int64}, ativ::Tuple, nepoch_ADAM::Int64, nepoch_
     treino = Treino(prob)
 
     # Chama a rotina de otimização do AdamW
-    x, objetivo_treino, u_test_pred = AdamW(rede, treino, nepoch_ADAM, prob)
+    x, objetivo_treino_adam, u_test_pred_adam = AdamW(rede, treino, nepoch_ADAM, prob)
+
+    # Atualiza os pesos e bias da rede com os resultados otimizados do AdamW
+    # para que o L-BFGS continue de onde o AdamW parou.
+    rede.x .= x 
+
+    println("***********************")
+    println("PASSANDO PARA O L-BFGS")
+    println("***********************")
 
     # Chama a rotina de otimização do LBFGS
-    #x, objetivo_treino, u_test_pred = LBFGS(rede, treino, nepoch_LBFGS)
+    x, objetivo_treino_lbfgs, u_test_pred = LBFGS(rede, treino, nepoch_LBFGS)
+
+    # (Opcional) Você pode concatenar os históricos de objetivo se quiser plotar o gráfico completo
+    objetivo_treino_total = vcat(objetivo_treino_adam, objetivo_treino_lbfgs)
 
     # Retorna as variáveis de projeto, função objetivo ao longo do tempo,
     # resposta analítica nos pontos de teste e resposta calculada pela rede neural
-    return x, objetivo_treino, treino, u_test_pred, rede
+    return x, objetivo_treino_total, treino, u_test_pred, rede
     
 end
 

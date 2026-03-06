@@ -128,7 +128,7 @@ function Objetivo(rede::Rede, treino::NamedTuple, epoch::Int64, x::Vector{Float6
            error("Nan em u0 físico ") 
         end 
 
-        # Obtém a primeira e segunda derivada - velocidade e aceleração
+        # Obtém a primeira e segunda derivada 
         DerivadasPDE!(RNA_forte, rede, pesos, bias, u0, du_xy, d2u_xy, x_i)
 
         # Testa por NaN
@@ -152,7 +152,8 @@ function Objetivo(rede::Rede, treino::NamedTuple, epoch::Int64, x::Vector{Float6
     # Soma as componentes de perda para valor do objetivo
     # TODO: utilizar fator_fis somente no ADAM
     fator_fis = 1.0 #max(epoch / 500, 1.0)
-    obj = λ1 * perda[1] + λ2 * perda[2] + λ3 * perda[3] + λ4 * fator_fis * perda[4]
+    #obj = λ1 * perda[1] + λ2 * perda[2] + λ3 * perda[3] + λ4 * fator_fis * perda[4]
+	obj =  λ4 * fator_fis * perda[4]
 
 	# Checa termos de perda para nan
     if any(isnan.(perda)) | isnan.(obj)
