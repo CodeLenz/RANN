@@ -11,6 +11,7 @@ using Random; # Random.seed!(1234) # define um seed para as variáveis aleatóri
 using Enzyme # diferenciação automática
 using ProgressMeter # Barra de progresso ao rodar o código
 using DelimitedFiles # Escrever e ler arquivos
+using StaticArrays
 
 # Adiciona demais arquivos do programa
 include("struct_rede.jl")

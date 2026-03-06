@@ -7,31 +7,28 @@
 #
 # Detalhe que a perturbação não pode ser muito pequena, por causa da segunda derivada
 #
-function DerivadasC2!(RNA::Function, rede::Rede, pesos::Vector{Matrix{Float64}}, bias::Vector{Vector{Float64}},
+function DerivadasC2!(RNA::Function, rede::Rede, pesos::Vector{<:AbstractMatrix{Float64}}, bias::Vector{<:AbstractVector{Float64}},
                       u0::Vector{Float64}, du::Vector{Float64}, d2u::Vector{Float64}, t::Vector{Float64},
                       ϵ = 1E-3)
 
-    #
-    # Calcula a primeira e a segunda derivadas em relação ao tempo,
-    # utilizando DFC complexas
-    #
-    
     # Valor escalar do tempo, para propormos uma perturbação complexa
-    h = ϵ*sqrt(im)
-    tf = t[1] + h
-    tt = t[1] - h
+    h = ϵ * sqrt(im)
+    
+    # SVector aloca diretamente na Stack, blindando a memória e acelerando o processo
+    tf = SVector{1, ComplexF64}(t[1] + h)
+    tt = SVector{1, ComplexF64}(t[1] - h)
 
     # Calcula a resposta para frente no tempo
-    uf = RNA(rede, pesos, bias, [tf])
+    uf = RNA(rede, pesos, bias, tf)
 
     # Calcula a resposta para trás no tempo
-    ut = RNA(rede, pesos, bias, [tt])
+    ut = RNA(rede, pesos, bias, tt)
 
     # Primeira derivada na cara dura
-    du .= real( (uf.-ut)/(2*h) ) 
+    du[1] = real( (uf[1] - ut[1]) / (2*h) ) 
     
     # A segunda derivada na cara dura
-    d2u .= real( (uf .- 2*u0 .+ ut)/(h^2) )
+    d2u[1] = real( (uf[1] - 2*u0[1] + ut[1]) / h^2 )
     
 end
 
@@ -42,75 +39,44 @@ end
 #
 # ϵ:: perturbação 
 #
-function DerivadasPDE!(RNA::Function, rede::Rede, pesos::Vector{Matrix{Float64}}, bias::Vector{Vector{Float64}},
+#
+# f:: Função a derivar R^n -> R
+#
+function DerivadasPDE!(RNA::Function, rede::Rede, pesos::Vector{<:AbstractMatrix{Float64}}, bias::Vector{<:AbstractVector{Float64}},
                       u0::Vector{Float64}, du_xy::Vector{Vector{Float64}}, d2u_xy::Vector{Vector{Float64}},  
                       x::Vector{Float64}, ϵ = 1E-3)    
 
-    # Número de variáveis de projeto 
-    nvp = length(x)
-
-    # Valor escalar do tempo, para propormos uma perturbação complexa
+    # Valor escalar da perturbação complexa
     h = ϵ * sqrt(im)
 
-    # Promove x para complexo 
-    xc = zeros(ComplexF64, nvp)
+    # Cria um MVector mutável 
+    xc = MVector{2, ComplexF64}(x[1], x[2]) 
  
-    # Copia os dados atuais para o vetor complexo
-    xc .= x
+    # Loop em cada dimensão espacial (x, depois y)
+    for i in 1:2
 
-    # Loop em cada dimensão  
-    for i in eachindex(xc)
-
-       # Backup de x[i]
+       # Backup da coordenada original
        bx = xc[i]
 
        # Perturbação para frente
        xc[i] = bx + h
-
-       # Calcula para frente
        uf = RNA(rede, pesos, bias, xc)
 
        # Perturba para trás
        xc[i] = bx - h
-
-       # Calcula para trás
        ut = RNA(rede, pesos, bias, xc)
 
        # Primeira derivada em relação a x[i]
-       du_xy[i] .= real( (uf - ut) / (2 * h) ) 
+       # Acessamos o índice [1] diretamente e usamos = em vez de .= 
+       # para evitar o broadcast e acelerar ainda mais
+       du_xy[i][1] = real( (uf[1] - ut[1]) / (2 * h) ) 
     
        # Segunda derivada em relação a x[i]
-       d2u_xy[i] .= real( (uf - 2 * u0 + ut) / h^2 )
+       d2u_xy[i][1] = real( (uf[1] - 2 * u0[1] + ut[1]) / h^2 )
 
-       # Restaura 
+       # Restaura a coordenada original para o próximo loop
        xc[i] = bx
 
     end
 
 end
-
-#=
-
- y                 y'
-|               |  
-|               |
-|               |    x',y'
-|               |
-|            C(a,b)------------------>x'
-|
-|          negativa
-|
-|  
-|
---------------------------------------X
-
-
-    (x-0)^2 + (y-0)^2 = R^2
-
-    (x-a)^2 + (y-b)^2 = R^2
-
-    x = r*cos(θ)   ->     x = a + r*cos(θ)
-    y = r*sin(θ)   ->     y = b + r*sin(θ)
-
-
-=#

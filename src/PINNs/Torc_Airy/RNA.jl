@@ -1,5 +1,6 @@
-# Atualiza os vetores de vetores de pesos e bias utilizando o vetor de variáveis de projeto x
-function Atualiza_pesos_bias(rede::Rede, x::Vector{Float64})
+
+# Atualiza os vetores de pesos e bias utilizando o vetor de variáveis de projeto x
+function Atualiza_pesos_bias(rede::Rede, x::AbstractVector)
 
     # Acessa os termos em Rede por apelidos 
     n_camadas = rede.n_camadas
@@ -7,78 +8,53 @@ function Atualiza_pesos_bias(rede::Rede, x::Vector{Float64})
     pesos_ranges = rede.pesos_ranges
     bias_ranges  = rede.bias_ranges
     
-    # Aloca o vetor de Pesos: Vetor de matrizes com os pesos de cada camada da rede
-    pesos = [Matrix{Float64}(undef,topologia[i+1], topologia[i]) for i in 1:n_camadas]
+    # Cria vetores contendo VIEWS (@view) em vez de alocar novas matrizes.
+    # O reshape organiza a view em formato de matriz sem copiar dados.
+    pesos = [reshape(@view(x[pesos_ranges[i]]), topologia[i+1], topologia[i]) for i in 1:n_camadas]
+    bias  = [@view(x[bias_ranges[i]]) for i in 1:n_camadas]
 
-    # Aloca o vetor de biases: vetor de vetores com os bias dos neurônios de cada camada
-    bias = [Vector{Float64}(undef,topologia[i+1]) for i in 1:n_camadas]
-
-    #
-    # Agora só usamos os valores pré-calculados de acessos e 
-    # também usamos @views para evitar alocação de memória
-    #
-    @inbounds for i in eachindex(pesos)
-        copyto!(pesos[i], reshape(@view(x[pesos_ranges[i]]), topologia[i+1], topologia[i]))
-        copyto!(bias[i], @view(x[bias_ranges[i]]))
-    end
-
-    # Retorna matrizes de pesos e bias
+    # Retorna as matrizes (views) de pesos e bias
     return pesos, bias
 
 end
 
-#
-# Forward da Rede neural
-#
-function RNA(rede::Rede, pesos::Vector{Matrix{Float64}}, bias::Vector{Vector{Float64}}, 
-             entrada_i::Vector{T})::Vector{T} where T
 
-    # Acessa os termos em Rede por apelidos 
-    n_camadas = rede.n_camadas
-    topologia = rede.topologia
-    ativ      = rede.ativ
+# Forward da Rede neural otimizado e AD-Friendly
+function RNA(rede::Rede, pesos::Vector{<:AbstractMatrix{Float64}}, bias::Vector{<:AbstractVector{Float64}}, 
+             entrada_i::AbstractVector{T})::Vector{T} where T
 
-    # Aloca sinais aqui fora
-    sinais = [zeros(T,tt) for tt in topologia] 
-
-    # Inclui o vetor de entradas na primeira linha de sinais
-    sinais[1] .= entrada_i
+    # Promove a entrada estática para um Vector padrão.
+    a = Vector{T}(entrada_i)
 
     # Loop pelas camadas
-    for c = 2:(n_camadas+1)
+    for c in 1:rede.n_camadas
+        
+        # Aliases
+        W = pesos[c]
+        b = bias[c]
+        ϕ = rede.ativ[c]
 
-        # Recupera a camada anterior de sinais
-        camada_anterior = sinais[c-1]
-
-        # Aliases para a matriz de pesos e funções de ativação 
-        W = pesos[c-1] 
-        ϕ = ativ[c-1]
-
-        # Copia os bias diretamente para sinais[c] 
-        # Loop explícito para evitar avisos do Enzyme
-        for i in eachindex(bias[c-1])
-            sinais[c][i] = bias[c-1][i]
-        end
-
-        # Calcula W*camada_anterior + b usando o mul! de 5 parâmetros.
-        # O resultado é armazenado diretamente em sinais[c]
-        mul!(sinais[c],W,camada_anterior,1.0,1.0)
+        # Calcula a combinação linear
+        z = W * a .+ b
 
         # Aplica a função de ativação
-        # Loop explícito para evitar avisos do Enzyme 
-        for i in eachindex(sinais[c])
-           sinais[c][i] = ϕ(sinais[c][i])
+        for i in eachindex(z)
+            z[i] = ϕ(z[i])
         end
+
+        # Atualiza para a próxima camada
+        a = z
     end
 
-    return sinais[end]
+    return a
 
 end
 
+
+
 # Reforço "forte" das condições de contorno
-# Aplica a condição de contorno diretamente no resultado da rede neural
-function RNA_forte(rede::Rede, pesos::Vector{Matrix{Float64}}, bias::Vector{Vector{Float64}}, 
-                   entrada_i::Vector{T})::Vector{T} where T
+function RNA_forte(rede::Rede, pesos::Vector{<:AbstractMatrix{Float64}}, bias::Vector{<:AbstractVector{Float64}}, 
+                   entrada_i::AbstractVector{T})::Vector{T} where T
 
     # Calcula saída da rede neural
     ψ = RNA(rede, pesos, bias, entrada_i)
@@ -92,13 +68,13 @@ function RNA_forte(rede::Rede, pesos::Vector{Matrix{Float64}}, bias::Vector{Vect
 
     # Saída da rede neural ajustada
     # Loop explícito para evitar avisos do Enzyme
-    # Reaproveita g
-    for i in eachindex(g)
-        g[i] = g[i] + B * ψ[i]
+    # Reaproveita ψ
+    for i in eachindex(ψ)
+        ψ[i] = g[i] + B * ψ[i]
     end
 
-    # retorna g (antigo u)
-    return g
+    # retorna ψ (antigo u)
+    return ψ
     
 end
 

@@ -169,7 +169,7 @@ function CContorno(prob::String)
 end
 
 # Função para cálculo da distância de contorno para aplicação forte das condições de contorno
-function Distancia_Contorno(XY::Vector{T}) where T
+function Distancia_Contorno(XY::AbstractVector{T}) where T
 
     # Importa os dados da seção
     R, _ = Geometria_Circular()
