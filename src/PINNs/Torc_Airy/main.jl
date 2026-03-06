@@ -36,6 +36,10 @@ function main(topologia::Vector{Int64}, ativ::Tuple, nepoch_ADAM::Int64, nepoch_
     # Inicializa os dados de treino
     treino = Treino(prob)
 
+    println("***********************")
+    println("EXPLORANDO COM O ADAMW")
+    println("***********************")
+
     # Chama a rotina de otimização do AdamW
     x, objetivo_treino_adam, u_test_pred_adam = AdamW(rede, treino, nepoch_ADAM, prob)
 
@@ -50,7 +54,7 @@ function main(topologia::Vector{Int64}, ativ::Tuple, nepoch_ADAM::Int64, nepoch_
     # Chama a rotina de otimização do LBFGS
     x, objetivo_treino_lbfgs, u_test_pred = LBFGS(rede, treino, nepoch_LBFGS,prob)
 
-    # (Opcional) Você pode concatenar os históricos de objetivo se quiser plotar o gráfico completo
+    # Concatena os históricos de objetivo se quiser plotar o gráfico completo
     objetivo_treino_total = vcat(objetivo_treino_adam, objetivo_treino_lbfgs)
 
     # Retorna as variáveis de projeto, função objetivo ao longo do tempo,
