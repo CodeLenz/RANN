@@ -39,7 +39,6 @@ end
 #
 # ϵ:: perturbação 
 #
-#
 # f:: Função a derivar R^n -> R
 #
 function DerivadasPDE!(RNA::Function, rede::Rede, pesos::Vector{<:AbstractMatrix{Float64}}, bias::Vector{<:AbstractVector{Float64}},

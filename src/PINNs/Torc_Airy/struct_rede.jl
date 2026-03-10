@@ -87,7 +87,10 @@ struct Rede
         n_projeto = n_total_conect + n_neuronios
 
         # Inicializa o vetor de variáveis de projeto (pesos e bias)
-        #x = ones(n_projeto) #randn(n_projeto) 
+        # Possibilidades de inicialização: aleatória, ones ou Xavier
+        # Teste empírico para definir a melhor ao problema
+        # x = randn(n_projeto) 
+        # x = ones(n_projeto) 
         x = IniciaXavier(n_projeto, n_camadas, topologia, conexoes)
 
         # Pre-computa os acessos 
@@ -157,7 +160,6 @@ function IniciaXavier(n_projeto::Int64, n_camadas::Int64, topologia::Vector{Int6
     return x
 
 end
-
 
 #
 # Rotina que pré-computa os acessos aos pesos e bias 

@@ -16,12 +16,12 @@ function Φ_Analitico(prob::String, XY::Vector{Float64})
         # Importa os dados da seção
         R, _ = Geometria_Circular()
 
-        #a = 2 * R
-        #b = 2 * R 
+        # Coordenadas de offset da origem
+        # a = b = 0 => Sem offset
         a = b = 0.0
 
         # Calcula a resposta analítica
-        Φ_analitico = 0.5 * (R^2 - (XY[1]-a)^2 - (XY[2]-b)^2)
+        Φ_analitico = 0.5 * (R^2 - (XY[1] - a)^2 - (XY[2] - b)^2)
 
         return Φ_analitico
 

@@ -35,12 +35,16 @@ function Resposta_Teste(rede:: Rede, x::Vector{Float64}, treino::NamedTuple, obj
     plot_perda_fisica = plot([perda[4][(epoch-(intervalo_monitor-1)):epoch]], title = "Perda Física", label = ["Treino"])
 
     # Gráfico da função objetivo
+    # Neste momento, temos apenas a perda física
+    #=
     # Layout do gráfico
     layout = @layout [a; b c]               
 
     # Gera o gráfico
     plot_obj = plot(plot_obj_treino, plot_contorno, plot_perda_fisica,
                     layout = layout, size = (1000, 1000))
+    =#
+    plot_obj = plot(plot_obj_treino, size = (1000, 1000))
 
     # Grava o gráfico
     savefig(plot_obj, "Resultados/plot_obj_treino_$(epoch)_$otimizador.png")

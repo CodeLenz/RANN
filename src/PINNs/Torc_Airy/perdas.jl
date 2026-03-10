@@ -1,6 +1,7 @@
 # Define a função de perda para a condição inicial ou condição de contorno
 function Fn_CC_CI(y_pred::Vector{Float64}, y_esperado::Vector{Float64})
 
+    # Função quadrática para gradientes mais suaves
     return (y_pred[1] - y_esperado[1])^2
 
 end
@@ -15,7 +16,7 @@ function Fn_perda_fisica(u::Vector{Float64}, du_xy::Vector{Vector{Float64}}, du2
     res = EqDiff(u, du_xy, du2_xy, x)
                        
     # Retorna a norma
-    # Como é escalar, estamos usando abs para evitar o norm2
+    # Função quadrática para gradientes mais suaves
     return (res)^2
 
 end

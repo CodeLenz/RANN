@@ -30,6 +30,8 @@ function Objetivo(rede::Rede, treino::NamedTuple, epoch::Int64, x::Vector{Float6
    	#
 	#=
 	# Verifica a existência das condições de contorno
+	# Como estamos aplicando as condições de contorno de forma forte, não é necessário
+
 	if !isnothing(treino.contorno)
 
 		# Loop pelas condições de contorno
@@ -152,10 +154,7 @@ function Objetivo(rede::Rede, treino::NamedTuple, epoch::Int64, x::Vector{Float6
     perda[4] /= size(treino.fisica, 2)
 
     # Soma as componentes de perda para valor do objetivo
-    # TODO: utilizar fator_fis somente no ADAM
-    fator_fis = 1.0 #max(epoch / 500, 1.0)
-    #obj = λ1 * perda[1] + λ2 * perda[2] + λ3 * perda[3] + λ4 * fator_fis * perda[4]
-	obj =  λ4 * fator_fis * perda[4]
+    obj = λ1 * perda[1] + λ2 * perda[2] + λ3 * perda[3] + λ4 * perda[4]
 
 	# Checa termos de perda para nan
     if any(isnan.(perda)) | isnan.(obj)

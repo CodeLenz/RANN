@@ -11,7 +11,7 @@ using Random; # Random.seed!(1234) # define um seed para as variáveis aleatóri
 using Enzyme # diferenciação automática
 using ProgressMeter # Barra de progresso ao rodar o código
 using DelimitedFiles # Escrever e ler arquivos
-using StaticArrays
+using StaticArrays # Tipos de vetores estáticos e mutáveis
 
 # Adiciona demais arquivos do programa
 include("struct_rede.jl")
@@ -53,10 +53,12 @@ function main(topologia::Vector{Int64}, ativ::Tuple, nepoch_ADAM::Int64, nepoch_
     println("***********************")
 
     # Chama a rotina de otimização do LBFGS
-    x, objetivo_treino_lbfgs, u_test_pred = LBFGS(rede, treino, nepoch_LBFGS,prob)
+    x, objetivo_treino_lbfgs, u_test_pred = LBFGS(rede, treino, nepoch_LBFGS, prob)
 
-    # Concatena os históricos de objetivo se quiser plotar o gráfico completo
+    # Concatena os históricos de objetivo e gera gráfico completo
     objetivo_treino_total = vcat(objetivo_treino_adam, objetivo_treino_lbfgs)
+    plot_obj_total = plot([objetivo_treino_total], title = "Objetivo ADAM + LBFGS", label = ["Treino"], size = (1000, 1000))
+    savefig(plot_obj_total, "Resultados/plot_obj_total.png")
 
     # Retorna as variáveis de projeto, função objetivo ao longo do tempo,
     # resposta analítica nos pontos de teste e resposta calculada pela rede neural
