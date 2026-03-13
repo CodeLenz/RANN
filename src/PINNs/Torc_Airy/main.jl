@@ -78,7 +78,8 @@ function roda()
    nepoch_LBFGS = 1_000
 
    # Problema a ser resolvido
-   prob = "circular"
+   # prob = "circular"
+   prob = "quad"
 
    # Roda a função main
    x, objetivo_treino, treino, u_test_pred, rede = main(topologia, ativ, nepoch_ADAM, nepoch_LBFGS, prob)
