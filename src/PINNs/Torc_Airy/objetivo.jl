@@ -1,7 +1,7 @@
 # Função objetivo que depende das entradas da rede neural
 # R^n -> R, onde n é o número total de pesos e bias da rede
 # λ1 e λ2 são hiperparâmetros para ponderação dos termos da função objetivo
-function Objetivo(rede::Rede, treino::NamedTuple, epoch::Int64, x::Vector{Float64},
+function Objetivo(rede::Rede, treino::NamedTuple, epoch::Int64, x::Vector{Float64}, prob::String,
                   λ1 = 1.0, λ2 = 1.0E-1, λ3 = 1.0E-3, λ4 = 1.0)
    
    	# Aloca as matrizes de pesos e bias a partir das variáveis de projeto
@@ -44,7 +44,7 @@ function Objetivo(rede::Rede, treino::NamedTuple, epoch::Int64, x::Vector{Float6
       		u0_esperado = treino.contorno[end, coluna]
 
       		# Valores 
-      		u0 .= RNA(rede, pesos, bias, cc_i)
+      		u0 .= RNA(rede, pesos, bias, cc_i, prob)
 
       		# Testa por NaN
       		if any(isnan.(u0)) 
@@ -75,7 +75,7 @@ function Objetivo(rede::Rede, treino::NamedTuple, epoch::Int64, x::Vector{Float6
 
    		# Calcula o valor do deslocamento no tempo t0
 		# Não estou usando .= para evitar o warning do Enzyme
-   		u0 = RNA_forte(rede, pesos, bias, [t_inicial])
+   		u0 = RNA_forte(rede, pesos, bias, [t_inicial], prob)
       
    		# Testa por NaN
    		if any(isnan.(u0)) 
@@ -91,7 +91,7 @@ function Objetivo(rede::Rede, treino::NamedTuple, epoch::Int64, x::Vector{Float6
 		end
 
     	# Calcula a primeira e a segunda derivada ao mesmo tempo
-    	DerivadasC2!(RNA_forte, rede, pesos, bias, u0, du_t, d2u_t, t_inicial)
+    	DerivadasC2!(RNA_forte, rede, pesos, bias, u0, du_t, d2u_t, t_inicial, prob)
     
     	# Testa por NaN
     	if any(isnan.(du_t)) 
@@ -125,7 +125,7 @@ function Objetivo(rede::Rede, treino::NamedTuple, epoch::Int64, x::Vector{Float6
 
         # Valores 
 		# Não estou usando .= para evitar o warning do Enzyme
-        u0 = RNA_forte(rede, pesos, bias, x_i)
+        u0 = RNA_forte(rede, pesos, bias, x_i, prob)
 
         # Testa por NaN
         if any(isnan.(u0)) 
@@ -133,7 +133,7 @@ function Objetivo(rede::Rede, treino::NamedTuple, epoch::Int64, x::Vector{Float6
         end 
 
         # Obtém a primeira e segunda derivada 
-        DerivadasPDE!(RNA_forte, rede, pesos, bias, u0, du_xy, d2u_xy, x_i)
+        DerivadasPDE!(RNA_forte, rede, pesos, bias, u0, du_xy, d2u_xy, x_i, prob)
 
         # Testa por NaN
         if any(isnan.(du_xy[1])) ||  any(isnan.(du_xy[2]))
@@ -171,9 +171,9 @@ end
 # Cria um wrapper para enganar o Enzyme
 # Retorna apenas o valor float que queremos diferenciar da função objetivo, visto que ele não consegue
 # diferenciar mais de um parâmetro (tupla)
-function ObjetivoFloat(rede::Rede, treino::NamedTuple, epoch::Int64, x::Vector{Float64})::Float64  
+function ObjetivoFloat(rede::Rede, treino::NamedTuple, epoch::Int64, x::Vector{Float64}, prob::String)::Float64  
 
-    obj, _ = Objetivo(rede, treino, epoch, x)
+    obj, _ = Objetivo(rede, treino, epoch, x, prob)
 
     return obj
 

@@ -26,7 +26,8 @@ function LBFGS(rede::Rede, treino::NamedTuple, nepoch::Int64, prob::String; m = 
         Const(rede),
         Const(treino),
         Const(1),
-        Duplicated(x, G)
+        Duplicated(x, G),
+        Const(prob)
     )
 
     # Histórico para o cálculo da direção (Memória do L-BFGS)
@@ -60,12 +61,12 @@ function LBFGS(rede::Rede, treino::NamedTuple, nepoch::Int64, prob::String; m = 
         p = -r  # Direção de busca
 
         # --- 2. Busca Linear (Line Search - Armijo) ---
-        obj_atual = ObjetivoFloat(rede, treino, epoch, x)
+        obj_atual = ObjetivoFloat(rede, treino, epoch, x, prob)
         αk = α0
         c1 = 1E-4 
         
         # Backtracking
-        while ObjetivoFloat(rede, treino, epoch, x + αk * p) > obj_atual + c1 * αk * dot(G, p)
+        while ObjetivoFloat(rede, treino, epoch, x + αk * p, prob) > obj_atual + c1 * αk * dot(G, p)
             αk *= 0.5
             if αk < 1e-10 
                 break
@@ -82,7 +83,8 @@ function LBFGS(rede::Rede, treino::NamedTuple, nepoch::Int64, prob::String; m = 
             Const(rede),
             Const(treino),
             Const(epoch),
-            Duplicated(x_new, G_new)
+            Duplicated(x_new, G_new),
+            Const(prob)
         )
         
         # --- 4. Atualização do Histórico (Condição de Wolfe FR) ---
@@ -102,7 +104,7 @@ function LBFGS(rede::Rede, treino::NamedTuple, nepoch::Int64, prob::String; m = 
         G .= G_new
 
         # --- 5. Monitoramento e Logs ---
-        obj_treino, perda = Objetivo(rede, treino, epoch, x)
+        obj_treino, perda = Objetivo(rede, treino, epoch, x, prob)
         vetor_obj_treino[epoch] = obj_treino
         for i in 1:4
             vetor_perda[i][epoch] = perda[i]

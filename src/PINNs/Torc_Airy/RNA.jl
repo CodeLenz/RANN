@@ -21,7 +21,7 @@ end
 
 # Forward da Rede neural otimizado e AD-Friendly
 function RNA(rede::Rede, pesos::Vector{<:AbstractMatrix{Float64}}, bias::Vector{<:AbstractVector{Float64}}, 
-             entrada_i::AbstractVector{T})::Vector{T} where T
+             entrada_i::AbstractVector{T}, prob::String)::Vector{T} where T
 
     # Promove a entrada estática para um Vector padrão.
     a = Vector{T}(entrada_i)
@@ -54,13 +54,13 @@ end
 
 # Reforço "forte" das condições de contorno
 function RNA_forte(rede::Rede, pesos::Vector{<:AbstractMatrix{Float64}}, bias::Vector{<:AbstractVector{Float64}}, 
-                   entrada_i::AbstractVector{T})::Vector{T} where T
+                   entrada_i::AbstractVector{T}, prob::String)::Vector{T} where T
 
     # Calcula saída da rede neural
-    ψ = RNA(rede, pesos, bias, entrada_i)
+    ψ = RNA(rede, pesos, bias, entrada_i, prob)
 
     # Função de distância do contorno
-    B = Distancia_Contorno(entrada_i)
+    B = Distancia_Contorno(entrada_i, prob)
     
     # Função representativa do contorno - por enquanto, é zero
     # TODO: generalizar

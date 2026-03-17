@@ -8,7 +8,7 @@
 # Detalhe que a perturbação não pode ser muito pequena, por causa da segunda derivada
 #
 function DerivadasC2!(RNA::Function, rede::Rede, pesos::Vector{<:AbstractMatrix{Float64}}, bias::Vector{<:AbstractVector{Float64}},
-                      u0::Vector{Float64}, du::Vector{Float64}, d2u::Vector{Float64}, t::Vector{Float64},
+                      u0::Vector{Float64}, du::Vector{Float64}, d2u::Vector{Float64}, t::Vector{Float64}, prob::String,
                       ϵ = 1E-3)
 
     # Valor escalar do tempo, para propormos uma perturbação complexa
@@ -19,10 +19,10 @@ function DerivadasC2!(RNA::Function, rede::Rede, pesos::Vector{<:AbstractMatrix{
     tt = SVector{1, ComplexF64}(t[1] - h)
 
     # Calcula a resposta para frente no tempo
-    uf = RNA(rede, pesos, bias, tf)
+    uf = RNA(rede, pesos, bias, tf, prob)
 
     # Calcula a resposta para trás no tempo
-    ut = RNA(rede, pesos, bias, tt)
+    ut = RNA(rede, pesos, bias, tt, prob)
 
     # Primeira derivada na cara dura
     du[1] = real( (uf[1] - ut[1]) / (2*h) ) 
@@ -43,7 +43,7 @@ end
 #
 function DerivadasPDE!(RNA::Function, rede::Rede, pesos::Vector{<:AbstractMatrix{Float64}}, bias::Vector{<:AbstractVector{Float64}},
                       u0::Vector{Float64}, du_xy::Vector{Vector{Float64}}, d2u_xy::Vector{Vector{Float64}},  
-                      x::Vector{Float64}, ϵ = 1E-3)    
+                      x::Vector{Float64}, prob::String, ϵ = 1E-3)    
 
     # Valor escalar da perturbação complexa
     h = ϵ * sqrt(im)
@@ -59,11 +59,11 @@ function DerivadasPDE!(RNA::Function, rede::Rede, pesos::Vector{<:AbstractMatrix
 
        # Perturbação para frente
        xc[i] = bx + h
-       uf = RNA(rede, pesos, bias, xc)
+       uf = RNA(rede, pesos, bias, xc, prob)
 
        # Perturba para trás
        xc[i] = bx - h
-       ut = RNA(rede, pesos, bias, xc)
+       ut = RNA(rede, pesos, bias, xc, prob)
 
        # Primeira derivada em relação a x[i]
        # Acessamos o índice [1] diretamente e usamos = em vez de .= 

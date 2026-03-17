@@ -264,7 +264,7 @@ function CContorno(prob::String)
 
         # Número de pontos de contorno por lado
         # TODO avaliar pontos repetidos nos cantos
-        n_contorno_lado = 100
+        n_contorno_lado = 50
 
         # Define matriz para os pontos de contorno
         XY_contorno = zeros(Float64, 3, n_contorno_lado * 4)
@@ -397,8 +397,11 @@ function Distancia_Contorno(XY::AbstractVector{T}, prob::String) where T
         dist_baixo = y - (-L/2)    # positive when y > y0 (inside bottom wall)
         dist_cima = (L/2) - y    # positive when y < y1 (inside top wall)
 
-        # Obtém a distância mínima para alguma das arestas
-        dist = min(dist_esq, dist_dir, dist_baixo, dist_cima)
+        # Máxima distância possível para o centro da seção
+        φ_max = (L/2)^4
+
+        # Calcula a função distância normalizada
+        dist = dist_esq * dist_dir * dist_baixo * dist_cima
 
     end
 

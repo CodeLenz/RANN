@@ -43,7 +43,7 @@ function AdamW(rede::Rede, treino::NamedTuple, nepoch::Int64, prob::String; α =
     @showprogress "Otimizando com AdamW..." for epoch = 1:nepoch
 
         # Calcula o objetivo da rede para o treino 
-        obj_treino = ObjetivoFloat(rede, treino, epoch, x)
+        obj_treino = ObjetivoFloat(rede, treino, epoch, x, prob)
 
         # Testa se a otimização convergiu ao longo das iterações
         if obj_treino <= conv
@@ -63,11 +63,12 @@ function AdamW(rede::Rede, treino::NamedTuple, nepoch::Int64, prob::String; α =
             Const(rede),
             Const(treino),
             Const(epoch),
-            Duplicated(x, G)
+            Duplicated(x, G),
+            Const(prob)
             )
 
         # Calcula o objetivo da rede para o treino 
-        obj_treino, perda  = Objetivo(rede, treino, epoch, x)
+        obj_treino, perda  = Objetivo(rede, treino, epoch, x, prob)
 
         # Armazena o objetivo
         vetor_obj_treino[epoch] = obj_treino
