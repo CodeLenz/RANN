@@ -26,7 +26,7 @@ function ColocDominio_Retangular()
     H, B, a, b, _ = Geometria_Retangular()
 
     # Número de divisões em x e y
-    div_x = 10
+    div_x = 20
     div_y = 10
 
     # Divisões para o teste
