@@ -11,7 +11,7 @@ function Treino(prob::String)
     # Importa as condições iniciais
     t_inicial, u_inicial, du_inicial = CIniciais(prob)
         
-    # Define dicionário para guardar todos os dados do problema
+    # Define named tuple para guardar todos os dados do problema
     treino = (fisica = XY_fisica,
               teste = XY_teste,
               contorno  = XY_contorno,

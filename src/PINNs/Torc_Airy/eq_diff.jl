@@ -18,11 +18,7 @@ function Φ_Analitico(prob::String, XY::Vector{Float64})
     if prob == "circular"
 
         # Importa os dados da seção
-        R, _ = Geometria(prob)
-
-        # Coordenadas de offset da origem
-        # a = b = 0 => Sem offset
-        a = b = 0.0
+        R, a, b, _ = Geometria_Circular()
 
         # Calcula a resposta analítica
         Φ_analitico = 0.5 * (R^2 - (x - a)^2 - (y - b)^2)
@@ -30,14 +26,10 @@ function Φ_Analitico(prob::String, XY::Vector{Float64})
         # Retorna resposta
         return Φ_analitico
 
-    elseif prob == "quad"
+    elseif prob == "retang"
 
         # Importa os dados da seção
-        L, _ = Geometria(prob)
-
-        # Coordenadas de offset da origem
-        # a = b = 0 => Sem offset
-        a = b = 0.0
+        H, B, a, b, _ = Geometria_Retangular()
 
         # Loop por N termos da série, a princípio deixaremos 20
         N = 20
@@ -51,16 +43,16 @@ function Φ_Analitico(prob::String, XY::Vector{Float64})
 
                     l = 2 * li + 1
 
-                    num = (-1)^( ( (k + l) / 2 ) - 1 )
+                    num = (-1)^( ( (k + l) ÷ 2 ) - 1 )
 
-                    Φ += ( num / (k * l * (k^2 * L^2 + l^2 * L^2)) ) * cos(k * π * x / L) * cos(l * π * y / L)
+                    Φ += ( num / (k * l * (k^2 * H^2 + l^2 * B^2)) ) * cos(k * π * x / B) * cos(l * π * y / H)
 
             end
 
         end
         
         # Solução analítica
-        Φ_analitico = Φ * (32 * L^2 * L^2 / π^4)
+        Φ_analitico = Φ * (32 * B^2 * H^2 / π^4)
 
         # Retorna resposta
         return Φ_analitico
