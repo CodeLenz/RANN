@@ -1,22 +1,10 @@
 # Define as condições de contorno iniciais
-function CIniciais(prob::String)
+# Para o problema de Airy, não temos condições iniciais, portanto deve retornar matrizes vazias
+function CIniciais()
 
-    # Caso 1: Seção transversal circular
-    if prob == "circular"
-
-        # Nesse caso, não temos condições iniciais, portanto deve retornar matrizes vazias
-        t_inicial = nothing
-        u_inicial = nothing
-        du_inicial = nothing
-
-    # Caso não seja selecionado nenhum problema, define matriz vazia
-    else
-
-        t_inicial = nothing
-        u_inicial = nothing
-        du_inicial = nothing
-
-    end
+    t_inicial = nothing
+    u_inicial = nothing
+    du_inicial = nothing
 
     # Retorna os valores
     return t_inicial, u_inicial, du_inicial

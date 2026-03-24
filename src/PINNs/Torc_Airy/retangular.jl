@@ -26,8 +26,8 @@ function ColocDominio_Retangular()
     H, B, a, b, _ = Geometria_Retangular()
 
     # Número de divisões em x e y
-    div_x = 20
-    div_y = 10
+    div_x = 10
+    div_y = 5
 
     # Divisões para o teste
     div_x_teste = div_x * 3
@@ -93,6 +93,14 @@ function ColocDominio_Retangular()
 
     end
 
+    # Salva um arquivo com o gráfico dos pontos de colocação e de teste
+    plot_XY = scatter(XY_fisica[1,:], XY_fisica[2, :], title = "Pontos de Colocação e Contorno", 
+                   label = "Colocação", markershape=:circle, markercolor=:blue)
+    scatter!(plot_XY, XY_teste[1,:], XY_teste[2, :], label="Teste", markershape=:cross, markercolor=:red)
+
+    # Grava o gráfico
+    savefig(plot_XY, "Resultados/pontos_colocação_teste.png")
+
     # Retorna os valores
     XY_fisica, XY_teste
     
@@ -106,7 +114,7 @@ function CContorno_Retangular()
 
     # Número de pontos de contorno por lado
     # TODO avaliar pontos repetidos nos cantos
-    n_contorno_lado = 50
+    n_contorno_lado = 10
 
     # Define matriz para os pontos de contorno
     XY_contorno = zeros(Float64, 3, n_contorno_lado * 4)
@@ -184,12 +192,23 @@ function CContorno_Retangular()
 
     end
 
+    # Salva um arquivo com o gráfico dos pontos de colocação e de teste
+    plot_contorno = scatter(XY_contorno[1,:], XY_contorno[2, :], title = "Pontos de Contorno", 
+                            markershape=:circle, markercolor=:blue)
+
+    # Grava o gráfico
+    savefig(plot_contorno, "Resultados/pontos_contorno.png")
+
     # Retorna os valores
     XY_contorno
 
 end
 
 # Função para cálculo da distância de contorno para aplicação forte das condições de contorno
+# Proposta retirada de 
+# https://medium.com/@tkadeethum/hard-constraints-in-physics-informed-neural-networks-architecture-level-enforcement-of-boundary-528e6a18bab6
+# e 
+# https://github.com/teeratornk/pinn_hard_constraint?tab=readme-ov-file
 function Distancia_Contorno_Retangular(XY::AbstractVector{T}) where T
 
     # Para facilitar 

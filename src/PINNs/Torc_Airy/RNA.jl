@@ -60,7 +60,8 @@ function RNA_forte(rede::Rede, pesos::Vector{<:AbstractMatrix{Float64}}, bias::V
     ψ = RNA(rede, pesos, bias, entrada_i, prob)
 
     # Função de distância do contorno
-    B = Distancia_Contorno(entrada_i, prob)
+    s = Symbol("Distancia_Contorno_"*prob)
+    B = getfield(Main, s)(entrada_i)
     
     # Função representativa do contorno - por enquanto, é zero
     # TODO: generalizar

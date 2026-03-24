@@ -25,8 +25,8 @@ function ColocDominio_Circular()
     R, a, b, _ = Geometria_Circular()
 
     # Número de divisões em raio e ângulo
-    div_r = 10
-    div_θ = 16
+    div_r = 5
+    div_θ = 8
 
     # Divisões para o teste
     div_r_teste = div_r * 3
@@ -92,6 +92,14 @@ function ColocDominio_Circular()
 
     end
 
+    # Salva um arquivo com o gráfico dos pontos de colocação e de teste
+    plot_XY = scatter(XY_fisica[1,:], XY_fisica[2, :], title = "Pontos de Colocação e Contorno", 
+                   label = "Colocação", markershape=:circle, markercolor=:blue)
+    scatter!(plot_XY, XY_teste[1,:], XY_teste[2, :], label="Teste", markershape=:cross, markercolor=:red)
+
+    # Grava o gráfico
+    savefig(plot_XY, "Resultados/pontos_colocação_teste.png")
+
     # Retorna os valores
     XY_fisica, XY_teste
     
@@ -104,7 +112,7 @@ function CContorno_Circular()
     R, a, b, _ = Geometria_Circular()
 
     # Número de pontos de contorno
-    n_contorno = 500
+    n_contorno = 50
 
     # Define um range de ângulos
     θ = collect(range(0.0, 2.0 * pi, n_contorno))
@@ -125,6 +133,13 @@ function CContorno_Circular()
         XY_contorno[3, i] = 0.0
 
     end
+
+    # Salva um arquivo com o gráfico dos pontos de colocação e de teste
+    plot_contorno = scatter(XY_contorno[1,:], XY_contorno[2, :], title = "Pontos de Contorno", 
+                            markershape=:circle, markercolor=:blue)
+
+    # Grava o gráfico
+    savefig(plot_contorno, "Resultados/pontos_contorno.png")
 
     # Retorna os valores
     XY_contorno

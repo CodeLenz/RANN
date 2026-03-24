@@ -3,13 +3,15 @@
 function Treino(prob::String)
 
     # Importa os pontos de colocação do domínio e os pontos de teste
-    XY_fisica, XY_teste = ColocDominio(prob)
+    s_coloc = Symbol("ColocDominio_"*prob)
+    XY_fisica, XY_teste = getfield(Main, s_coloc)()
 
     # Importa os pontos de contorno
-    XY_contorno = CContorno(prob)
+    s_contorno = Symbol("CContorno_"*prob)
+    XY_contorno = getfield(Main, s_contorno)()
 
     # Importa as condições iniciais
-    t_inicial, u_inicial, du_inicial = CIniciais(prob)
+    t_inicial, u_inicial, du_inicial = CIniciais()
         
     # Define named tuple para guardar todos os dados do problema
     treino = (fisica = XY_fisica,

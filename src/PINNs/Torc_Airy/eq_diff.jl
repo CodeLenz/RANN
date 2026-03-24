@@ -15,7 +15,7 @@ function Φ_Analitico(prob::String, XY::Vector{Float64})
     y = XY[2]
 
     # Caso 1: Seção transversal circular
-    if prob == "circular"
+    if prob == "Circular"
 
         # Importa os dados da seção
         R, a, b, _ = Geometria_Circular()
@@ -26,7 +26,7 @@ function Φ_Analitico(prob::String, XY::Vector{Float64})
         # Retorna resposta
         return Φ_analitico
 
-    elseif prob == "retang"
+    elseif prob == "Retangular"
 
         # Importa os dados da seção
         H, B, a, b, _ = Geometria_Retangular()

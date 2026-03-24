@@ -23,7 +23,6 @@ include("adamW.jl")
 include("ativ.jl")
 include("resultados.jl")
 include("perdas.jl")
-include("geometria.jl")
 include("circular.jl")
 include("retangular.jl")
 include("inicial.jl")
@@ -80,8 +79,8 @@ function roda()
    nepoch_LBFGS = 2_000
 
    # Problema a ser resolvido
-   # prob = "circular"
-   prob = "retang"
+   prob = "Circular"
+   # prob = "Retangular"
 
    # Roda a função main
    x, objetivo_treino, treino, u_test_pred, rede = main(topologia, ativ, nepoch_ADAM, nepoch_LBFGS, prob)
