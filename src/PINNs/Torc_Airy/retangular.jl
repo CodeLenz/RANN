@@ -26,8 +26,8 @@ function ColocDominio_Retangular()
     H, B, a, b, _ = Geometria_Retangular()
 
     # Número de divisões em x e y
-    div_x = 10
-    div_y = 5
+    div_x = 20
+    div_y = 10
 
     # Divisões para o teste
     div_x_teste = div_x * 3
@@ -114,7 +114,7 @@ function CContorno_Retangular()
 
     # Número de pontos de contorno por lado
     # TODO avaliar pontos repetidos nos cantos
-    n_contorno_lado = 10
+    n_contorno_lado = 50
 
     # Define matriz para os pontos de contorno
     XY_contorno = zeros(Float64, 3, n_contorno_lado * 4)
@@ -209,6 +209,7 @@ end
 # https://medium.com/@tkadeethum/hard-constraints-in-physics-informed-neural-networks-architecture-level-enforcement-of-boundary-528e6a18bab6
 # e 
 # https://github.com/teeratornk/pinn_hard_constraint?tab=readme-ov-file
+#=
 function Distancia_Contorno_Retangular(XY::AbstractVector{T}) where T
 
     # Para facilitar 
@@ -234,3 +235,4 @@ function Distancia_Contorno_Retangular(XY::AbstractVector{T}) where T
     return dist
 
 end
+=#

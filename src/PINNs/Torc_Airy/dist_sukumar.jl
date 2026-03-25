@@ -2,9 +2,9 @@
 # Proposta retirada de N. Sukumar, Ankit Srivastava
 # https://arxiv.org/abs/2104.08426
 
-# ADF para retângulo [-H/2, H/2] × [-L/2, L/2]
+# ADF para retângulo [-H/2, H/2] × [-B/2, B/2]
 # Segmentos seguem ordem anti-horária: baixo, direita, topo, esquerda
-function adf_retang(XY::AbstractVector{T}) where T
+function Distancia_Contorno_Retangular(XY::AbstractVector{T}) where T
 
     # Para facilitar 
     x = XY[1]
@@ -31,7 +31,7 @@ end
 # Calcula a função ADF (Approximate Distance Function) para um segmento de linha
 # Equação 6 no artigo
 # x1,y1 e x2,y2 são as extremidades do segmento, x,y é o ponto onde a função é avaliada
-function adf_segmento(x::T, y::T, x1::T, y1::T, x2::T, y2::T, L::T) where T
+function adf_segmento(x::T, y::T, x1::Float64, y1::Float64, x2::Float64, y2::Float64, L::Float64) where T
 
     # Centro do segmento
     xc = (x1 + x2) / 2
