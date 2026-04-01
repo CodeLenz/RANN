@@ -5,7 +5,7 @@ function Geometria_Retangular()
 
     # Lados
     H = 1.0 # [m]
-    B = 2.0 # [m]
+    B = 1.0 # [m]
 
     # Coordenadas de offset da origem
     # a = b = 0 => Sem offset
@@ -27,7 +27,7 @@ function ColocDominio_Retangular()
 
     # Número de divisões em x e y
     div_x = 20
-    div_y = 10
+    div_y = 20
 
     # Divisões para o teste
     div_x_teste = div_x * 3
