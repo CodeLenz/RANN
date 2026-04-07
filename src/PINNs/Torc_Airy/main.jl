@@ -25,6 +25,7 @@ include("resultados.jl")
 include("perdas.jl")
 include("circular.jl")
 include("retangular.jl")
+include("sec_L.jl")
 include("dist_sukumar.jl")
 include("inicial.jl")
 include("eq_diff.jl")
@@ -72,16 +73,17 @@ end
 function roda()
 
    # Define os dados do problema: topologia e funções de ativação
-   topologia = [2; 50; 50; 50; 1]
+   topologia = [2; 30; 30; 30; 1]
    ativ = (tanh, tanh, tanh, identity)
 
    # Número de épocas
-   nepoch_ADAM = 2_000
-   nepoch_LBFGS = 2_000
+   nepoch_ADAM = 1_000
+   nepoch_LBFGS = 1_000
 
    # Problema a ser resolvido
    # prob = "Circular"
-   prob = "Retangular"
+   # prob = "Retangular"
+   prob = "L"
 
    # Roda a função main
    x, objetivo_treino, treino, u_test_pred, rede = main(topologia, ativ, nepoch_ADAM, nepoch_LBFGS, prob)

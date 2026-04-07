@@ -60,7 +60,7 @@ function Φ_Analitico(prob::String, XY::Vector{Float64})
     # Caso não seja selecionado nenhum problema, retorna vazio
     else
 
-        return nothing
+        return Vector{Float64}()
 
     end
 

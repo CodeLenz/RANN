@@ -28,6 +28,45 @@ function Distancia_Contorno_Retangular(XY::AbstractVector{T}) where T
 
 end
 
+# ADF para seção em L [0, a] × [0, b]
+# Segmentos seguem ordem anti-horária
+#
+#        b
+#        _
+#       | |
+#       | |
+#    a  | |
+#       | |________
+#       |__________|  b
+#
+#            a
+#
+function Distancia_Contorno_L(XY::AbstractVector{T}) where T
+
+    # Para facilitar 
+    x = XY[1]
+    y = XY[2]
+
+    # Importa os dados da seção
+    a, b, off_x, off_y = Geometria_L()
+
+    # Seis segmentos do L, sentido anti-horário
+    # x, y, x1, y1, x2, y2, L
+    φ1 = adf_segmento(x, y, 0.0, 0.0, a, 0.0, a)  
+    φ2 = adf_segmento(x, y, a, 0.0, a, b, b) 
+    φ3 = adf_segmento(x, y, a, b, b, b, (a-b)) 
+    φ4 = adf_segmento(x, y, b, b, b, a, (a-b))
+    φ5 = adf_segmento(x, y, b, a, 0.0, a, b)
+    φ6 = adf_segmento(x, y, 0.0, a, 0.0, 0.0, a)  
+
+    # Computa a função ADF equivalente combinando os quatro segmentos
+    φ_equiv = adf_requivalente([φ1, φ2, φ3, φ4, φ5, φ6])
+
+    # Combina os segmentos usando R-equivalence joining
+    return φ_equiv
+
+end
+
 # Calcula a função ADF (Approximate Distance Function) para um segmento de linha
 # Equação 6 no artigo
 # x1,y1 e x2,y2 são as extremidades do segmento, x,y é o ponto onde a função é avaliada
