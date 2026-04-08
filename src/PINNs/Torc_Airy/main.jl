@@ -77,8 +77,8 @@ function roda()
    ativ = (tanh, tanh, tanh, identity)
 
    # Número de épocas
-   nepoch_ADAM = 1_000
-   nepoch_LBFGS = 1_000
+   nepoch_ADAM = 2_000
+   nepoch_LBFGS = 2_000
 
    # Problema a ser resolvido
    # prob = "Circular"

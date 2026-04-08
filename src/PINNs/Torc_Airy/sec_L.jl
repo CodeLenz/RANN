@@ -16,8 +16,8 @@
 function Geometria_L()
 
     # Lados
-    a = 0.1  # [m]
-    b = 0.01 # [m]
+    a = 10.0 # [m]
+    b = 1.0 # [m]
 
     # Coordenadas de offset da origem
     # off_x = off_y = 0 => Sem offset
