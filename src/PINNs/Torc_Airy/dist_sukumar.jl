@@ -91,7 +91,7 @@ function adf_segmento(x::T, y::T, x1::Float64, y1::Float64, x2::Float64, y2::Flo
 end
 
 # Combina n segmentos usando R-equivalence joining (equação 10, m=1)
-function adf_requivalente(vetor_φ::AbstractVector{T}; m = 2) where T
+function adf_requivalente(vetor_φ::AbstractVector{T}; m = 1) where T
 
     # φ = 1 / (Σ 1/φᵢᵐ)^(1/m)
     denominador = sum(1.0 / φ^m for φ in vetor_φ)

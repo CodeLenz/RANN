@@ -50,8 +50,6 @@ function RNA(rede::Rede, pesos::Vector{<:AbstractMatrix{Float64}}, bias::Vector{
 
 end
 
-
-
 # Reforço "forte" das condições de contorno
 function RNA_forte(rede::Rede, pesos::Vector{<:AbstractMatrix{Float64}}, bias::Vector{<:AbstractVector{Float64}}, 
                    entrada_i::AbstractVector{T}, prob::String)::Vector{T} where T

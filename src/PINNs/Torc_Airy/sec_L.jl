@@ -133,8 +133,6 @@ function ColocDominio_L()
     # Filtra essas colunas
     XY_teste = XY_teste[:, indices_teste]
 
-    @show size(XY_fisica), size(XY_teste)
-
     # Salva um arquivo com o gráfico dos pontos de colocação e de teste
     plot_XY = scatter(XY_fisica[1,:], XY_fisica[2, :], title = "Pontos de Colocação e Contorno", 
                    label = "Colocação", markershape=:circle, markercolor=:blue)
