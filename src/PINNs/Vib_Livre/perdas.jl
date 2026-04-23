@@ -6,7 +6,7 @@ function Fn_perda_inicial(y_pred::Vector{Float64}, y_esperado::Vector{Float64})
 end
 
 # Define a função de perda física para os pontos de treino
-function Fn_perda_fisica(treino::Treino, u::Vector{Float64}, du::Vector{Float64}, du2::Vector{Float64})
+function Fn_perda_fisica(treino::NamedTuple, u::Vector{Float64}, du::Vector{Float64}, du2::Vector{Float64})
 
 
     #

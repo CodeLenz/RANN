@@ -15,7 +15,7 @@ function Geometria_Retangular()
     Je = B * H * (H^2 + B^2) / 12 # [m^4]
 
     # Retorna os valores
-    return H, B, a, b,Je
+    return H, B, a, b, Je
 
 end
 
@@ -226,7 +226,8 @@ function Distancia_Contorno_Retangular(XY::AbstractVector{T}) where T
     dist_cima = (H/2) - y    # positive when y < y1 (inside top wall)
 
     # Máxima distância possível para o centro da seção
-    φ_max = max( (B/2)^4, (H/2)^4 )
+    # TODO: Validar
+    φ_max = (B/2)^2 * (H/2)^2
 
     # Calcula a função distância normalizada
     dist = dist_esq * dist_dir * dist_baixo * dist_cima
