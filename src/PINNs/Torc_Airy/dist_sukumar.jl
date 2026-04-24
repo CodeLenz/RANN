@@ -15,10 +15,10 @@ function Distancia_Contorno_Retangular(XY::AbstractVector{T}) where T
 
     # Quatro segmentos do retângulo, sentido anti-horário
     # x, y, x1, y1, x2, y2, L
-    φ1 = adf_segmento(x, y, -B/2, -H/2,  B/2, -H/2, B)  # baixo
-    φ2 = adf_segmento(x, y,  B/2, -H/2,  B/2,  H/2, H)  # direita
-    φ3 = adf_segmento(x, y,  B/2,  H/2, -B/2,  H/2, B)  # topo
-    φ4 = adf_segmento(x, y, -B/2,  H/2, -B/2, -H/2, H)  # esquerda
+    φ1 = adf_segmento(x, y, -B/2, -H/2,  B/2, -H/2)  # baixo
+    φ2 = adf_segmento(x, y,  B/2, -H/2,  B/2,  H/2)  # direita
+    φ3 = adf_segmento(x, y,  B/2,  H/2, -B/2,  H/2)  # topo
+    φ4 = adf_segmento(x, y, -B/2,  H/2, -B/2, -H/2)  # esquerda
 
     # Computa a função ADF equivalente combinando os quatro segmentos
     φ_equiv = adf_requivalente([φ1, φ2, φ3, φ4])
@@ -52,12 +52,12 @@ function Distancia_Contorno_L(XY::AbstractVector{T}) where T
 
     # Seis segmentos do L, sentido anti-horário
     # x, y, x1, y1, x2, y2, L
-    φ1 = adf_segmento(x, y, 0.0, 0.0, a, 0.0, a)  
-    φ2 = adf_segmento(x, y, a, 0.0, a, b, b) 
-    φ3 = adf_segmento(x, y, a, b, b, b, (a-b)) 
-    φ4 = adf_segmento(x, y, b, b, b, a, (a-b))
-    φ5 = adf_segmento(x, y, b, a, 0.0, a, b)
-    φ6 = adf_segmento(x, y, 0.0, a, 0.0, 0.0, a)  
+    φ1 = adf_segmento(x, y, 0.0, 0.0, a, 0.0)  
+    φ2 = adf_segmento(x, y, a, 0.0, a, b) 
+    φ3 = adf_segmento(x, y, a, b, b, b) 
+    φ4 = adf_segmento(x, y, b, b, b, a)
+    φ5 = adf_segmento(x, y, b, a, 0.0, a)
+    φ6 = adf_segmento(x, y, 0.0, a, 0.0, 0.0)  
 
     # Computa a função ADF equivalente combinando os quatro segmentos
     φ_equiv = adf_requivalente([φ1, φ2, φ3, φ4, φ5, φ6])
@@ -70,7 +70,13 @@ end
 # Calcula a função ADF (Approximate Distance Function) para um segmento de linha
 # Equação 6 no artigo
 # x1,y1 e x2,y2 são as extremidades do segmento, x,y é o ponto onde a função é avaliada
-function adf_segmento(x::T, y::T, x1::Float64, y1::Float64, x2::Float64, y2::Float64, L::Float64) where T
+function adf_segmento(x::T, y::T, x1::Float64, y1::Float64, x2::Float64, y2::Float64) where T
+
+    # Comprimento do segmento 
+    L = sqrt( (x2-x1)^2 + (y2-y1)^2)
+
+    # Teste de segurança
+    L>0 || error("adf_segmento:: comprimento nulo")
 
     # Centro do segmento
     xc = (x1 + x2) / 2
@@ -91,7 +97,12 @@ function adf_segmento(x::T, y::T, x1::Float64, y1::Float64, x2::Float64, y2::Flo
 end
 
 # Combina n segmentos usando R-equivalence joining (equação 10, m=1)
-function adf_requivalente(vetor_φ::AbstractVector{T}; m = 1) where T
+function adf_requivalente(vetor_φ::AbstractVector{T}, m=1) where T
+
+    # Testa se temos um zero em φ
+    if any(vetor_φ.≈0)
+       error("adf_requivalente:: um dos φ é nulo") 
+    end
 
     # φ = 1 / (Σ 1/φᵢᵐ)^(1/m)
     denominador = sum(1.0 / φ^m for φ in vetor_φ)
