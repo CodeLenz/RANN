@@ -14,10 +14,10 @@ function Resposta_Teste(rede:: Rede, x::Vector{Float64}, treino::NamedTuple, obj
     for i = 1:size(treino.teste, 2)
 
         # Extrai o ponto para teste
-        x = treino.teste[:, i]
+        x_i = treino.teste[:, i]
 
         # Calcula o deslocamento pela rede
-        u_test_pred[:, i] .= RNA_forte(rede, pesos, bias, x, prob)
+        u_test_pred[:, i] .= RNA_forte(rede, pesos, bias, x_i, prob)
 
         # Calcula o deslocamento Analítico
         #u_analitico[:, i] .= Φ_Analitico(prob, x)
@@ -47,7 +47,7 @@ function Resposta_Teste(rede:: Rede, x::Vector{Float64}, treino::NamedTuple, obj
     plot_obj = plot(plot_obj_treino, size = (1000, 1000))
 
     # Grava o gráfico
-    savefig(plot_obj, "Resultados/plot_obj_treino_$(epoch)_$otimizador.png")
+    savefig(plot_obj, "Resultados/plot_obj_treino_$(epoch)_$otimizador.pdf")
 
     # Compara a resposta analítica com a calculada pela rede neural
     # Define escala única dos gráficos
@@ -60,10 +60,10 @@ function Resposta_Teste(rede:: Rede, x::Vector{Float64}, treino::NamedTuple, obj
     #erro_u = abs.((u_test_pred .- u_analitico))
 
     # Rede neural
-    plot_u_teste_pred = scatter(treino.teste[1, :], treino.teste[2, :], marker_z = u_test_pred', 
+    plot_u_teste_pred = scatter(treino.teste[1, :], treino.teste[2, :], marker_z = u_test_pred[:], 
                                 clims = (min_c, max_c), title = "Rede Neural", xlabel = "x", ylabel = "y",
-                                label = false, color = :jet, markersize = 8, markerstrokecolor = :black, 
-                                markerstrokewidth = 0.2, alpha = 0.9)
+                                label = false, color = :jet, markersize = 4, 
+                                markerstrokewidth = 0.0, alpha = 1.0)
     
     # Analítico
     #=plot_u_teste_analitico = scatter(treino.teste[1, :], treino.teste[2, :], marker_z = u_analitico', 
@@ -83,8 +83,8 @@ function Resposta_Teste(rede:: Rede, x::Vector{Float64}, treino::NamedTuple, obj
     plot_u_teste = plot(plot_u_teste_pred, plot_title = "Função de Airy Φ", size = (1000, 1000))
 
     # Grava o gráfico
-    savefig(plot_u_teste, "Resultados/plot_u_teste_$(epoch)_$otimizador.png")
-    #savefig(plot_erro, "Resultados/plot_erro_$(epoch)_$otimizador.png")
+    savefig(plot_u_teste, "Resultados/plot_u_teste_$(epoch)_$otimizador.pdf")
+    #savefig(plot_erro, "Resultados/plot_erro_$(epoch)_$otimizador.pdf")
 
     # Retorna o deslocamento estimado
     return u_test_pred
