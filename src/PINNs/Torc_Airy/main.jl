@@ -61,7 +61,7 @@ function main(topologia::Vector{Int64}, ativ::Tuple, nepoch_ADAM::Int64, nepoch_
     # Concatena os históricos de objetivo e gera gráfico completo
     objetivo_treino_total = vcat(objetivo_treino_adam, objetivo_treino_lbfgs)
     plot_obj_total = plot([objetivo_treino_total], title = "Objetivo ADAM + LBFGS", label = ["Treino"], size = (1000, 1000))
-    savefig(plot_obj_total, "Resultados/plot_obj_total.png")
+    savefig(plot_obj_total, "Resultados/plot_obj_total.pdf")
 
     # Retorna as variáveis de projeto, função objetivo ao longo do tempo,
     # resposta analítica nos pontos de teste e resposta calculada pela rede neural
@@ -73,7 +73,7 @@ end
 function roda()
 
    # Define os dados do problema: topologia e funções de ativação
-   topologia = [2; 50; 50; 50; 1]
+   topologia = [2; 30; 30; 30; 1]
    ativ = (tanh, tanh, tanh, identity)
 
    # Número de épocas

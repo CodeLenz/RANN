@@ -6,9 +6,8 @@ function Resposta_Teste(rede:: Rede, x::Vector{Float64}, treino::NamedTuple, obj
     # Atualiza pesos e bias com o resultado da otimização
     pesos, bias = Atualiza_pesos_bias(rede, x)
 
-    # Aloca a resposta estimada e a resposta analítica
+    # Aloca a resposta estimada
     u_test_pred = zeros(1, size(treino.teste, 2))
-    u_analitico = zeros(1, size(treino.teste, 2))
 
     # Loop pelos dados de teste
     for i = 1:size(treino.teste, 2)
@@ -19,10 +18,10 @@ function Resposta_Teste(rede:: Rede, x::Vector{Float64}, treino::NamedTuple, obj
         # Calcula o deslocamento pela rede
         u_test_pred[:, i] .= RNA_forte(rede, pesos, bias, x_i, prob)
 
-        # Calcula o deslocamento Analítico
-        #u_analitico[:, i] .= Φ_Analitico(prob, x)
-
     end
+
+    # Calcula o deslocamento Analítico
+    u_analitico = Φ_Analitico(prob, treino.teste)
     
     # Grava deslocamento calculado em um arquivo para monitoramento 
     writedlm("Resultados/teste_rede_$(epoch)_$otimizador.txt", u_test_pred)
@@ -36,6 +35,7 @@ function Resposta_Teste(rede:: Rede, x::Vector{Float64}, treino::NamedTuple, obj
 
     # Gráfico da função objetivo
     # Neste momento, temos apenas a perda física
+    plot_obj = plot(plot_obj_treino, size = (1000, 1000))
     #=
     # Layout do gráfico
     layout = @layout [a; b c]               
@@ -44,47 +44,43 @@ function Resposta_Teste(rede:: Rede, x::Vector{Float64}, treino::NamedTuple, obj
     plot_obj = plot(plot_obj_treino, plot_contorno, plot_perda_fisica,
                     layout = layout, size = (1000, 1000))
     =#
-    plot_obj = plot(plot_obj_treino, size = (1000, 1000))
 
     # Grava o gráfico
     savefig(plot_obj, "Resultados/plot_obj_treino_$(epoch)_$otimizador.pdf")
 
     # Compara a resposta analítica com a calculada pela rede neural
     # Define escala única dos gráficos
-    #min_c = min(minimum(u_test_pred), minimum(u_analitico))
-    #max_c = max(maximum(u_test_pred), maximum(u_analitico))
-    min_c = minimum(u_test_pred)
-    max_c = maximum(u_test_pred)
+    min_c = min(minimum(u_test_pred), minimum(u_analitico))
+    max_c = max(maximum(u_test_pred), maximum(u_analitico))
 
     # Calcula erro entre analítico e rede neural em MAE
-    #erro_u = abs.((u_test_pred .- u_analitico))
+    erro_u = abs.((u_test_pred .- u_analitico))
 
     # Rede neural
     plot_u_teste_pred = scatter(treino.teste[1, :], treino.teste[2, :], marker_z = u_test_pred[:], 
                                 clims = (min_c, max_c), title = "Rede Neural", xlabel = "x", ylabel = "y",
-                                label = false, color = :jet, markersize = 4, 
-                                markerstrokewidth = 0.0, alpha = 1.0)
+                                label = false, color = :jet, markersize = 4, markerstrokecolor = :black,
+                                markerstrokewidth = 0.0, alpha = 0.9)
     
     # Analítico
-    #=plot_u_teste_analitico = scatter(treino.teste[1, :], treino.teste[2, :], marker_z = u_analitico', 
+    plot_u_teste_analitico = scatter(treino.teste[1, :], treino.teste[2, :], marker_z = u_analitico', 
                                      clims = (min_c, max_c), title = "Analítico", xlabel = "x", ylabel = "y",
-                                     label = false, color = :jet, markersize = 8, markerstrokecolor = :black, 
-                                     markerstrokewidth = 0.2, alpha = 0.9)
+                                     label = false, color = :jet, markersize = 4, markerstrokecolor = :black, 
+                                     markerstrokewidth = 0.0, alpha = 0.9)
 
     # Erro
     plot_erro = scatter(treino.teste[1, :], treino.teste[2, :], marker_z = erro_u', 
                         title = "Erro entre Rede Neural e Analítico (Diferença)", xlabel = "x", ylabel = "y",
-                        label = false, clims = (0.0, maximum(erro_u')), markersize = 8, markerstrokecolor = :black, 
-                        markerstrokewidth = 0.2, alpha = 0.9, size = (1000, 1000), c = cgrad(:jet), colorbar = true)
+                        label = false, clims = (0.0, maximum(erro_u')), markersize = 4, markerstrokecolor = :black, 
+                        markerstrokewidth = 0.0, alpha = 0.9, size = (1000, 1000), c = cgrad(:jet), colorbar = true)
     
+    # Gráfico completo
     plot_u_teste = plot(plot_u_teste_pred, plot_u_teste_analitico, plot_title = "Função de Airy Φ",
                         size = (3000, 1000))
-    =#
-    plot_u_teste = plot(plot_u_teste_pred, plot_title = "Função de Airy Φ", size = (1000, 1000))
-
+    
     # Grava o gráfico
     savefig(plot_u_teste, "Resultados/plot_u_teste_$(epoch)_$otimizador.pdf")
-    #savefig(plot_erro, "Resultados/plot_erro_$(epoch)_$otimizador.pdf")
+    savefig(plot_erro, "Resultados/plot_erro_$(epoch)_$otimizador.pdf")
 
     # Retorna o deslocamento estimado
     return u_test_pred

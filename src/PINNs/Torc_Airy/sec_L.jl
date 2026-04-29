@@ -40,6 +40,19 @@ function ponto_dentro_L(x, y, a, b)
 
 end
 
+# Função auxiliar para verificar se um ponto está no contorno
+function ponto_no_contorno(x, y, a, b)
+
+    # Verifica se o ponto está no contorno
+    if (x == 0) || (y == 0) || (x == a && y <= b) || (y == b && (x >= b || x <= a)) ||
+         (x == b && (y >= b || y <= a)) || (y == a && x <= b)
+        return true
+    else
+        return false
+    end
+
+end
+
 # Define os pontos de colocação do domínio e também os pontos de teste
 function ColocDominio_L()
 
@@ -53,23 +66,14 @@ function ColocDominio_L()
     div_x = 35
     div_y = 35
 
-    # Divisões para o teste
-    div_x_teste = div_x * 3
-    div_y_teste = div_y * 3
-
     # Define um range de valores de x 
     range_x = collect(range(0, a; length = (div_x + 2))[2:(end - 1)])
-    range_x_teste = collect(range(0, a; length = (div_x_teste + 2))[2:(end - 1)])
 
     # Define um range de valores de y
     range_y = collect(range(0, a; length = (div_y+ 2))[2:(end - 1)])
-    range_y_teste = collect(range(0, a; length = (div_y_teste + 2))[2:(end - 1)])
 
     # Define matriz para os pontos de perda física
     XY_fisica = zeros(Float64, 2, div_x * div_y)
-
-    # Define matriz para os pontos de teste
-    XY_teste = zeros(Float64, 2, div_x_teste * div_y_teste)
 
     # Gera os pontos de colocação
     # Contador
@@ -94,29 +98,6 @@ function ColocDominio_L()
 
     end
 
-    # Gera os pontos de teste
-    # Reseta o contador
-    k = 1
-
-    # Loop em x
-    for x in range_x_teste
-
-        # Loop em y
-        for y in range_y_teste
-
-            # Coordenada x
-            XY_teste[1, k] = off_x + x
-
-            # Coordenada y
-            XY_teste[2, k] = off_y + y
-
-            # Atualiza o contador
-            k = k + 1
-
-        end
-
-    end
-
     # Fase 2:
     # Remove os pontos que estão fora da seção em L
 
@@ -128,10 +109,12 @@ function ColocDominio_L()
     XY_fisica = XY_fisica[:, indices_fisica]
 
     # Pontos de teste
-    indices_teste = findall(λ -> ponto_dentro_L(XY_teste[1, λ], XY_teste[2, λ], a, b), 1:size(XY_teste, 2))
+    # Lê os pontos de teste diretamente do arquivo de resultados nodais de FEM
+    XY_teste = Matrix(transpose(readdlm("solucao_airy_nodal.txt")[:, 1:2]))
 
-    # Filtra essas colunas
-    XY_teste = XY_teste[:, indices_teste]
+    # Filtra posições do contorno
+    indices_contorno = findall(λ -> !ponto_no_contorno(XY_teste[1, λ], XY_teste[2, λ], a, b), 1:size(XY_teste, 2))
+    XY_teste = XY_teste[:, indices_contorno]
 
     # Salva um arquivo com o gráfico dos pontos de colocação e de teste
     plot_XY = scatter(XY_fisica[1,:], XY_fisica[2, :], title = "Pontos de Colocação e Contorno", 
@@ -139,7 +122,7 @@ function ColocDominio_L()
     scatter!(plot_XY, XY_teste[1,:], XY_teste[2, :], label="Teste", markershape=:cross, markercolor=:red)
 
     # Grava o gráfico
-    savefig(plot_XY, "Resultados/pontos_colocação_teste.png")
+    savefig(plot_XY, "Resultados/pontos_colocação_teste.pdf")
 
     # Retorna os valores
     XY_fisica, XY_teste
@@ -274,7 +257,7 @@ function CContorno_L()
                             markershape=:circle, markercolor=:blue)
 
     # Grava o gráfico
-    savefig(plot_contorno, "Resultados/pontos_contorno.png")
+    savefig(plot_contorno, "Resultados/pontos_contorno.pdf")
 
     # Retorna os valores
     XY_contorno
