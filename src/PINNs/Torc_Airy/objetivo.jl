@@ -1,7 +1,7 @@
 # Função objetivo que depende das entradas da rede neural
 # R^n -> R, onde n é o número total de pesos e bias da rede
 # λ1 e λ2 são hiperparâmetros para ponderação dos termos da função objetivo
-function Objetivo(rede::Rede, treino::NamedTuple, epoch::Int64, x::Vector{Float64}, prob::String,
+function Objetivo(rede::Rede, treino::NamedTuple, x::Vector{Float64}, prob::String,
                   λ1 = 1.0, λ2 = 1.0E-1, λ3 = 1.0E-3, λ4 = 1.0)
    
    	# Aloca as matrizes de pesos e bias a partir das variáveis de projeto
@@ -13,10 +13,10 @@ function Objetivo(rede::Rede, treino::NamedTuple, epoch::Int64, x::Vector{Float6
 
    	# Aloca as derivadas em relação as variáveis (x, y) 
 	# Primeira derivada: du/dx du/dy
-   	du_xy = [zeros(1) for _ in 1:2]
+   	du_xy  = [zeros(1), zeros(1)]
 
 	# Segunda derivada: d2u/dx2 d2u/dy2
-   	d2u_xy = [zeros(1) for _ in 1:2]
+   	d2u_xy = [zeros(1), zeros(1)]
 
 	# Aloca as derivadas em relação a variável (t)
 	du_t = zeros(1)
@@ -171,9 +171,9 @@ end
 # Cria um wrapper para enganar o Enzyme
 # Retorna apenas o valor float que queremos diferenciar da função objetivo, visto que ele não consegue
 # diferenciar mais de um parâmetro (tupla)
-function ObjetivoFloat(rede::Rede, treino::NamedTuple, epoch::Int64, x::Vector{Float64}, prob::String)::Float64  
+function ObjetivoFloat(rede::Rede, treino::NamedTuple, x::Vector{Float64}, prob::String)::Float64  
 
-    obj, _ = Objetivo(rede, treino, epoch, x, prob)
+    obj, _ = Objetivo(rede, treino, x, prob)
 
     return obj
 

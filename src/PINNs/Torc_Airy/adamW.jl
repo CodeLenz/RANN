@@ -6,8 +6,9 @@
 # ϵ (default 10^-8) 
 # nepoch (Número de épocas, default = 10)
 # δ (critério de convergência, default = 1E-8)
-function AdamW(rede::Rede, treino::NamedTuple, nepoch::Int64, prob::String; α = 1E-3, β1 = 0.9, β2 = 0.999,
-              ϵ = 1E-8, w_decay = 0.0, conv = 1E-8, otimizador = "AdamW")
+function AdamW(obj_fn::Function, grad_fn!::Function, perda_fn::Function, x::Vector{Float64}, rede::Rede, treino::NamedTuple,
+               nepoch::Int64, prob::String; α = 1E-3, β1 = 0.9, β2 = 0.999, ϵ = 1E-8, 
+               w_decay = 0.0, conv = 1E-8, otimizador = "AdamW")
               
     # Intervalo para gerar as respostas (acompanhamento)
     intervalo_monitor = 1000
@@ -18,9 +19,6 @@ function AdamW(rede::Rede, treino::NamedTuple, nepoch::Int64, prob::String; α =
     # Aloca vetor para termos de perda
     # Perda física, Perda de contorno, Perda inicial em t e dt
     perda = zeros(4)
-
-    # Copia rede.x para uma outra memória
-    x = copy(rede.x)
 
     # Aloca um vetor para monitorar objetivo
     vetor_obj_treino = zeros(nepoch)
@@ -43,7 +41,7 @@ function AdamW(rede::Rede, treino::NamedTuple, nepoch::Int64, prob::String; α =
     @showprogress "Otimizando com AdamW..." for epoch = 1:nepoch
 
         # Calcula o objetivo da rede para o treino 
-        obj_treino = ObjetivoFloat(rede, treino, epoch, x, prob)
+        obj_treino = obj_fn(x)
 
         # Testa se a otimização convergiu ao longo das iterações
         if obj_treino <= conv
@@ -53,22 +51,11 @@ function AdamW(rede::Rede, treino::NamedTuple, nepoch::Int64, prob::String; α =
 
         end
         
-        # Zera o vetor gradiente para novo cálculo
-        fill!(G, 0.0)
-
-        # Derivada automática em relação a x (pesos e bias) com o Enzyme
-        Enzyme.autodiff(
-            Enzyme.Reverse,
-            ObjetivoFloat,
-            Const(rede),
-            Const(treino),
-            Const(epoch),
-            Duplicated(x, G),
-            Const(prob)
-            )
+        # Realiza a derivação automática com o Enzyme
+        grad_fn!(G, x)
 
         # Calcula o objetivo da rede para o treino 
-        obj_treino, perda  = Objetivo(rede, treino, epoch, x, prob)
+        obj_treino, perda  = perda_fn(x)
 
         # Armazena o objetivo
         vetor_obj_treino[epoch] = obj_treino
@@ -100,7 +87,8 @@ function AdamW(rede::Rede, treino::NamedTuple, nepoch::Int64, prob::String; α =
         if (epoch % intervalo_monitor == 0) || (epoch == nepoch)
 
             # Obtém a resposta da rede neural para os pontos de teste e gera gráficos para monitoramento
-            u_test_pred = Resposta_Teste(rede, x, treino, vetor_obj_treino, vetor_perda, epoch, prob, otimizador,intervalo_monitor)
+            u_test_pred = Resposta_Teste(rede, x, treino, vetor_obj_treino, vetor_perda, 
+                                         epoch, prob, otimizador, intervalo_monitor)
 
         end
 

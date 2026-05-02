@@ -40,23 +40,43 @@ function main(topologia::Vector{Int64}, ativ::Tuple, nepoch_ADAM::Int64, nepoch_
     # Inicializa os dados de treino
     treino = Treino(prob)
 
+    # Define variáveis de projeto
+    x = copy(rede.x)
+
+    # Define wrappers para a função objetivo e gradiente, para facilitar a passagem de argumentos
+    # Função objetivo
+    obj_fn(x) = ObjetivoFloat(rede, treino, x, prob)
+    perda_fn(x) = Objetivo(rede, treino, x, prob)
+
+    # Cálculo do gradiente via Enzyme
+    grad_fn!(G, x) = begin
+
+        # Zera o vetor gradiente
+        fill!(G, 0.0)
+
+        # Derivada automática com Enzyme in-place
+        Enzyme.autodiff(Enzyme.Reverse,
+                        ObjetivoFloat,
+                        Const(rede), 
+                        Const(treino),
+                        Duplicated(x, G), 
+                        Const(prob))
+
+    end
+
     println("***********************")
     println("EXPLORANDO COM O ADAMW")
     println("***********************")
 
     # Chama a rotina de otimização do AdamW
-    x, objetivo_treino_adam, u_test_pred_adam = AdamW(rede, treino, nepoch_ADAM, prob)
-
-    # Atualiza os pesos e bias da rede com os resultados otimizados do AdamW
-    # para que o L-BFGS continue de onde o AdamW parou.
-    rede.x .= x 
+    x, objetivo_treino_adam, u_test_pred_adam = AdamW(obj_fn, grad_fn!, perda_fn, x, rede, treino, nepoch_ADAM, prob)
 
     println("***********************")
     println("PASSANDO PARA O L-BFGS")
     println("***********************")
 
     # Chama a rotina de otimização do LBFGS
-    x, objetivo_treino_lbfgs, u_test_pred = LBFGS(rede, treino, nepoch_LBFGS, prob)
+    x, objetivo_treino_lbfgs, u_test_pred = LBFGS(obj_fn, grad_fn!, perda_fn, x, rede, treino, nepoch_LBFGS, prob)
 
     # Concatena os históricos de objetivo e gera gráfico completo
     objetivo_treino_total = vcat(objetivo_treino_adam, objetivo_treino_lbfgs)
@@ -73,12 +93,12 @@ end
 function roda()
 
    # Define os dados do problema: topologia e funções de ativação
-   topologia = [2; 30; 30; 30; 1]
+   topologia = [2; 50; 50; 50; 1]
    ativ = (tanh, tanh, tanh, identity)
 
    # Número de épocas
-   nepoch_ADAM = 5_000
-   nepoch_LBFGS = 5_000
+   nepoch_ADAM = 3_000
+   nepoch_LBFGS = 3_000
 
    # Problema a ser resolvido
    # prob = "Circular"
