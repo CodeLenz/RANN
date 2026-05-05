@@ -30,7 +30,7 @@ function LBFGS(obj_fn::Function, grad_fn!::Function, perda_fn::Function, x::Vect
 
     @showprogress "Otimizando com LBFGS..." for epoch in 1:nepoch
 
-        # --- 1. Determinação da Direção de Descida (Recursão de dois loops) ---
+        # Determinação da Direção de Descida (Recursão de dois loops) 
         q = copy(G)
         α_coeffs = zeros(length(s_hist)) # renomeado para não confundir com o passo alpha
         for i in length(s_hist):-1:1
@@ -53,7 +53,7 @@ function LBFGS(obj_fn::Function, grad_fn!::Function, perda_fn::Function, x::Vect
 
         p = -r  # Direção de busca
 
-        # --- 2. Busca Linear (Line Search - Armijo) ---
+        # 2. Busca Linear (Line Search - Armijo)
         obj_atual = obj_fn(x)
         αk = α0
         c1 = 1E-4 
@@ -66,12 +66,12 @@ function LBFGS(obj_fn::Function, grad_fn!::Function, perda_fn::Function, x::Vect
             end
         end
         
-        # --- 3. Atualização e Cálculo do Novo Gradiente ---
+        # Atualização e Cálculo do Novo Gradiente 
         # Realiza a derivação automática com o Enzyme
         x_new = x + αk * p
-        grad_fn!(G_new, x)
+        grad_fn!(G_new, x_new)
         
-        # --- 4. Atualização do Histórico (Condição de Wolfe FR) ---
+        # Atualização do Histórico (Condição de Wolfe FR) 
         s = x_new - x
         y = G_new - G
         ys = dot(y, s)
@@ -87,7 +87,7 @@ function LBFGS(obj_fn::Function, grad_fn!::Function, perda_fn::Function, x::Vect
         x .= x_new
         G .= G_new
 
-        # --- 5. Monitoramento e Logs ---
+        # Monitoramento e Logs 
         obj_treino, perda = perda_fn(x)
         vetor_obj_treino[epoch] = obj_treino
         for i in 1:4
