@@ -9,7 +9,7 @@
 #
 function DerivadasC2!(RNA_forte::Function, rede::Rede, pesos::Vector{<:AbstractMatrix{Float64}}, bias::Vector{<:AbstractVector{Float64}},
                       u0::Vector{Float64}, du::Vector{Float64}, d2u::Vector{Float64}, t::Vector{Float64}, prob::String,
-                      ϵ = 1E-3)
+                      ϵ = 1E-5)
 
     # Valor escalar do tempo, para propormos uma perturbação complexa
     h = ϵ * sqrt(im)
@@ -43,7 +43,7 @@ end
 #
 function DerivadasPDE!(RNA_forte::Function, rede::Rede, pesos::Vector{<:AbstractMatrix{Float64}}, bias::Vector{<:AbstractVector{Float64}},
                       u0::Vector{Float64}, du_xy::Vector{Vector{Float64}}, d2u_xy::Vector{Vector{Float64}},  
-                      x::Vector{Float64}, prob::String, ϵ = 1E-3)    
+                      x::Vector{Float64}, prob::String, ϵ = 1E-5)    
 
     # Valor escalar da perturbação complexa
     h = ϵ * sqrt(im)
