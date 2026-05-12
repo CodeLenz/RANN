@@ -26,3 +26,21 @@ function Treino(prob::String)
 
 end
 
+# Função para subamostrar os pontos de treino físico, caso seja necessário reduzir a quantidade de pontos para otimização
+# Seleciona n pontos de treino físico a partir do conjunto total N, de forma aleatória
+function subsample_fisica(fisica_completo::Matrix{Float64}, n::Int)
+
+    # Avalia o número total de pontos de treino físico
+    N = size(fisica_completo, 2)
+
+    # Garante que n não seja maior que N
+    n = min(n, N)
+
+    # Seleciona n índices aleatórios sem reposição
+    idx = randperm(N)[1:n]
+
+    # Retorna os pontos de treino físico subamostrados
+    return fisica_completo[:, idx]
+    
+end
+

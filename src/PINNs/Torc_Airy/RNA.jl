@@ -44,6 +44,7 @@ function RNA(rede::Rede, pesos::Vector{<:AbstractMatrix{Float64}}, bias::Vector{
 
         # Atualiza para a próxima camada
         a = z
+        
     end
 
     return a

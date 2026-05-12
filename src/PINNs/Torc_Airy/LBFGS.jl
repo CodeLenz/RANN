@@ -1,6 +1,6 @@
 # Função de otimização da rede neural
 # Método LBFGS
-function LBFGS(obj_fn::Function, grad_fn!::Function, perda_fn::Function, x::Vector{Float64}, rede::Rede, treino::NamedTuple,
+function LBFGS(obj_fn::Function, grad_fn!::Function, x::Vector{Float64}, rede::Rede, treino::NamedTuple,
                nepoch::Int64, prob::String; m = 10, conv = 1E-8, α0 = 1.0, otimizador = "LBFGS")
 
     # Intervalo para monitoramento
@@ -8,9 +8,11 @@ function LBFGS(obj_fn::Function, grad_fn!::Function, perda_fn::Function, x::Vect
 
     # Aloca variáveis de monitoramento (Seguindo o padrão do AdamW)
     obj_treino = 0.0
-    perda = zeros(4)
     vetor_obj_treino = zeros(nepoch)
-    vetor_perda = [zeros(nepoch) for _ in 1:4]    
+
+    # Define conjunto de pontos de treino para o L-BFGS 
+    # Nesse caso, é o conjunto completo
+    pontos_treino_fisica = treino.fisica
 
     # Aloca a resposta estimada para os pontos de teste
     u_test_pred = zeros(1, size(treino.teste, 2))
@@ -21,7 +23,7 @@ function LBFGS(obj_fn::Function, grad_fn!::Function, perda_fn::Function, x::Vect
     
     # Cálculo inicial do gradiente com o Enzyme
     # Realiza a derivação automática com o Enzyme
-    grad_fn!(G, x)
+    grad_fn!(G, x, pontos_treino_fisica)
 
     # Histórico para o cálculo da direção (Memória do L-BFGS)
     s_hist = Vector{Vector{Float64}}()
@@ -54,12 +56,12 @@ function LBFGS(obj_fn::Function, grad_fn!::Function, perda_fn::Function, x::Vect
         p = -r  # Direção de busca
 
         # 2. Busca Linear (Line Search - Armijo)
-        obj_atual = obj_fn(x)
+        obj_atual = obj_fn(x, pontos_treino_fisica)
         αk = α0
         c1 = 1E-4 
         
         # Backtracking
-        while obj_fn(x + αk * p) > obj_atual + c1 * αk * dot(G, p)
+        while obj_fn(x + αk * p, pontos_treino_fisica) > obj_atual + c1 * αk * dot(G, p)
             αk *= 0.5
             if αk < 1e-10 
                 break
@@ -69,7 +71,7 @@ function LBFGS(obj_fn::Function, grad_fn!::Function, perda_fn::Function, x::Vect
         # Atualização e Cálculo do Novo Gradiente 
         # Realiza a derivação automática com o Enzyme
         x_new = x + αk * p
-        grad_fn!(G_new, x_new)
+        grad_fn!(G_new, x_new, pontos_treino_fisica)
         
         # Atualização do Histórico (Condição de Wolfe FR) 
         s = x_new - x
@@ -88,11 +90,8 @@ function LBFGS(obj_fn::Function, grad_fn!::Function, perda_fn::Function, x::Vect
         G .= G_new
 
         # Monitoramento e Logs 
-        obj_treino, perda = perda_fn(x)
+        obj_treino = obj_fn(x, pontos_treino_fisica)
         vetor_obj_treino[epoch] = obj_treino
-        for i in 1:4
-            vetor_perda[i][epoch] = perda[i]
-        end
 
         # Critério de parada
         if obj_treino <= conv || norm(G) < 1E-9
@@ -101,8 +100,8 @@ function LBFGS(obj_fn::Function, grad_fn!::Function, perda_fn::Function, x::Vect
         end
 
         if (epoch % intervalo_monitor == 0) || (epoch == nepoch)
-            u_test_pred = Resposta_Teste(rede, x, treino, vetor_obj_treino, vetor_perda, 
-                                         epoch, prob, otimizador, intervalo_monitor)
+            u_test_pred = Resposta_Teste(rede, x, treino, vetor_obj_treino, epoch, 
+                                         prob, otimizador, intervalo_monitor)
         end
     end
 

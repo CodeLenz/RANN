@@ -63,8 +63,8 @@ function ColocDominio_L()
     # Define pontos de colocação assumindo uma distribuição uniforme em um quadrado de lado a
     
     # Número de divisões em x e y
-    div_x = 50
-    div_y = 50
+    div_x = 35
+    div_y = 35
 
     # Define um range de valores de x 
     range_x = collect(range(0, a; length = (div_x + 2))[2:(end - 1)])
