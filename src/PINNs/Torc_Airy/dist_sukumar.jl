@@ -97,7 +97,7 @@ function adf_segmento(x::T, y::T, x1::Float64, y1::Float64, x2::Float64, y2::Flo
 end
 
 # Combina n segmentos usando R-equivalence joining (equação 10, m=1)
-function adf_requivalente(vetor_φ::AbstractVector{T}, m = 2) where T
+function adf_requivalente(vetor_φ::AbstractVector{T}, m = 1) where T
 
     # Testa se temos um zero em φ
     if any(vetor_φ.≈0)

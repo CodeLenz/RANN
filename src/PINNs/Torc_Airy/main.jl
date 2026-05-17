@@ -93,7 +93,7 @@ function roda()
 
    # Define os dados do problema: topologia e funções de ativação
    topologia = [2; 30; 30; 30; 1]
-   ativ = (Swish, Swish, Swish, identity)
+   ativ = (tanh, tanh, tanh, identity)
 
    # Número de épocas
    nepoch_ADAM = 3_000

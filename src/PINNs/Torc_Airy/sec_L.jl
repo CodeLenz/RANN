@@ -16,7 +16,7 @@
 function Geometria_L()
 
     # Lados
-    a = 10.0 # [m]
+    a = 2.0 # [m]
     b = 1.0 # [m]
 
     # Coordenadas de offset da origem
@@ -44,8 +44,8 @@ end
 function ponto_no_contorno(x, y, a, b)
 
     # Verifica se o ponto está no contorno
-    if (x == 0) || (y == 0) || (x == a && y <= b) || (y == b && (x >= b || x <= a)) ||
-         (x == b && (y >= b || y <= a)) || (y == a && x <= b)
+    if (x ≈ 0) || (y ≈ 0) || (x ≈ a && y <= b) || (y ≈ b && (x >= b && x <= a)) ||
+         (x ≈ b && (y >= b && y <= a)) || (y ≈ a && x <= b)
         return true
     else
         return false
@@ -103,7 +103,8 @@ function ColocDominio_L()
 
     # Pontos de colocação física
     # Encontra os indices onde temos pontos válidos da seção
-    indices_fisica = findall(λ -> ponto_dentro_L(XY_fisica[1, λ], XY_fisica[2, λ], a, b), 1:size(XY_fisica, 2))
+    indices_fisica = findall(λ -> ponto_dentro_L(XY_fisica[1, λ], XY_fisica[2, λ], a, b) &&
+                                  !ponto_no_contorno(XY_fisica[1, λ], XY_fisica[2, λ], a, b), 1:size(XY_fisica, 2))
 
     # Filtra essas colunas
     XY_fisica = XY_fisica[:, indices_fisica]

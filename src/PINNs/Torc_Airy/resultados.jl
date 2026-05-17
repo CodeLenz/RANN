@@ -46,19 +46,19 @@ function Resposta_Teste(rede:: Rede, x::Vector{Float64}, treino::NamedTuple, obj
     # Rede neural
     plot_u_teste_pred = scatter(treino.teste[1, :], treino.teste[2, :], marker_z = u_test_pred[:], 
                                 clims = (min_c, max_c), title = "Rede Neural", xlabel = "x", ylabel = "y",
-                                label = false, color = :jet, markersize = 1, markerstrokecolor = :black,
+                                label = false, color = :jet, markersize = 4, markerstrokecolor = :black,
                                 markerstrokewidth = 0.0, alpha = 0.9)
     
     # Analítico
     plot_u_teste_analitico = scatter(treino.teste[1, :], treino.teste[2, :], marker_z = u_analitico', 
                                      clims = (min_c, max_c), title = "Analítico", xlabel = "x", ylabel = "y",
-                                     label = false, color = :jet, markersize = 1, markerstrokecolor = :black, 
+                                     label = false, color = :jet, markersize = 4, markerstrokecolor = :black, 
                                      markerstrokewidth = 0.0, alpha = 0.9)
 
     # Erro
     plot_erro = scatter(treino.teste[1, :], treino.teste[2, :], marker_z = erro_u', 
                         title = "Erro entre Rede Neural e Analítico (Diferença)", xlabel = "x", ylabel = "y",
-                        label = false, clims = (0.0, maximum(erro_u')), markersize = 1, markerstrokecolor = :black, 
+                        label = false, clims = (0.0, maximum(erro_u')), markersize = 4, markerstrokecolor = :black, 
                         markerstrokewidth = 0.0, alpha = 0.9, size = (1000, 1000), c = cgrad(:jet), colorbar = true)
     
     # Gráfico completo
