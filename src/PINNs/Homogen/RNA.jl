@@ -62,10 +62,10 @@ function RNA_Fourier(rede::Rede, pesos::Vector{<:AbstractMatrix{Float64}}, bias:
     entrada_period = Camada_Fourier(entrada_i, N)
 
     # Calcula saída da rede neural
-    u = RNA(rede, pesos, bias, entrada_period, prob)
+    u_tilde = RNA(rede, pesos, bias, entrada_period, prob)
 
-    # retorna u
-    return u
+    # retorna u_tilde
+    return u_tilde
     
 end
 
