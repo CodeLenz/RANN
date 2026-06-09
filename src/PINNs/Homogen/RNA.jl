@@ -1,71 +1,106 @@
+# =============================================================================
+#  Estruturas de dados da rede neural
+# =============================================================================
+struct Camada{T<:AbstractFloat}
+    W::Matrix{T}
+    b::Vector{T}
+    φ::Function
+    dφ::Function
+end
 
-# Atualiza os vetores de pesos e bias utilizando o vetor de variáveis de projeto x
-function Atualiza_pesos_bias(rede::Rede, x::AbstractVector)
+struct Rede{T<:AbstractFloat}
+    camadas::Vector{Camada{T}}
+end
 
-    # Acessa os termos em Rede por apelidos 
-    n_camadas = rede.n_camadas
-    topologia = rede.topologia
-    pesos_ranges = rede.pesos_ranges
-    bias_ranges  = rede.bias_ranges
+# -----------------------------------------------------------------------------
+#  Inicialização
+# -----------------------------------------------------------------------------
+function Inicializa_Rede(larguras::Vector{Int}, ativacoes::Vector, 
+                         ::Type{T}=Float64) where {T<:AbstractFloat}
     
-    # Cria vetores contendo VIEWS (@view) em vez de alocar novas matrizes.
-    # O reshape organiza a view em formato de matriz sem copiar dados.
-    pesos = [reshape(@view(x[pesos_ranges[i]]), topologia[i+1], topologia[i]) for i in 1:n_camadas]
-    bias  = [@view(x[bias_ranges[i]]) for i in 1:n_camadas]
+    # Inicializa as camadas
+    camadas = Camada{T}[]
+    
+    # Loop pelas camadas 
+    for i in 1:length(larguras) - 1
 
-    # Retorna as matrizes (views) de pesos e bias
-    return pesos, bias
+        # Número de entradas e de saídas da camada
+        n_in, n_out = larguras[i], larguras[i + 1]
+        
+        # Inicializa a matriz de pesos da camada
+        W = randn(T, n_out, n_in) * sqrt(T(1) / n_in)
+
+        # Bias começam zerados
+        b = zeros(T, n_out)
+        
+        # Guarda ativação e sua derivada 
+        φ, dφ = ativacoes[i]
+
+        # Guarda a camada na rede
+        push!(camadas, Camada{T}(W, b, φ, dφ))
+    end
+    
+    # Devolve a rede 
+    return Rede{T}(camadas)
 
 end
 
-
-# Forward da Rede neural otimizado e AD-Friendly
-function RNA(rede::Rede, pesos::Vector{<:AbstractMatrix{Float64}}, bias::Vector{<:AbstractVector{Float64}}, 
-             entrada_i::AbstractVector{T}, prob::String)::Vector{T} where T
-
-    # Promove a entrada estática para um Vector padrão.
-    a = Vector{T}(entrada_i)
-
-    # Loop pelas camadas
-    for c in 1:rede.n_camadas
+# -----------------------------------------------------------------------------
+# Forward otimizado
+# Z_buffers é um buffer de memória
+# -----------------------------------------------------------------------------
+function Forward_Rede_InPlace!(rede::Rede{T}, X::Matrix{T}, 
+                               Z_buffers::Vector{Matrix{T}}, 
+                               As::Vector{Matrix{T}}) where {T<:AbstractFloat}
+    
+    # A primeira ativação recebe os dados do lote (coluna por coluna)
+    As[1] .= X
+    
+    for (i, camada) in enumerate(rede.camadas)
         
-        # Aliases
-        W = pesos[c]
-        b = bias[c]
-        ϕ = rede.ativ[c]
-
-        # Calcula a combinação linear
-        z = W * a .+ b
-
-        # Aplica a função de ativação
-        for i in eachindex(z)
-            z[i] = ϕ(z[i])
-        end
-
-        # Atualiza para a próxima camada
-        a = z
+        # Multiplica W * A e guarda no rascunho temporário
+        mul!(Z_buffers[i], camada.W, As[i])
+        
+        # Soma o bias no próprio rascunho
+        Z_buffers[i] .+= camada.b
+        
+        # Aplica a ativação e salva em As[i+1]
+        As[i+1] .= camada.φ.(Z_buffers[i])
         
     end
-
-    return a
-
-end
-
-# Aplicação da pré camada de modos de Fourier para periodicidade na rede
-function RNA_Fourier(rede::Rede, pesos::Vector{<:AbstractMatrix{Float64}}, bias::Vector{<:AbstractVector{Float64}}, 
-                     entrada_i::AbstractVector{T}, prob::String)::Vector{T} where T
-
-    # Retoma a resolução espectral N
-    N = rede.topologia[1] / 4
-
-    # Converte as coordenadas geométricas em modos periódicos
-    entrada_period = Camada_Fourier(entrada_i, N)
-
-    # Calcula saída da rede neural
-    u_tilde = RNA(rede, pesos, bias, entrada_period, prob)
-
-    # retorna u_tilde
-    return u_tilde
     
 end
 
+# -----------------------------------------------------------------------------
+#  Passo reverso 
+# -----------------------------------------------------------------------------
+function Backward_Rede(rede::Rede{T}, As::Vector{Matrix{T}}, dL_dAL::Matrix{T}) where {T<:AbstractFloat}
+
+    # Número de camadas
+    L  = length(rede.camadas)
+
+    # Inicializa os gradientes para cada camada
+    ∇W = Vector{Matrix{T}}(undef, L)
+    ∇b = Vector{Vector{T}}(undef, L)
+
+    # sensibilidades da saída
+    Δ = dL_dAL .* rede.camadas[L].dφ.(As[end])
+
+    # Loop pelas camadas, aplicando a backpropagation
+    for i in L:-1:1
+
+        #  Gradientes por pushback
+        ∇W[i] = Δ * As[i]'
+        ∇b[i] = vec(sum(Δ, dims = 2))
+        
+        # Evita calcularmos na primeira camada, pois não tem 
+        # uma camada anterior
+        if i > 1
+            Δ = (rede.camadas[i].W' * Δ) .* rede.camadas[i - 1].dφ.(As[i])
+        end
+    end
+    
+    # Devolve os arrays com os gradientes por camada
+    return ∇W, ∇b
+
+end
