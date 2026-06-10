@@ -129,9 +129,11 @@ function Perda_Energia_Alvo(AL::Matrix{T}, pontos::Matrix{T}, ε_macro::Matrix{T
     
     # Restrição de corpo rígido (valor médio nulo)
     L_avg = (sum(u1_C) / N_pts)^2 + (sum(u2_C) / N_pts)^2
+
+    perda = L_energia + λ_avg * L_avg
     
     # Retorna a perda total da PINN
-    return L_energia + λ_avg * L_avg
+    return perda, L_energia, L_avg
 
 end
 

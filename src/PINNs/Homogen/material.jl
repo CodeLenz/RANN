@@ -39,3 +39,27 @@ function Matriz_Constitutiva(E::T, ν::T) where {T<:AbstractFloat}
     return C
 
 end
+
+# -----------------------------------------------------------------------------
+#  C pela regra das misturas
+# -----------------------------------------------------------------------------
+function Calcula_Tensor_Regra_Mistura(params::NamedTuple)
+
+    # C da matriz
+    C_m = Matriz_Constitutiva(params.E_m, params.ν_m)
+
+    # C da fibra
+    C_f = Matriz_Constitutiva(params.E_f, params.ν_f)
+
+    # Fração volumétrica da fibra
+    V_f = π * params.r0^2
+
+    # Fração volumétrica da matriz
+    V_m = 1.0 - V_f
+
+    # Regra das misturas
+    CH = V_m * C_m + V_f * C_f
+
+    return CH
+
+end

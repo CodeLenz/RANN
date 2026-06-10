@@ -12,6 +12,8 @@ function Treina_Rede_PINN_Energia!(rede::Rede{T}, pontos::Matrix{T},
 
     # Aloca histórico da perda
     historico = T[]
+    historico_energia = T[]
+    historico_avg = T[]
 
     # Número de camadas da rede
     L = length(rede.camadas)
@@ -106,14 +108,19 @@ function Treina_Rede_PINN_Energia!(rede::Rede{T}, pontos::Matrix{T},
         AL = As[end]
          
         # Grande manha do Zygote!!!
-        custo, back = Zygote.pullback(al -> Perda_Energia_Alvo(al, pontos, ε_macro, mat_params, λ_avg), AL)
+        result = Zygote.withgradient(al -> Perda_Energia_Alvo(al, pontos, ε_macro, mat_params, λ_avg), AL)
+
+        # Custo total e termos de energia e média
+        custo, L_energia, L_avg = result.val
 
         # Sensibilidade da perda em relação à ultima camada (saída da rede)
-        dL_dAL = back(T(1.0))[1]
+        dL_dAL = result.grad[1]
 
         # Já guardamos o custo aqui
         push!(historico, custo)
-        
+        push!(historico_energia, L_energia)
+        push!(historico_avg, L_avg)
+
         # Calcula o resto dos gradientes "manualmente" (estes são os gradientes puros da função de perda)
         ∇W, ∇b = Backward_Rede(rede, As, dL_dAL)
 
@@ -152,6 +159,6 @@ function Treina_Rede_PINN_Energia!(rede::Rede{T}, pontos::Matrix{T},
     end
     
     # Retorna o histórico do objetivo
-    return historico
+    return historico, historico_energia, historico_avg
 
 end

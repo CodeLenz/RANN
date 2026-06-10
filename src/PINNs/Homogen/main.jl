@@ -11,6 +11,7 @@ using LinearAlgebra
 using Zygote
 using Sobol
 using Plots
+using DelimitedFiles
 
 include("ativ.jl")
 include("RNA.jl")
@@ -64,6 +65,8 @@ function Main_Homogenizacao()
 
     # Vetor de vetores para guardar os históricos (são 3)
     historicos_treinados = Vector{Float64}[]
+    historicos_energia = Vector{Float64}[]
+    historicos_avg = Vector{Float64}[]
 
     #
     # Loop pelas redes
@@ -77,21 +80,40 @@ function Main_Homogenizacao()
         rede = Inicializa_Rede([16, 40, 40, 2], [TANH_GEN, TANH_GEN, LINEAR_GEN], Float64)
         
         # Treina a rede
-        hist = Treina_Rede_PINN_Energia!(rede, pontos, modos[k], N_modos_fourier, mat_params;
-                                         η = 0.005, epochs = 1000, N_SHOW = 100, λ_avg = 100.0)
+        hist, hist_energia, hist_avg = Treina_Rede_PINN_Energia!(rede, pontos, modos[k], N_modos_fourier, mat_params;
+                                                                 η = 0.005, epochs = 1000, N_SHOW = 100, λ_avg = 100.0)
 
         # Guarda a rede no vetor de redes para fazermos o pós-processamento depois 
         push!(redes_treinadas, rede)
 
         # Guarda os valores do treino da rede
         push!(historicos_treinados, hist)
+        push!(historicos_energia, hist_energia)
+        push!(historicos_avg, hist_avg)
 
     end
+
+    # Acompanha a evolução do objetivo ao longo do tempo
+    plot_obj_treino = plot([historicos_treinados[i] for i in 1:3], title = "Objetivo", label = ["Rede 1", "Rede 2", "Rede 3"])
+    plot_obj_energia = plot([historicos_energia[i] for i in 1:3], title = "Energia de Deformação", label = ["Rede 1", "Rede 2", "Rede 3"])
+    plot_obj_avg = plot([historicos_avg[i] for i in 1:3], title = "Valor Médio dos Deslocamentos", label = ["Rede 1", "Rede 2", "Rede 3"])
+    savefig(plot_obj_treino, "Resultados/objetivo_treino.pdf")
+    savefig(plot_obj_energia, "Resultados/objetivo_energia.pdf")
+    savefig(plot_obj_avg, "Resultados/objetivo_avg.pdf")
 
     # Agora vamos calcular o tensor homogeneizado
     println("\n Calculando Tensor Homogeneizado ")
     CH = Calcula_Tensor_Homogeneizado(redes_treinadas, modos, N_modos_fourier, mat_params, 50)
     display(CH)
+
+    # Calcula o tensor através da regra das misturas para comparação
+    CH_mistura = Calcula_Tensor_Regra_Mistura(mat_params)
+    println("\n Tensor Homogeneizado pela Regra das Misturas ")
+    display(CH_mistura)
+
+    # Grava tensor homogeneizado em um arquivo 
+    writedlm("Resultados/CH.txt", CH)
+    writedlm("Resultados/CH_mistura.txt", CH_mistura)
     
     # Retorna a matriz homogeneizada e os históricos
     return CH, historicos_treinados
