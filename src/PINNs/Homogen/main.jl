@@ -19,6 +19,7 @@ include("PINN.jl")
 include("material.jl")
 include("tensao_pos.jl")
 include("treino.jl")
+include("AdamW.jl")
 
 # =============================================================================
 #  Validação
@@ -80,8 +81,7 @@ function Main_Homogenizacao()
         rede = Inicializa_Rede([16, 40, 40, 2], [TANH_GEN, TANH_GEN, LINEAR_GEN], Float64)
         
         # Treina a rede
-        hist, hist_energia, hist_avg = Treina_Rede_PINN_Energia!(rede, pontos, modos[k], N_modos_fourier, mat_params;
-                                                                 η = 0.005, epochs = 1000, N_SHOW = 100, λ_avg = 100.0)
+        hist, hist_energia, hist_avg = Treina_Rede_PINN_Energia!(rede, pontos, modos[k], N_modos_fourier, mat_params; η = 0.005, epochs = 5000, λ_avg = 1E6)
 
         # Guarda a rede no vetor de redes para fazermos o pós-processamento depois 
         push!(redes_treinadas, rede)
@@ -94,9 +94,9 @@ function Main_Homogenizacao()
     end
 
     # Acompanha a evolução do objetivo ao longo do tempo
-    plot_obj_treino = plot([historicos_treinados[i] for i in 1:3], title = "Objetivo", label = ["Rede 1", "Rede 2", "Rede 3"])
-    plot_obj_energia = plot([historicos_energia[i] for i in 1:3], title = "Energia de Deformação", label = ["Rede 1", "Rede 2", "Rede 3"])
-    plot_obj_avg = plot([historicos_avg[i] for i in 1:3], title = "Valor Médio dos Deslocamentos", label = ["Rede 1", "Rede 2", "Rede 3"])
+    plot_obj_treino = plot([historicos_treinados[i] for i in 1:3], title = "Objetivo", label = ["Rede 1" "Rede 2" "Rede 3"])
+    plot_obj_energia = plot([historicos_energia[i] for i in 1:3], title = "Energia de Deformação", label = ["Rede 1" "Rede 2" "Rede 3"])
+    plot_obj_avg = plot([historicos_avg[i] for i in 1:3], title = "Valor Médio dos Deslocamentos", label = ["Rede 1" "Rede 2" "Rede 3"])
     savefig(plot_obj_treino, "Resultados/objetivo_treino.pdf")
     savefig(plot_obj_energia, "Resultados/objetivo_energia.pdf")
     savefig(plot_obj_avg, "Resultados/objetivo_avg.pdf")
