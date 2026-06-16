@@ -12,6 +12,7 @@ using Zygote
 using Sobol
 using Plots
 using DelimitedFiles
+using ProgressMeter
 
 include("ativ.jl")
 include("RNA.jl")
@@ -20,6 +21,11 @@ include("material.jl")
 include("tensao_pos.jl")
 include("treino.jl")
 include("AdamW.jl")
+include("L-BFGS/L-BFGS.jl")
+include("L-BFGS/dois_lacos.jl")
+include("L-BFGS/refinamento.jl")
+include("L-BFGS/wolfe_ls.jl")
+include("L-BFGS/interpolacao.jl")
 
 # =============================================================================
 #  Validação
@@ -65,9 +71,12 @@ function Main_Homogenizacao()
     redes_treinadas = Rede{Float64}[]
 
     # Vetor de vetores para guardar os históricos (são 3)
-    historicos_treinados = Vector{Float64}[]
-    historicos_energia = Vector{Float64}[]
-    historicos_avg = Vector{Float64}[]
+    historicos_treinados_ADAM = Vector{Float64}[]
+    historicos_energia_ADAM = Vector{Float64}[]
+    historicos_avg_ADAM = Vector{Float64}[]
+    historicos_treinados_LBFGS = Vector{Float64}[]
+    historicos_energia_LBFGS = Vector{Float64}[]
+    historicos_avg_LBFGS = Vector{Float64}[]
 
     #
     # Loop pelas redes
@@ -78,28 +87,39 @@ function Main_Homogenizacao()
         println("\n Treinando Modo ", k)
 
         # Inicializa a rede
-        rede = Inicializa_Rede([16, 40, 40, 2], [TANH_GEN, TANH_GEN, LINEAR_GEN], Float64)
+        rede = Inicializa_Rede([16, 30, 30, 30, 2], [TANH_GEN, TANH_GEN, TANH_GEN, LINEAR_GEN], Float64)
         
         # Treina a rede
-        hist, hist_energia, hist_avg = Treina_Rede_PINN_Energia!(rede, pontos, modos[k], N_modos_fourier, mat_params; η = 0.005, epochs = 5000, λ_avg = 1E6)
+        hist_ADAM, hist_energia_ADAM, hist_avg_ADAM, 
+        hist_LBFGS, hist_energia_LBFGS, hist_avg_LBFGS = Treina_Rede_PINN_Energia!(rede, pontos, modos[k], N_modos_fourier, mat_params; 
+                                                                 η = 0.005, epochs_ADAM = 3000, epochs_LBFGS = 6000, λ_avg = 1E6)
 
         # Guarda a rede no vetor de redes para fazermos o pós-processamento depois 
         push!(redes_treinadas, rede)
 
         # Guarda os valores do treino da rede
-        push!(historicos_treinados, hist)
-        push!(historicos_energia, hist_energia)
-        push!(historicos_avg, hist_avg)
+        push!(historicos_treinados_ADAM, hist_ADAM)
+        push!(historicos_energia_ADAM, hist_energia_ADAM)
+        push!(historicos_avg_ADAM, hist_avg_ADAM)
+        push!(historicos_treinados_LBFGS, hist_LBFGS)
+        push!(historicos_energia_LBFGS, hist_energia_LBFGS)
+        push!(historicos_avg_LBFGS, hist_avg_LBFGS)
 
     end
 
     # Acompanha a evolução do objetivo ao longo do tempo
-    plot_obj_treino = plot([historicos_treinados[i] for i in 1:3], title = "Objetivo", label = ["Rede 1" "Rede 2" "Rede 3"])
-    plot_obj_energia = plot([historicos_energia[i] for i in 1:3], title = "Energia de Deformação", label = ["Rede 1" "Rede 2" "Rede 3"])
-    plot_obj_avg = plot([historicos_avg[i] for i in 1:3], title = "Valor Médio dos Deslocamentos", label = ["Rede 1" "Rede 2" "Rede 3"])
-    savefig(plot_obj_treino, "Resultados/objetivo_treino.pdf")
-    savefig(plot_obj_energia, "Resultados/objetivo_energia.pdf")
-    savefig(plot_obj_avg, "Resultados/objetivo_avg.pdf")
+    plot_obj_treino_ADAM = plot([historicos_treinados_ADAM[i] for i in 1:3], title = "Objetivo", label = ["Rede 1" "Rede 2" "Rede 3"])
+    plot_obj_energia_ADAM = plot([historicos_energia_ADAM[i] for i in 1:3], title = "Energia de Deformação", label = ["Rede 1" "Rede 2" "Rede 3"])
+    plot_obj_avg_ADAM = plot([historicos_avg_ADAM[i] for i in 1:3], title = "Valor Médio dos Deslocamentos", label = ["Rede 1" "Rede 2" "Rede 3"])
+    plot_obj_treino_LBFGS = plot([historicos_treinados_LBFGS[i] for i in 1:3], title = "Objetivo", label = ["Rede 1" "Rede 2" "Rede 3"])
+    plot_obj_energia_LBFGS = plot([historicos_energia_LBFGS[i] for i in 1:3], title = "Energia de Deformação", label = ["Rede 1" "Rede 2" "Rede 3"])
+    plot_obj_avg_LBFGS = plot([historicos_avg_LBFGS[i] for i in 1:3], title = "Valor Médio dos Deslocamentos", label = ["Rede 1" "Rede 2" "Rede 3"])
+    savefig(plot_obj_treino_ADAM, "Resultados/objetivo_treino_ADAM.pdf")
+    savefig(plot_obj_energia_ADAM, "Resultados/objetivo_energia_ADAM.pdf")
+    savefig(plot_obj_avg_ADAM, "Resultados/objetivo_avg_ADAM.pdf")
+    savefig(plot_obj_treino_LBFGS, "Resultados/objetivo_treino_LBFGS.pdf")
+    savefig(plot_obj_energia_LBFGS, "Resultados/objetivo_energia_LBFGS.pdf")
+    savefig(plot_obj_avg_LBFGS, "Resultados/objetivo_avg_LBFGS.pdf")
 
     # Agora vamos calcular o tensor homogeneizado
     println("\n Calculando Tensor Homogeneizado ")
@@ -116,9 +136,11 @@ function Main_Homogenizacao()
     writedlm("Resultados/CH_mistura.txt", CH_mistura)
     
     # Retorna a matriz homogeneizada e os históricos
-    return CH, historicos_treinados
+    return CH, historicos_treinados_ADAM, historicos_energia_ADAM, historicos_avg_ADAM, 
+    historicos_treinados_LBFGS, historicos_energia_LBFGS, historicos_avg_LBFGS
 
 end
 
 # Testa ....
-CH, historicos_treinados = Main_Homogenizacao()
+CH, historicos_treinados_ADAM, historicos_energia_ADAM, historicos_avg_ADAM, 
+    historicos_treinados_LBFGS, historicos_energia_LBFGS, historicos_avg_LBFGS = Main_Homogenizacao()

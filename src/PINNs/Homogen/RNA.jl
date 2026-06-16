@@ -28,6 +28,7 @@ function Inicializa_Rede(larguras::Vector{Int}, ativacoes::Vector,
         n_in, n_out = larguras[i], larguras[i + 1]
         
         # Inicializa a matriz de pesos da camada
+        # Inicialização de LeCun
         W = randn(T, n_out, n_in) * sqrt(T(1) / n_in)
 
         # Bias começam zerados
@@ -49,9 +50,8 @@ end
 # Forward otimizado
 # Z_buffers é um buffer de memória
 # -----------------------------------------------------------------------------
-function Forward_Rede_InPlace!(rede::Rede{T}, X::Matrix{T}, 
-                               Z_buffers::Vector{Matrix{T}}, 
-                               As::Vector{Matrix{T}}) where {T<:AbstractFloat}
+function Forward_Rede_InPlace!(W::Vector{Matrix{T}}, b::Vector{Vector{T}}, rede::Rede{T}, X::Matrix{T}, 
+                               Z_buffers::Vector{Matrix{T}}, As::Vector{Matrix{T}}) where {T<:AbstractFloat}
     
     # A primeira ativação recebe os dados do lote (coluna por coluna)
     As[1] .= X
@@ -59,10 +59,10 @@ function Forward_Rede_InPlace!(rede::Rede{T}, X::Matrix{T},
     for (i, camada) in enumerate(rede.camadas)
         
         # Multiplica W * A e guarda no rascunho temporário
-        mul!(Z_buffers[i], camada.W, As[i])
+        mul!(Z_buffers[i], W[i], As[i])
         
         # Soma o bias no próprio rascunho
-        Z_buffers[i] .+= camada.b
+        Z_buffers[i] .+= b[i]
         
         # Aplica a ativação e salva em As[i+1]
         As[i+1] .= camada.φ.(Z_buffers[i])
@@ -74,7 +74,8 @@ end
 # -----------------------------------------------------------------------------
 #  Passo reverso 
 # -----------------------------------------------------------------------------
-function Backward_Rede(rede::Rede{T}, As::Vector{Matrix{T}}, dL_dAL::Matrix{T}) where {T<:AbstractFloat}
+function Backward_Rede(W::Vector{Matrix{T}}, rede::Rede{T}, As::Vector{Matrix{T}},
+                       dL_dAL::Matrix{T}) where {T<:AbstractFloat}
 
     # Número de camadas
     L  = length(rede.camadas)
@@ -96,7 +97,7 @@ function Backward_Rede(rede::Rede{T}, As::Vector{Matrix{T}}, dL_dAL::Matrix{T}) 
         # Evita calcularmos na primeira camada, pois não tem 
         # uma camada anterior
         if i > 1
-            Δ = (rede.camadas[i].W' * Δ) .* rede.camadas[i - 1].dφ.(As[i])
+            Δ = (W[i]' * Δ) .* rede.camadas[i - 1].dφ.(As[i])
         end
     end
     

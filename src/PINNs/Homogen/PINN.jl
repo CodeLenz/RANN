@@ -17,7 +17,7 @@ function Gera_Pontos_Sobol(N_pontos::Int, ::Type{T}=Float64) where {T<:AbstractF
     for i in 1:N_pontos
 
         # Pega o próximo ponto da sequência
-        p = next!(seq)
+        p = Sobol.next!(seq)
 
         # Guarda na matriz 
         pontos[i, 1] = T(p[1])

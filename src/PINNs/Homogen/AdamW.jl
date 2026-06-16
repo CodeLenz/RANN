@@ -1,7 +1,6 @@
 # Otimizador ADAM
-function AdamW!(obj_fn::Function, rede::Rede{T}, X::Matrix{T}, Z_buffers::Vector{Matrix{T}}, 
-                As::Vector{Matrix{T}}, historico::Vector{T}, historico_energia::Vector{T},
-                historico_avg::Vector{T}, η::T, epochs::Int, 
+function AdamW!(obj_fn::Function, rede::Rede{T}, historico::Vector{T}, historico_energia::Vector{T},
+                historico_avg::Vector{T}, η::T, epochs::Int; 
                 λ_decay = T(1e-4), N_SHOW = 50, β1 = T(0.9), β2 = T(0.999), ϵ = T(1e-8),
                 verbose = true) where {T<:AbstractFloat}
 
@@ -15,25 +14,19 @@ function AdamW!(obj_fn::Function, rede::Rede{T}, X::Matrix{T}, Z_buffers::Vector
     vb = [zeros(T, size(c.b)) for c in rede.camadas]
               
     # Loop de treino
-    for iter in 1:epochs
+    @showprogress "Loop ADAM" for iter in 1:epochs
 
-        # Propaga a rede para frente In-Place (Zero Alocação para Z e A)
-        Forward_Rede_InPlace!(rede, X, Z_buffers, As)
-
-        # Saídas da ultima camada da rede
-        AL = As[end]
+        # Copia os pesos e bias atuais da rede para chamada da função
+        W = [copy(c.W) for c in rede.camadas]
+        b = [copy(c.b) for c in rede.camadas]
 
         # Chama função objetivo e recupera termos de custo e gradiente 
-        # Nesse caso, gradiente é a sensibilidade da perda em relação à ultima camada (saída da rede)
-        custo, L_energia, L_avg, dL_dAL = obj_fn(AL)
+        custo, L_energia, L_avg, ∇W, ∇b = obj_fn(W, b)
 
         # Já guardamos o custo aqui
         push!(historico, custo)
         push!(historico_energia, L_energia)
         push!(historico_avg, L_avg)
-
-        # Calcula o resto dos gradientes "manualmente" (estes são os gradientes puros da função de perda)
-        ∇W, ∇b = Backward_Rede(rede, As, dL_dAL)
 
         # Otimização AdamW camada a camada com mutação In-Place
         for i in 1:L

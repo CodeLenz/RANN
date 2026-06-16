@@ -4,17 +4,21 @@
 function Calcula_Deformacoes_pos_treino(y1::T, y2::T, ε_macro::Matrix{T}, rede::Rede{T},
                                         N_modos::Int, As::Vector{Matrix{T}}, Z_buffers::Vector{Matrix{T}}; h=T(1e-5)) where {T<:AbstractFloat}
 
+    # Copia os pesos e bias atuais da rede para chamada da função
+    W = [copy(c.W) for c in rede.camadas]
+    b = [copy(c.b) for c in rede.camadas]
+
     # Perturba em y1
-    Forward_Rede_InPlace!(rede, reshape(Camada_Periodica(y1 + h, y2, N_modos), :, 1), Z_buffers, As)
+    Forward_Rede_InPlace!(W, b, rede, reshape(Camada_Periodica(y1 + h, y2, N_modos), :, 1), Z_buffers, As)
     u_x_mais  = vec(As[end])
-    Forward_Rede_InPlace!(rede, reshape(Camada_Periodica(y1 - h, y2, N_modos), :, 1), Z_buffers, As)
+    Forward_Rede_InPlace!(W, b, rede, reshape(Camada_Periodica(y1 - h, y2, N_modos), :, 1), Z_buffers, As)
     u_x_menos = vec(As[end])
     du_dy1 = (u_x_mais .- u_x_menos) ./ (T(2.0) * h)
     
     # Perturba em y2
-    Forward_Rede_InPlace!(rede, reshape(Camada_Periodica(y1, y2 + h, N_modos), :, 1), Z_buffers, As)
+    Forward_Rede_InPlace!(W, b, rede, reshape(Camada_Periodica(y1, y2 + h, N_modos), :, 1), Z_buffers, As)
     u_y_mais  = vec(As[end])
-    Forward_Rede_InPlace!(rede, reshape(Camada_Periodica(y1, y2 - h, N_modos), :, 1), Z_buffers, As)
+    Forward_Rede_InPlace!(W, b, rede, reshape(Camada_Periodica(y1, y2 - h, N_modos), :, 1), Z_buffers, As)
     u_y_menos = vec(As[end])
     du_dy2 = (u_y_mais .- u_y_menos) ./ (T(2.0) * h)
     
