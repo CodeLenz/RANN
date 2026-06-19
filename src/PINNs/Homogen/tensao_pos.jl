@@ -1,33 +1,30 @@
 # -----------------------------------------------------------------------------
 #  Calcula as deformações para a parte do pós-processamento do C^H
 # -----------------------------------------------------------------------------
-function Calcula_Deformacoes_pos_treino(y1::T, y2::T, ε_macro::Matrix{T}, rede::Rede{T},
-                                        N_modos::Int, As::Vector{Matrix{T}}, Z_buffers::Vector{Matrix{T}}; h=T(1e-5)) where {T<:AbstractFloat}
+function Calcula_Deformacoes_pos_treino(X::Matrix{T}, ε_macro::Matrix{T}, rede::Rede{T}, W::Vector{Matrix{T}},
+                                        b::Vector{Vector{T}}, As::Vector{Matrix{T}}, Z_buffers::Vector{Matrix{T}},
+                                        h::T) where {T<:AbstractFloat}
 
-    # Copia os pesos e bias atuais da rede para chamada da função
-    W = [copy(c.W) for c in rede.camadas]
-    b = [copy(c.b) for c in rede.camadas]
+    # Roda o forward para todos os pontos de pertubação
+    Forward_Rede_InPlace!(W, b, rede, X, Z_buffers, As)
 
+    # Extraí os deslocamentos vetorizados
     # Perturba em y1
-    Forward_Rede_InPlace!(W, b, rede, reshape(Camada_Periodica(y1 + h, y2, N_modos), :, 1), Z_buffers, As)
-    u_x_mais  = vec(As[end])
-    Forward_Rede_InPlace!(W, b, rede, reshape(Camada_Periodica(y1 - h, y2, N_modos), :, 1), Z_buffers, As)
-    u_x_menos = vec(As[end])
+    u_x_mais  = As[end][:, 1:4:end]
+    u_x_menos = As[end][:, 2:4:end]
     du_dy1 = (u_x_mais .- u_x_menos) ./ (T(2.0) * h)
     
     # Perturba em y2
-    Forward_Rede_InPlace!(W, b, rede, reshape(Camada_Periodica(y1, y2 + h, N_modos), :, 1), Z_buffers, As)
-    u_y_mais  = vec(As[end])
-    Forward_Rede_InPlace!(W, b, rede, reshape(Camada_Periodica(y1, y2 - h, N_modos), :, 1), Z_buffers, As)
-    u_y_menos = vec(As[end])
+    u_y_mais  = As[end][:, 3:4:end]
+    u_y_menos = As[end][:, 4:4:end]
     du_dy2 = (u_y_mais .- u_y_menos) ./ (T(2.0) * h)
     
     # Calcula as deformações
-    ε11 = ε_macro[1,1] + du_dy1[1]
-    ε22 = ε_macro[2,2] + du_dy2[2]
-    ε12 = ε_macro[1,2] + T(0.5) * (du_dy2[1] + du_dy1[2])
+    ε11 = ε_macro[1,1] .+ du_dy1[1, :]
+    ε22 = ε_macro[2,2] .+ du_dy2[2, :]
+    ε12 = ε_macro[1,2] .+ T(0.5) .* (du_dy2[1, :] .+ du_dy1[2, :])
     
-    # Retorna no formato de Voigt
+    # Monta em formato de Voigt
     return [ε11, ε22, ε12]
 
 end
@@ -36,7 +33,8 @@ end
 #  Integração final de propriedades
 # -----------------------------------------------------------------------------
 function Calcula_Tensor_Homogeneizado(redes::Vector{Rede{T}}, modos::Vector{Matrix{T}}, 
-                                      N_modos::Int, mat_params::NamedTuple, N_eval::Int=50) where {T<:AbstractFloat}
+                                      N_modos::Int, mat_params::NamedTuple, N_eval::Int=50;
+                                      h=T(1e-4)) where {T<:AbstractFloat}
 
     # Aloca a matriz 
     CH = zeros(T, 3, 3)
@@ -49,33 +47,54 @@ function Calcula_Tensor_Homogeneizado(redes::Vector{Rede{T}}, modos::Vector{Matr
     # Número de pontos total 
     N_pts = length(pts)
 
+    # Inicializa malha de pontos para integral
+    X_list = Matrix{T}[]
+
     # Deformações 
     deformacoes = [Vector{Vector{T}}(undef, N_pts) for _ in 1:3]
-
-    # Pré-aloca o histórico de ativações para o backward
-    As = [Matrix{T}(undef, size(redes[1].camadas[1].W, 2), N_pts * 5)]
-    for c in redes[1].camadas
-        push!(As, Matrix{T}(undef, size(c.W, 1), N_pts * 5))
-    end
-
-    # Pré-aloca os rascunhos de Z apenas para usar no forward
-    Z_buffers = [Matrix{T}(undef, size(c.W, 1), N_pts * 5) for c in redes[1].camadas]
     
-    # Loop pelas redes (k) e pelos pontos (p)
-    for k in 1:3
-
-        for p in 1:N_pts
+    # Loop pelos pontos para calcular as deformações
+    for p in 1:N_pts
 
             # Coordenadas do ponto 
             y1, y2 = pts[p][1], pts[p][2]
 
+            # Lista com o stencil 
+            coords = [(y1+h, y2), (y1-h, y2), (y1, y2+h), (y1, y2-h)]
+
+            # Para cada ponto aplicamos a camada periódica
+            for pt in coords
+                push!(X_list, reshape(Camada_Periodica(pt[1], pt[2], N_modos), :, 1))
+            end
+
+    end
+
+    # Concatenamos horizontalmente para ficarmos com uma matriz só
+    X_all = hcat(X_list...)
+
+    # Pré-aloca o histórico de ativações para o backward
+    As = [Matrix{T}(undef, size(redes[1].camadas[1].W, 2), N_pts * 4)]
+    for c in redes[1].camadas
+        push!(As, Matrix{T}(undef, size(c.W, 1), N_pts * 4))
+    end
+
+    # Pré-aloca os rascunhos de Z apenas para usar no forward
+    Z_buffers = [Matrix{T}(undef, size(c.W, 1), N_pts * 4) for c in redes[1].camadas]
+
+    # Loop pelas redes (k)
+    for k in 1:3
+
+            # Copia os pesos e bias atuais da rede para chamada da função
+            W = [copy(c.W) for c in redes[k].camadas]
+            b = [copy(c.b) for c in redes[k].camadas]
+
             # Deformação do ponto 
-            ε_vec = Calcula_Deformacoes_pos_treino(y1, y2, modos[k], redes[k], N_modos, As, Z_buffers)
+            ε_vec = Calcula_Deformacoes_pos_treino(X_all, modos[k], redes[k], W, b, As, Z_buffers, h)
 
             # Monta em formato de Voigt
-            deformacoes[k][p] = [ε_vec[1], ε_vec[2], T(2.0)*ε_vec[3]]
-
-        end
+            for p in 1:N_pts
+                deformacoes[k][p] = [ε_vec[1][p], ε_vec[2][p], T(2.0)*ε_vec[3][p]]
+            end
 
     end
 

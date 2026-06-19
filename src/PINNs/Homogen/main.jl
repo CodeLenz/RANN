@@ -26,6 +26,7 @@ include("L-BFGS/dois_lacos.jl")
 include("L-BFGS/refinamento.jl")
 include("L-BFGS/wolfe_ls.jl")
 include("L-BFGS/interpolacao.jl")
+include("plot.jl")
 
 # =============================================================================
 #  Validação
@@ -92,7 +93,7 @@ function Main_Homogenizacao()
         # Treina a rede
         hist_ADAM, hist_energia_ADAM, hist_avg_ADAM, 
         hist_LBFGS, hist_energia_LBFGS, hist_avg_LBFGS = Treina_Rede_PINN_Energia!(rede, pontos, modos[k], N_modos_fourier, mat_params; 
-                                                                 η = 0.005, epochs_ADAM = 3000, epochs_LBFGS = 6000, λ_avg = 1E6)
+                                                                 η = 0.005, epochs_ADAM = 3000, epochs_LBFGS = 1000, λ_avg = 1E6)
 
         # Guarda a rede no vetor de redes para fazermos o pós-processamento depois 
         push!(redes_treinadas, rede)
@@ -107,19 +108,9 @@ function Main_Homogenizacao()
 
     end
 
-    # Acompanha a evolução do objetivo ao longo do tempo
-    plot_obj_treino_ADAM = plot([historicos_treinados_ADAM[i] for i in 1:3], title = "Objetivo", label = ["Rede 1" "Rede 2" "Rede 3"])
-    plot_obj_energia_ADAM = plot([historicos_energia_ADAM[i] for i in 1:3], title = "Energia de Deformação", label = ["Rede 1" "Rede 2" "Rede 3"])
-    plot_obj_avg_ADAM = plot([historicos_avg_ADAM[i] for i in 1:3], title = "Valor Médio dos Deslocamentos", label = ["Rede 1" "Rede 2" "Rede 3"])
-    plot_obj_treino_LBFGS = plot([historicos_treinados_LBFGS[i] for i in 1:3], title = "Objetivo", label = ["Rede 1" "Rede 2" "Rede 3"])
-    plot_obj_energia_LBFGS = plot([historicos_energia_LBFGS[i] for i in 1:3], title = "Energia de Deformação", label = ["Rede 1" "Rede 2" "Rede 3"])
-    plot_obj_avg_LBFGS = plot([historicos_avg_LBFGS[i] for i in 1:3], title = "Valor Médio dos Deslocamentos", label = ["Rede 1" "Rede 2" "Rede 3"])
-    savefig(plot_obj_treino_ADAM, "Resultados/objetivo_treino_ADAM.pdf")
-    savefig(plot_obj_energia_ADAM, "Resultados/objetivo_energia_ADAM.pdf")
-    savefig(plot_obj_avg_ADAM, "Resultados/objetivo_avg_ADAM.pdf")
-    savefig(plot_obj_treino_LBFGS, "Resultados/objetivo_treino_LBFGS.pdf")
-    savefig(plot_obj_energia_LBFGS, "Resultados/objetivo_energia_LBFGS.pdf")
-    savefig(plot_obj_avg_LBFGS, "Resultados/objetivo_avg_LBFGS.pdf")
+    # Gera os gráficos do objetivo
+    plot_objetivo!(historicos_treinados_ADAM, historicos_energia_ADAM, historicos_avg_ADAM, historicos_treinados_LBFGS,
+                   historicos_energia_LBFGS, historicos_avg_LBFGS)
 
     # Agora vamos calcular o tensor homogeneizado
     println("\n Calculando Tensor Homogeneizado ")

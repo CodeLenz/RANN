@@ -36,3 +36,47 @@ function Interp_quadratica(α_A::T, α_B::T, f_A::T, f_B::T, m_A::T, δ::T) wher
     return α_q
     
 end
+
+#
+# Interpolação cúbica
+#
+# Intervalo inicial [α_A, α_B] 
+# f_A e  f_B são os valores da função nos extremos do intervalo 
+# m_A e m_B são as inclinações da função nos extremos do intervalor
+# δ é a "folga" em relação às bordas do intervalo (se a raiz estiver muito perto 
+# das bordas retornamos o ponto médio.)
+#
+function Interp_cubica(α_A::T, α_B::T, f_A::T, f_B::T, m_A::T, m_B::T, δ::T) where T
+
+    # Calcula os coeficientes para a aproximação cúbica
+    h = α_B - α_A
+    G = (f_B - f_A) / h
+    θ = m_A + m_B - 3.0 * G
+    D = θ^2 - m_A * m_B
+    
+    # Se o determinante for negativo usamos a interpolação quadrática 
+    if D < 0.0
+        return Interp_quadratica(α_A, α_B, f_A, f_B, m_A, δ)
+    end
+    
+    # Agora podemos calcular os próximos termos da solução cúbica
+    w = sign(h) * sqrt(D)
+    denom = m_B - m_A + 2.0 * w
+    
+    # Se o denominador for muito pequeno devolvemos o ponto médio
+    if abs(denom) < 1e-10
+        return (α_A + α_B) / 2.0
+    end
+    
+    # Estimativa do ponto de mínimo
+    α_c = α_B - h * (m_B + w - θ) / denom
+    
+    # Se a estimativa estiver muito perto das bordas devolvemos o ponto médio
+    if α_c <= min(α_A, α_B) + δ * abs(h) || α_c >= max(α_A, α_B) - δ * abs(h)
+        return (α_A + α_B) / 2.0
+    end
+    
+    # Retorna a estimativa de mínimo
+    return α_c
+
+end
