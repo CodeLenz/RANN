@@ -1,4 +1,4 @@
-# -----------------------------------------------------------------------------
++# -----------------------------------------------------------------------------
 #  Calcula as deformações para a parte do pós-processamento do C^H
 # -----------------------------------------------------------------------------
 function Calcula_Deformacoes_pos_treino(X::Matrix{T}, ε_macro::Matrix{T}, rede::Rede{T}, W::Vector{Matrix{T}},
@@ -34,7 +34,7 @@ end
 # -----------------------------------------------------------------------------
 function Calcula_Tensor_Homogeneizado(redes::Vector{Rede{T}}, modos::Vector{Matrix{T}}, 
                                       N_modos::Int, mat_params::NamedTuple, N_eval::Int=50;
-                                      h=T(1e-5)) where {T<:AbstractFloat}
+                                      h=T(1e-4)) where {T<:AbstractFloat}
 
     # Aloca a matriz 
     CH = zeros(T, 3, 3)
