@@ -29,26 +29,18 @@ include("L-BFGS/interpolacao.jl")
 include("resultados.jl")
 
 # =============================================================================
-#  Validação
+#  Função principal
 # =============================================================================
-function Main_Homogenizacao(mat_params::NamedTuple, N_modos_fourier::Int, N_colocacao::Int, N_eval::Int, topologia::Vector{Int}, 
-                            ativ::Vector, epochs_ADAM::Int, epochs_LBFGS::Int, λ_avg::Float64; treina::Bool = true)
-
-    # Modos fundamentais para cada caso de "carga" 
-    # da homogeneização
-    ε_1 = [1.0 0.0; 
-           0.0 0.0]
-    ε_2 = [0.0 0.0; 
-           0.0 1.0]
-    ε_3 = [0.0 0.5; 
-           0.5 0.0]
-    modos = [ε_1, ε_2, ε_3]
+function Main_Homogenizacao(mat_params::NamedTuple, prob::String, modos::Vector{Matrix{Float64}}, N_modos_fourier::Int, 
+                            N_colocacao::Int, N_eval::Int, topologia::Vector{Int}, ativ::Vector, epochs_ADAM::Int,  
+                            epochs_LBFGS::Int, λ_avg::Float64; treina::Bool = true)
 
     # Amostragem QMC
     pontos = Gera_Pontos_Sobol(N_colocacao, Float64)
 
     # Avalia módulo de Elasticidade nos pontos de Sobol para geração de gráfico
-    props = Propriedades_Material.(pontos[:, 1], pontos[:, 2], Ref(mat_params))
+    props_simbolo = Symbol("Propriedades_Material_"*prob)
+    props = getfield(Main, props_simbolo).(pontos[:, 1], pontos[:, 2], Ref(mat_params))
     E_C = first.(props)
 
     # Salva gráfico
@@ -86,7 +78,7 @@ function Main_Homogenizacao(mat_params::NamedTuple, N_modos_fourier::Int, N_colo
             
             # Treina a rede
             hist_ADAM, hist_energia_ADAM, hist_avg_ADAM, 
-            hist_LBFGS, hist_energia_LBFGS, hist_avg_LBFGS = Treina_Rede_PINN_Energia!(redes_treinadas[k], pontos, modos[k], N_modos_fourier, mat_params; 
+            hist_LBFGS, hist_energia_LBFGS, hist_avg_LBFGS = Treina_Rede_PINN_Energia!(redes_treinadas[k], pontos, modos[k], N_modos_fourier, prob, mat_params; 
                                                                                        η = 0.005, epochs_ADAM, epochs_LBFGS, λ_avg)
 
             # Guarda os valores do treino da rede
@@ -96,6 +88,18 @@ function Main_Homogenizacao(mat_params::NamedTuple, N_modos_fourier::Int, N_colo
             push!(historicos_treinados_LBFGS, hist_LBFGS)
             push!(historicos_energia_LBFGS, hist_energia_LBFGS)
             push!(historicos_avg_LBFGS, hist_avg_LBFGS)
+
+            #=# Após o treino de uma rede, atualiza inicialização dos parâmetros da próxima rede
+            if k < 3
+
+                # Loop pelas camadas
+                for i in 1:length(redes_treinadas[k].camadas)
+                    redes_treinadas[k+1].camadas[i].W .= redes_treinadas[k].camadas[i].W
+                    redes_treinadas[k+1].camadas[i].b .= redes_treinadas[k].camadas[i].b
+                end
+
+            end
+            =#
 
         end
 
@@ -118,17 +122,10 @@ function Main_Homogenizacao(mat_params::NamedTuple, N_modos_fourier::Int, N_colo
 
     # Agora vamos calcular o tensor homogeneizado
     println("\n Calculando Tensor Homogeneizado ")
-    CH = Calcula_Tensor_Homogeneizado(redes_treinadas, modos, N_modos_fourier, mat_params, N_eval)
-    display(CH)
-
-    # Calcula o tensor através da regra das misturas para comparação
-    CH_mistura = Calcula_Tensor_Regra_Mistura(mat_params)
-    println("\n Tensor Homogeneizado pela Regra das Misturas ")
-    display(CH_mistura)
+    CH = Calcula_Tensor_Homogeneizado(redes_treinadas, modos, N_modos_fourier, prob, mat_params, N_eval)
 
     # Grava tensor homogeneizado em um arquivo 
     writedlm("Resultados/CH.txt", CH)
-    writedlm("Resultados/CH_mistura.txt", CH_mistura)
     
     # Retorna a matriz homogeneizada e os históricos
     return CH
@@ -138,17 +135,37 @@ end
 # Define os hiperparâmetros do problema e roda a função principal
 function Roda()
 
-    # Propriedades dos materiais da célula
-    # no caso, fibra e matriz
-    # raio e centro da fibra
-    mat_params = (
+    # Propriedades dos materiais da célula - fibra e matriz
+    mat_params = Dict(
+        # Problema circular, raio e centro da fibra
+        "Circular" => (
         E_m = 1.0, ν_m = 0.0,
         E_f = 10.0, ν_f = 0.0,
         r0 = 0.25, yc1 = 0.5, yc2 = 0.5
+    ),
+        # Problema retangular, altura da fibra (simétrica ao centro da célula)
+        "Retangular" => (
+        E_m = 1.0, ν_m = 0.0,
+        E_f = 10.0, ν_f = 0.0,
+        hf = 0.4
+    )
     )
 
+    # Define problema de cálculo
+    prob = "Retangular"
+
+    # Modos fundamentais para cada caso de "carga" 
+    # da homogeneização
+    ε_1 = [1.0 0.0; 
+           0.0 0.0]
+    ε_2 = [0.0 0.0; 
+           0.0 1.0]
+    ε_3 = [0.0 0.5; 
+           0.5 0.0]
+    modos = [ε_1, ε_2, ε_3]
+
     # Número de modos para a camada periódica
-    N_modos_fourier = 4
+    N_modos_fourier = 8
     
     # Número de pontos de colocação via Sobol
     N_colocacao = 1000
@@ -157,20 +174,20 @@ function Roda()
     N_eval = 500
 
     # Topologia da rede
-    topologia = [16, 30, 30, 30, 2]
+    topologia = [64, 64, 64, 64, 2]
 
     # Ativações para cada camada
     ativ = [TANH_GEN, TANH_GEN, TANH_GEN, LINEAR_GEN]
 
     # Número de épocas dos otimizadores
     epochs_ADAM = 3000
-    epochs_LBFGS = 1000
+    epochs_LBFGS = 10_000
 
     # Hiperparâmetro de regularização para o valor médio dos deslocamentos
     λ_avg = 1E6
 
     # Testa
-    CH = Main_Homogenizacao(mat_params, N_modos_fourier, N_colocacao, N_eval, topologia, ativ, epochs_ADAM, epochs_LBFGS, λ_avg; treina = false)
+    CH = Main_Homogenizacao(mat_params[prob], prob, modos, N_modos_fourier, N_colocacao, N_eval, topologia, ativ, epochs_ADAM, epochs_LBFGS, λ_avg; treina = true)
 
 end
 

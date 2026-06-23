@@ -3,7 +3,7 @@
 # =============================================================================
 
 function Treina_Rede_PINN_Energia!(rede::Rede{T}, pontos::Matrix{T}, ε_macro::Matrix{T},
-                                   N_modos::Int, mat_params::NamedTuple; 
+                                   N_modos::Int, prob::String, mat_params::NamedTuple; 
                                    η = T(0.005), epochs_ADAM = 1000, epochs_LBFGS = 1000, λ_avg = T(100.0),
                                    verbose = true) where {T<:AbstractFloat}
 
@@ -102,9 +102,9 @@ function Treina_Rede_PINN_Energia!(rede::Rede{T}, pontos::Matrix{T}, ε_macro::M
         # Zygote.pullback calcula a função custo, e também realiza o pullback em relação a AL
         # Nesse caso, gradiente é a sensibilidade da perda em relação à ultima camada (saída da rede)
         # A segunda chamada (sem gradiente) recupera os termos de monitoramento de perda sem custo de AD
-        custo, back = Zygote.pullback(al -> Perda_Energia_Alvo(al, pontos, ε_macro, mat_params, λ_avg)[1], AL)
+        custo, back = Zygote.pullback(al -> Perda_Energia_Alvo(al, pontos, ε_macro, prob, mat_params, λ_avg)[1], AL)
         dL_dAL = back(T(1.0))[1]
-        _, L_energia, L_avg = Perda_Energia_Alvo(AL, pontos, ε_macro, mat_params, λ_avg)
+        _, L_energia, L_avg = Perda_Energia_Alvo(AL, pontos, ε_macro, prob, mat_params, λ_avg)
 
         # Calcula o resto dos gradientes "manualmente" (estes são os gradientes puros da função de perda)
         ∇W, ∇b = Backward_Rede(W, rede, As, dL_dAL)

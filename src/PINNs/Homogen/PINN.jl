@@ -22,6 +22,7 @@ function Gera_Pontos_Sobol(N_pontos::Int, ::Type{T}=Float64) where {T<:AbstractF
         # Guarda na matriz 
         pontos[i, 1] = T(p[1])
         pontos[i, 2] = T(p[2])
+
     end
 
     # Retorna a matriz de pontos
@@ -44,7 +45,7 @@ end
 #  Troca loop escalar por operações de fatiamento 
 #
 # -----------------------------------------------------------------------------
-function Perda_Energia_Alvo(AL::Matrix{T}, pontos::Matrix{T}, ε_macro::Matrix{T},
+function Perda_Energia_Alvo(AL::Matrix{T}, pontos::Matrix{T}, ε_macro::Matrix{T}, prob::String,
                             mat_params::NamedTuple, λ_avg::T) where {T<:AbstractFloat}
 
     # Número de pontos Sobol no lote
@@ -101,7 +102,8 @@ function Perda_Energia_Alvo(AL::Matrix{T}, pontos::Matrix{T}, ε_macro::Matrix{T
     # o Ref(mat_params) serve para avisar o compilador que mat_params 
     # é constante e não deve ser vetorizado, apenas y1 e y2.
     #
-    props = Propriedades_Material.(y1, y2, Ref(mat_params))
+    props_simbolo = Symbol("Propriedades_Material_"*prob)
+    props = getfield(Main, props_simbolo).(pontos[:, 1], pontos[:, 2], Ref(mat_params))
     
     # Separa os vetores de E e ν que agora estão em lote também
     E_C = first.(props)

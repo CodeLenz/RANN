@@ -33,7 +33,7 @@ end
 #  Integração final de propriedades
 # -----------------------------------------------------------------------------
 function Calcula_Tensor_Homogeneizado(redes::Vector{Rede{T}}, modos::Vector{Matrix{T}}, 
-                                      N_modos::Int, mat_params::NamedTuple, N_eval::Int=50;
+                                      N_modos::Int, prob::String, mat_params::NamedTuple, N_eval::Int=50;
                                       h=T(1e-5)) where {T<:AbstractFloat}
 
     # Aloca a matriz 
@@ -108,7 +108,8 @@ function Calcula_Tensor_Homogeneizado(redes::Vector{Rede{T}}, modos::Vector{Matr
         y1, y2 = pts[p][1], pts[p][2]
 
         # Propriedades do material no ponto 
-        E, ν = Propriedades_Material(y1, y2, mat_params)
+        props_simbolo = Symbol("Propriedades_Material_"*prob)
+        E, ν = getfield(Main, props_simbolo)(y1, y2, mat_params)
 
         # Matriz constitutiva
         C_local = Matriz_Constitutiva(E, ν)
