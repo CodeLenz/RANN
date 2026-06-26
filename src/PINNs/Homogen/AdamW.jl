@@ -1,8 +1,8 @@
 # Otimizador ADAM
-function AdamW!(obj_fn::Function, rede::Rede{T}, historico::Vector{T}, historico_energia::Vector{T},
+function AdamW!(obj_fn::F, rede::Rede{T}, historico::Vector{T}, historico_energia::Vector{T},
                 historico_avg::Vector{T}, η::T, epochs::Int; 
                 λ_decay = T(1e-4), N_SHOW = 50, β1 = T(0.9), β2 = T(0.999), ϵ = T(1e-8),
-                verbose = true) where {T<:AbstractFloat}
+                verbose = true) where {F<:Function, T<:AbstractFloat}
 
     # Número de camadas da rede
     L = length(rede.camadas)

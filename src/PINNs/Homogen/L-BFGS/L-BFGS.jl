@@ -11,9 +11,9 @@
 # ϵ_g, ϵ_x, ϵ_f     -> Tolerâncias para gradiente, espaço e função
 # max_iter          -> Número máximo de iterações permitidas
 #
-function L_BFGS!(obj_fn::Function, rede::Rede{T}, historico::Vector{T}, historico_energia::Vector{T},
+function L_BFGS!(obj_fn::F, rede::Rede{T}, historico::Vector{T}, historico_energia::Vector{T},
                  historico_avg::Vector{T}, nepoch::Int; m::Int=10, 
-                 ϵ_g=1e-6, ϵ_x=1e-8, ϵ_f=1e-8, N_SHOW = 50, verbose = true) where {T<:AbstractFloat}
+                 ϵ_g=1e-6, ϵ_x=1e-8, ϵ_f=1e-8, N_SHOW = 50, verbose = true) where {F<:Function, T<:AbstractFloat}
 
     # Transforma pesos e bias em vetor flat para o L-BFGS
     Θ_0 = vcat([vec(c.W) for c in rede.camadas]..., [vec(c.b) for c in rede.camadas]...)

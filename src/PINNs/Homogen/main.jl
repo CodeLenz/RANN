@@ -31,9 +31,9 @@ include("resultados.jl")
 # =============================================================================
 #  Função principal
 # =============================================================================
-function Main_Homogenizacao(mat_params::NamedTuple, prob::String, modos::Vector{Matrix{Float64}}, N_modos_fourier::Int, 
-                            N_colocacao::Int, N_eval::Int, topologia::Vector{Int}, ativ::Vector, epochs_ADAM::Int,  
-                            epochs_LBFGS::Int, λ_avg::Float64; treina::Bool = true)
+function Main_Homogenizacao(mat_params::NamedTuple, prob::String, modos::Vector{Matrix{T}}, N_modos_fourier::Int, 
+                            N_colocacao::Int, N_eval::Int, topologia::Vector{Int}, ativ::Vector, rounds::Int, epochs_ADAM::Int,  
+                            epochs_LBFGS::Int, λ_avg::T; treina::Bool = true) where {T<:AbstractFloat}
 
     # Amostragem QMC
     pontos = Gera_Pontos_Sobol(N_colocacao, Float64)
@@ -61,36 +61,20 @@ function Main_Homogenizacao(mat_params::NamedTuple, prob::String, modos::Vector{
     if treina
 
         # Vetor de vetores para guardar os históricos (são 3)
-        historicos_treinados_ADAM = Vector{Float64}[]
-        historicos_energia_ADAM = Vector{Float64}[]
-        historicos_avg_ADAM = Vector{Float64}[]
-        historicos_treinados_LBFGS = Vector{Float64}[]
-        historicos_energia_LBFGS = Vector{Float64}[]
-        historicos_avg_LBFGS = Vector{Float64}[]
+        hists_ADAM = Vector{T}[]
+        hists_energ_ADAM = Vector{T}[]
+        hists_avg_ADAM = Vector{T}[]
+        hists_LBFGS = Vector{T}[]
+        hists_energ_LBFGS = Vector{T}[]
+        hists_avg_LBFGS = Vector{T}[]
 
         #
         # Loop pelas redes
         #
         for k in 1:3
 
-            # Avisa que vamos treinar a rede k 
-            println("\n Treinando Modo ", k)
-            
-            # Treina a rede
-            hist_ADAM, hist_energia_ADAM, hist_avg_ADAM, 
-            hist_LBFGS, hist_energia_LBFGS, hist_avg_LBFGS = Treina_Rede_PINN_Energia!(redes_treinadas[k], pontos, modos[k], N_modos_fourier, prob, mat_params; 
-                                                                                       η = 0.005, epochs_ADAM, epochs_LBFGS, λ_avg)
-
-            # Guarda os valores do treino da rede
-            push!(historicos_treinados_ADAM, hist_ADAM)
-            push!(historicos_energia_ADAM, hist_energia_ADAM)
-            push!(historicos_avg_ADAM, hist_avg_ADAM)
-            push!(historicos_treinados_LBFGS, hist_LBFGS)
-            push!(historicos_energia_LBFGS, hist_energia_LBFGS)
-            push!(historicos_avg_LBFGS, hist_avg_LBFGS)
-
             #=# Após o treino de uma rede, atualiza inicialização dos parâmetros da próxima rede
-            if k < 3
+            if k > 1
 
                 # Loop pelas camadas
                 for i in 1:length(redes_treinadas[k].camadas)
@@ -101,11 +85,26 @@ function Main_Homogenizacao(mat_params::NamedTuple, prob::String, modos::Vector{
             end
             =#
 
+            # Avisa que vamos treinar a rede k 
+            println("\n Treinando Modo ", k)
+            
+            # Treina a rede
+            hist_ADAM_k, hist_energ_ADAM_k, hist_avg_ADAM_k, 
+            hist_LBFGS_k, hist_energ_LBFGS_k, hist_avg_LBFGS_k = Treina_Rede_PINN_Energia!(redes_treinadas[k], pontos, modos[k], N_modos_fourier, prob, mat_params; 
+                                                                                       η = 0.005, rounds, epochs_ADAM, epochs_LBFGS, λ_avg)
+
+            # Guarda os valores do treino da rede
+            push!(hists_ADAM, hist_ADAM_k)
+            push!(hists_energ_ADAM, hist_energ_ADAM_k)
+            push!(hists_avg_ADAM, hist_avg_ADAM_k)
+            push!(hists_LBFGS, hist_LBFGS_k)
+            push!(hists_energ_LBFGS, hist_energ_LBFGS_k)
+            push!(hists_avg_LBFGS, hist_avg_LBFGS_k)
+
         end
 
         # Gera os gráficos do objetivo
-        Resultados!(redes_treinadas, historicos_treinados_ADAM, historicos_energia_ADAM, historicos_avg_ADAM, historicos_treinados_LBFGS,
-                    historicos_energia_LBFGS, historicos_avg_LBFGS)
+        Resultados!(redes_treinadas, hists_ADAM, hists_energ_ADAM, hists_avg_ADAM, hists_LBFGS, hists_energ_LBFGS, hists_avg_LBFGS)
 
     # Se treina = false, vamos ler as redes treinadas de arquivos diretamente para fazer o pós-processamento
     else
@@ -165,29 +164,30 @@ function Roda()
     modos = [ε_1, ε_2, ε_3]
 
     # Número de modos para a camada periódica
-    N_modos_fourier = 8
+    N_modos_fourier = 4
     
     # Número de pontos de colocação via Sobol
-    N_colocacao = 1000
+    N_colocacao = 4000
 
     # Número de pontos para avaliação do tensor homogeneizado no pós-processamento
     N_eval = 500
 
     # Topologia da rede
-    topologia = [64, 64, 64, 64, 2]
+    topologia = [16, 32, 2]
 
     # Ativações para cada camada
-    ativ = [TANH_GEN, TANH_GEN, TANH_GEN, LINEAR_GEN]
+    ativ = [TANH_GEN, LINEAR_GEN]
 
     # Número de épocas dos otimizadores
-    epochs_ADAM = 3000
-    epochs_LBFGS = 10_000
+    rounds = 25
+    epochs_ADAM = 30
+    epochs_LBFGS = 50
 
     # Hiperparâmetro de regularização para o valor médio dos deslocamentos
-    λ_avg = 1E6
+    λ_avg = 1E4
 
     # Testa
-    CH = Main_Homogenizacao(mat_params[prob], prob, modos, N_modos_fourier, N_colocacao, N_eval, topologia, ativ, epochs_ADAM, epochs_LBFGS, λ_avg; treina = true)
+    CH = Main_Homogenizacao(mat_params[prob], prob, modos, N_modos_fourier, N_colocacao, N_eval, topologia, ativ, rounds, epochs_ADAM, epochs_LBFGS, λ_avg; treina = true)
 
 end
 

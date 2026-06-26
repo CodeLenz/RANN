@@ -31,6 +31,18 @@ function Gera_Pontos_Sobol(N_pontos::Int, ::Type{T}=Float64) where {T<:AbstractF
 end
 
 # -----------------------------------------------------------------------------
+#  QMC randomizado: rotação de Cranley-Patterson (shift aleatório mod 1).
+#  Mantém a baixa discrepância do Sobol e gera um conjunto NOVO a cada rodada.
+# -----------------------------------------------------------------------------
+function Gera_Pontos_QMC_Rotacionado(base::Matrix{T}, shift::Vector{T}) where {T<:AbstractFloat}
+    P = similar(base)
+    @inbounds for j in 1:size(base,2), i in 1:size(base,1)
+        P[i,j] = mod(base[i,j] + shift[j], one(T))
+    end
+    return P
+end
+
+# -----------------------------------------------------------------------------
 #  Camada que transforma entrada (y1,y2) em um sinal pediódico de 
 #  dimensão 4N (número de modos)
 # -----------------------------------------------------------------------------
