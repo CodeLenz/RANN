@@ -125,8 +125,13 @@ function Main_Homogenizacao(mat_params::NamedTuple, prob::String, modos::Vector{
 
     # Grava tensor homogeneizado em um arquivo 
     writedlm("Resultados/CH.txt", CH)
+
+    # Compara resultados com regra das misturas para o caso retangular
+    if prob == "Retangular"
+        Compara_Retangular(mat_params, CH)
+    end
     
-    # Retorna a matriz homogeneizada e os históricos
+    # Retorna a matriz homogeneizada
     return CH
 
 end
@@ -144,9 +149,9 @@ function Roda()
     ),
         # Problema retangular, altura da fibra (simétrica ao centro da célula)
         "Retangular" => (
-        E_m = 1.0, ν_m = 0.0,
-        E_f = 10.0, ν_f = 0.0,
-        hf = 0.4
+        E_m = 1.0, ν_m = 0.3,
+        E_f = 10.0, ν_f = 0.3,
+        hf = 0.2
     )
     )
 
@@ -187,7 +192,9 @@ function Roda()
     λ_avg = 1E4
 
     # Testa
-    CH = Main_Homogenizacao(mat_params[prob], prob, modos, N_modos_fourier, N_colocacao, N_eval, topologia, ativ, rounds, epochs_ADAM, epochs_LBFGS, λ_avg; treina = true)
+    CH = Main_Homogenizacao(mat_params[prob], prob, modos, N_modos_fourier, N_colocacao, N_eval, topologia, ativ, rounds, 
+                            epochs_ADAM, epochs_LBFGS, λ_avg; treina = true)
 
 end
 
+Roda()

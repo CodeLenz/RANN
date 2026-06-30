@@ -60,3 +60,38 @@ function Matriz_Constitutiva(E::T, ν::T) where {T<:AbstractFloat}
     return C
 
 end
+
+# -----------------------------------------------------------------------------
+# Problema de Fibra retangular:
+# Calcula E e ν efetivos por regra da mistura
+# Estima os coeficientes obtidos pela homogeneização e compara
+# -----------------------------------------------------------------------------
+function Compara_Retangular(mat_params::NamedTuple, CH::Matrix{T}) where {T<:AbstractFloat}
+
+   # Calcula E1 e ν12 efetivos por regra da mistura
+   E1 = mat_params.E_m * (1 - mat_params.hf) + mat_params.E_f * mat_params.hf
+   ν12 = mat_params.ν_m * (1 - mat_params.hf) + mat_params.ν_f * mat_params.hf
+
+   # Calcula E2 através da fórmula de Chamis
+   E2 = mat_params.E_m / (1 - sqrt(mat_params.hf) * (1 - mat_params.E_m / mat_params.E_f)) 
+
+   # Calcula coeficientes homogeneizados a partir do tensor C calculado
+   E1H = (CH[1, 1] * CH[2, 2] - CH[1, 2]^2) / CH[2, 2]
+   E2H = (CH[1, 1] * CH[2, 2] - CH[1, 2]^2) / CH[1, 1]
+   ν12H = CH[1, 2] / CH[2, 2]
+
+   # Mostra resultados
+   println("Coeficientes por regra das misturas:\n E1: $E1; \n E2: $E2; \n ν12: $ν12 \n")
+   println("Coeficientes por homogeneização:\n E1: $E1H; \n E2: $E2H; \n ν12: $ν12H")
+
+   # Salva resultados em arquivo de texto
+   writedlm("Resultados/compara_retangular.txt", [
+       "E1"   E1;
+       "E2"   E2;
+       "nu12" ν12;
+       "E1H"  E1H;
+       "E2H"  E2H;
+       "nu12H" ν12H
+   ])
+
+end
