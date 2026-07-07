@@ -29,8 +29,30 @@ end
 # -----------------------------------------------------------------------------
 function Propriedades_Material_Retangular(y1::T, y2::T, params::NamedTuple) where {T<:AbstractFloat}
     
-    # Se o ponto estiver entre (0.5 - hf/2) e (0.5 + hf/2) usamos as propriedades da fibra
+    # Se a altura y2 estiver entre (0.5 - hf/2) e (0.5 + hf/2) usamos as propriedades da fibra
     if y2 >= (0.5 - params.hf/2) && y2 <= (0.5 + params.hf/2)
+       E = params.E_f
+       ν = params.ν_f
+    else 
+       E = params.E_m
+       ν = params.ν_m
+    end
+
+    # Retorna as propriedades
+    return E, ν
+
+end
+
+# -----------------------------------------------------------------------------
+#  Rotina para devolver E, ν para um ponto (y_1,y_2)
+#  em uma fibra retangular de altura hf e largura unitária em uma matriz 
+#  A fibra se encontra simétrica em relação ao centro da célula
+#  e possui inclinação de α graus em relação ao eixo
+# -----------------------------------------------------------------------------
+function Propriedades_Material_Inclinada(y1::T, y2::T, params::NamedTuple) where {T<:AbstractFloat}
+    
+    # Se a altura y2 estiver entre (0.5 - hf/2 + (y1 - 0.5) sin(α)) e (0.5 + hf/2 + (y1 - 0.5) sin(α)) usamos as propriedades da fibra
+    if y2 >= (0.5 - params.hf/2 + (y1 - 0.5) * sind(params.α)) && y2 <= (0.5 + params.hf/2 + (y1 - 0.5) * sind(params.α))
        E = params.E_f
        ν = params.ν_f
     else 

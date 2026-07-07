@@ -47,30 +47,28 @@ function Calcula_Tensor_Homogeneizado(redes::Vector{Rede{T}}, modos::Vector{Matr
     # Número de pontos total 
     N_pts = length(pts)
 
-    # Inicializa malha de pontos para integral
-    X_list = Matrix{T}[]
+    # Inicializa malha de pontos para integral (pré-alocada; evita hcat(x...) com
+    # milhões de argumentos, que trava na especialização do splat)
+    X_all = Matrix{T}(undef, 4 * N_modos, N_pts * 4)
 
-    # Deformações 
+    # Deformações
     deformacoes = [Vector{Vector{T}}(undef, N_pts) for _ in 1:3]
-    
+
     # Loop pelos pontos para calcular as deformações
     for p in 1:N_pts
 
-            # Coordenadas do ponto 
+            # Coordenadas do ponto
             y1, y2 = pts[p][1], pts[p][2]
 
-            # Lista com o stencil 
-            coords = [(y1+h, y2), (y1-h, y2), (y1, y2+h), (y1, y2-h)]
+            # Lista com o stencil
+            coords = ((y1+h, y2), (y1-h, y2), (y1, y2+h), (y1, y2-h))
 
             # Para cada ponto aplicamos a camada periódica
-            for pt in coords
-                push!(X_list, reshape(Camada_Periodica(pt[1], pt[2], N_modos), :, 1))
+            for (j, pt) in enumerate(coords)
+                X_all[:, 4*(p-1) + j] .= Camada_Periodica(pt[1], pt[2], N_modos)
             end
 
     end
-
-    # Concatenamos horizontalmente para ficarmos com uma matriz só
-    X_all = hcat(X_list...)
 
     # Pré-aloca o histórico de ativações para o backward
     As = [Matrix{T}(undef, size(redes[1].camadas[1].W, 2), N_pts * 4)]

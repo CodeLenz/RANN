@@ -57,6 +57,9 @@ function Main_Homogenizacao(mat_params::NamedTuple, prob::String, modos::Vector{
         push!(redes_treinadas, rede)
     end
 
+    # Checa a existência do diretório Params e cria se não existir
+    mkpath("Resultados/Params")
+
     # Se treina = true, vamos treinar as redes
     if treina
 
@@ -73,17 +76,16 @@ function Main_Homogenizacao(mat_params::NamedTuple, prob::String, modos::Vector{
         #
         for k in 1:3
 
-            #=# Após o treino de uma rede, atualiza inicialização dos parâmetros da próxima rede
+            # Após o treino de uma rede, atualiza inicialização dos parâmetros da próxima rede
             if k > 1
 
                 # Loop pelas camadas
                 for i in 1:length(redes_treinadas[k].camadas)
-                    redes_treinadas[k+1].camadas[i].W .= redes_treinadas[k].camadas[i].W
-                    redes_treinadas[k+1].camadas[i].b .= redes_treinadas[k].camadas[i].b
+                    redes_treinadas[k].camadas[i].W .= redes_treinadas[k-1].camadas[i].W
+                    redes_treinadas[k].camadas[i].b .= redes_treinadas[k-1].camadas[i].b
                 end
 
             end
-            =#
 
             # Avisa que vamos treinar a rede k 
             println("\n Treinando Modo ", k)
@@ -143,20 +145,26 @@ function Roda()
     mat_params = Dict(
         # Problema circular, raio e centro da fibra
         "Circular" => (
-        E_m = 1.0, ν_m = 0.0,
-        E_f = 10.0, ν_f = 0.0,
-        r0 = 0.25, yc1 = 0.5, yc2 = 0.5
+        E_m = 1.0, ν_m = 0.3,
+        E_f = 10.0, ν_f = 0.3,
+        r0 = 0.2523, yc1 = 0.5, yc2 = 0.5
     ),
         # Problema retangular, altura da fibra (simétrica ao centro da célula)
         "Retangular" => (
         E_m = 1.0, ν_m = 0.3,
         E_f = 10.0, ν_f = 0.3,
         hf = 0.2
+    ),
+        # Problema retangular com inclinação α, altura da fibra (simétrica ao centro da célula)
+        "Inclinada" => (
+        E_m = 1.0, ν_m = 0.3,
+        E_f = 10.0, ν_f = 0.3,
+        hf = 0.2, α = 30
     )
     )
 
     # Define problema de cálculo
-    prob = "Retangular"
+    prob = "Circular"
 
     # Modos fundamentais para cada caso de "carga" 
     # da homogeneização
@@ -169,22 +177,22 @@ function Roda()
     modos = [ε_1, ε_2, ε_3]
 
     # Número de modos para a camada periódica
-    N_modos_fourier = 4
+    N_modos_fourier = 6
     
     # Número de pontos de colocação via Sobol
-    N_colocacao = 4000
+    N_colocacao = 10_000
 
     # Número de pontos para avaliação do tensor homogeneizado no pós-processamento
-    N_eval = 500
+    N_eval = 1000
 
     # Topologia da rede
-    topologia = [16, 32, 2]
+    topologia = [24, 40, 40, 40, 2]
 
     # Ativações para cada camada
-    ativ = [TANH_GEN, LINEAR_GEN]
+    ativ = [TANH_GEN, TANH_GEN, TANH_GEN, LINEAR_GEN]
 
     # Número de épocas dos otimizadores
-    rounds = 25
+    rounds = 10
     epochs_ADAM = 30
     epochs_LBFGS = 50
 
