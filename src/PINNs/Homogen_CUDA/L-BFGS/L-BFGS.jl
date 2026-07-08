@@ -35,7 +35,8 @@ function L_BFGS!(obj_fn::F, rede::Rede{T}, historico::Vector{T}, historico_energ
 
     # Inicia a fila de memória vazia
     # como um vetor de tuplas contendo os conjuntos (s, y, ρ)
-    memoria = Tuple{Vector{T}, Vector{T}, T}[]
+    # usa o tipo de Θ_0 (Vector{T} na CPU, CuVector{T} na GPU)
+    memoria = Tuple{typeof(Θ_0), typeof(Θ_0), T}[]
     
     # Loop principal
     @showprogress "Loop L-BFGS" for epoch = 1:nepoch

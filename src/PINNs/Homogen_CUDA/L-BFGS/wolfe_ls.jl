@@ -13,7 +13,7 @@
 # max_iter   -> número máximo de iterações tanto desta rotina quanto dos refinos de intervalo 
 # tol_α      -> tolerância de estagnação do intervalo de refino
 #
-function LS_Wolfe(f::F, Θ::Vector{T}, d::Vector{T};
+function LS_Wolfe(f::F, Θ::AbstractVector{T}, d::AbstractVector{T};
                   α_max::T=T(10.0), α_1::T=T(1.0), c1::T=T(1e-4), c2::T=T(0.9), δ::T=T(0.1), max_iter::Int=50,
                   tol_α::T=T(1e-8)) where {F<:Function, T<:AbstractFloat}
 

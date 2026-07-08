@@ -17,7 +17,7 @@
 # max_iter   -> número máximo de iterações tanto desta rotina quanto dos refinos de intervalo 
 # tol_α      -> tolerância de estagnação do intervalo para evitar loops infinitos
 #
-function Refinamento(f::Function, Θ::Vector{T}, d::Vector{T},
+function Refinamento(f::Function, Θ::AbstractVector{T}, d::AbstractVector{T},
                      α_A::T, α_B::T, f_A::T, f_B::T, c1::T, c2::T,
                      f_0::T, m_0::T, δ::T=T(0.1), max_iter::Int=50,
                      tol_α::T=T(1e-8)) where {T<:AbstractFloat}

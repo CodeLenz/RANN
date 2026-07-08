@@ -1,8 +1,8 @@
 # -----------------------------------------------------------------------------
 #  Calcula as deformações para a parte do pós-processamento do C^H
 # -----------------------------------------------------------------------------
-function Calcula_Deformacoes_pos_treino(X::Matrix{T}, ε_macro::Matrix{T}, rede::Rede{T}, W::Vector{Matrix{T}},
-                                        b::Vector{Vector{T}}, As::Vector{Matrix{T}}, Z_buffers::Vector{Matrix{T}},
+function Calcula_Deformacoes_pos_treino(X::AbstractMatrix{T}, ε_macro::AbstractMatrix{T}, rede::Rede{T}, W::Vector{<:AbstractMatrix{T}},
+                                        b::Vector{<:AbstractVector{T}}, As::Vector{<:AbstractMatrix{T}}, Z_buffers::Vector{<:AbstractMatrix{T}},
                                         h::T) where {T<:AbstractFloat}
 
     # Roda o forward para todos os pontos de pertubação
@@ -25,7 +25,9 @@ function Calcula_Deformacoes_pos_treino(X::Matrix{T}, ε_macro::Matrix{T}, rede:
     ε12 = ε_macro[1,2] .+ T(0.5) .* (du_dy2[1, :] .+ du_dy1[2, :])
     
     # Monta em formato de Voigt
-    return [ε11, ε22, ε12]
+    # Traz as deformações de volta para a CPU (Array) pois a montagem do tensor
+    # homogeneizado a seguir é feita ponto a ponto (indexação escalar, barata na CPU)
+    return [Array(ε11), Array(ε22), Array(ε12)]
 
 end
 
@@ -69,14 +71,17 @@ function Calcula_Tensor_Homogeneizado(redes::Vector{Rede{T}}, modos::Vector{Matr
 
     end
 
-    # Pré-aloca o histórico de ativações para o backward
-    As = [Matrix{T}(undef, size(redes[1].camadas[1].W, 2), N_pts * 4)]
+    # Envia a malha de entrada (montada na CPU) para o dispositivo ativo
+    X_all = to_device(X_all)
+
+    # Pré-aloca o histórico de ativações para o backward (no dispositivo ativo)
+    As = [dev_zeros(T, size(redes[1].camadas[1].W, 2), N_pts * 4)]
     for c in redes[1].camadas
-        push!(As, Matrix{T}(undef, size(c.W, 1), N_pts * 4))
+        push!(As, dev_zeros(T, size(c.W, 1), N_pts * 4))
     end
 
-    # Pré-aloca os rascunhos de Z apenas para usar no forward
-    Z_buffers = [Matrix{T}(undef, size(c.W, 1), N_pts * 4) for c in redes[1].camadas]
+    # Pré-aloca os rascunhos de Z apenas para usar no forward (no dispositivo ativo)
+    Z_buffers = [dev_zeros(T, size(c.W, 1), N_pts * 4) for c in redes[1].camadas]
 
     # Loop pelas redes (k)
     for k in 1:3

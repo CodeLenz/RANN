@@ -26,8 +26,8 @@ function Dois_Lacos(q_in::AbstractVector{T}, memoria::Vector) where {T<:Abstract
     q     = copy(q_in)
     m_len = length(memoria)
 
-    # Aloca r
-    r = zeros(T, length(q))
+    # Aloca r (mesmo tipo de q: CPU ou GPU)
+    r = zero(q)
 
     # Os escalares τ_i são CALCULADOS no laço retroativo e USADOS no laço
     # progressivo. O armazenamento é necesário pois quando o laço

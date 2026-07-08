@@ -89,17 +89,17 @@ function Treina_Rede_PINN_Energia!(rede::Rede{T}, base_pontos::Matrix{T}, ε_mac
 
         end
 
-        # Concatenamos horizontalmente para ficarmos com uma matriz só
-        #X_all = hcat(X_list...)
-    
-        # Pré-aloca o histórico de ativações para o backward
-        As = [Matrix{T}(undef, size(rede.camadas[1].W, 2), N_pts * 5)]
+        # Envia a matriz de entrada (montada na CPU) para o dispositivo ativo
+        X_all = to_device(X_all)
+
+        # Pré-aloca o histórico de ativações para o backward (no dispositivo ativo)
+        As = [dev_zeros(T, size(rede.camadas[1].W, 2), N_pts * 5)]
         for c in rede.camadas
-            push!(As, Matrix{T}(undef, size(c.W, 1), N_pts * 5))
+            push!(As, dev_zeros(T, size(c.W, 1), N_pts * 5))
         end
 
-        # Pré-aloca os rascunhos de Z apenas para  usar no forward
-        Z_buffers = [Matrix{T}(undef, size(c.W, 1), N_pts * 5) for c in rede.camadas]
+        # Pré-aloca os rascunhos de Z apenas para  usar no forward (no dispositivo ativo)
+        Z_buffers = [dev_zeros(T, size(c.W, 1), N_pts * 5) for c in rede.camadas]
 
         # Pré-aloca buffers de W e b para reconstrução dos pesos e bias no L-BFGS
         W_buffer = [similar(c.W) for c in rede.camadas]

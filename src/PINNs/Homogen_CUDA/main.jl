@@ -7,13 +7,20 @@
 #  derivada da função de perda em relação aos parâmetros do modelo.
 #
 # =============================================================================
+
+# Plotagem "headless": o Google Colab não tem display, então o backend GR
+# precisa gravar os PDFs sem abrir janela. Precisa vir ANTES de `using Plots`.
+ENV["GKSwstype"] = "100"
+
 using LinearAlgebra
+using CUDA          # <-- versão GPU: arrays da rede viram CuArray
 using Zygote
 using Sobol
 using Plots
 using DelimitedFiles
 using ProgressMeter
 
+include("device.jl")   # <-- define USE_GPU, to_device, dev_zeros (GPU ou CPU)
 include("ativ.jl")
 include("RNA.jl")
 include("PINN.jl")
@@ -114,8 +121,9 @@ function Main_Homogenizacao(mat_params::NamedTuple, prob::String, modos::Vector{
         # Lê as redes treinadas de arquivos para fazer o pós-processamento
         for k in 1:3
             for (l, c) in enumerate(redes_treinadas[k].camadas)
-                c.W .= readdlm("Resultados/Params/rede_$(k)_camada_$(l)_W.txt", Float32)
-                c.b .= vec(readdlm("Resultados/Params/rede_$(k)_camada_$(l)_b.txt", Float32))
+                # lê da CPU e envia para o dispositivo ativo antes de copiar in-place
+                c.W .= to_device(readdlm("Resultados/Params/rede_$(k)_camada_$(l)_W.txt", Float32))
+                c.b .= to_device(vec(readdlm("Resultados/Params/rede_$(k)_camada_$(l)_b.txt", Float32)))
             end
         end
 
@@ -186,7 +194,7 @@ function Roda()
     N_eval = 1000
 
     # Topologia da rede
-    topologia = [16, 64, 2]
+    topologia = [16, 32, 2]
 
     # Ativações para cada camada
     ativ = [TANH_GEN, LINEAR_GEN]
@@ -203,6 +211,18 @@ function Roda()
     CH = Main_Homogenizacao(mat_params[prob], prob, modos, N_modos_fourier, N_colocacao, N_eval, topologia, ativ, rounds, 
                             epochs_ADAM, epochs_LBFGS, λ_avg; treina = true)
 
+end
+
+# =============================================================================
+#  Seleção de dispositivo (GPU se houver, senão CPU)
+# =============================================================================
+if USE_GPU
+    println("GPU CUDA disponível: ", CUDA.name(CUDA.device()), " — rodando na GPU.")
+    # Erro (em vez de silenciosamente lento) se algum array da GPU for indexado
+    # escalarmente por engano. Se você topar com esse erro, me mande a linha.
+    CUDA.allowscalar(false)
+else
+    println("Nenhuma GPU CUDA funcional encontrada — rodando na CPU.")
 end
 
 Roda()
