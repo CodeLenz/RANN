@@ -76,7 +76,7 @@ function Main_Homogenizacao(mat_params::NamedTuple, prob::String, modos::Vector{
         #
         for k in 1:3
 
-            #=# Após o treino de uma rede, atualiza inicialização dos parâmetros da próxima rede
+            # Após o treino de uma rede, atualiza inicialização dos parâmetros da próxima rede
             if k > 1
 
                 # Loop pelas camadas
@@ -85,7 +85,7 @@ function Main_Homogenizacao(mat_params::NamedTuple, prob::String, modos::Vector{
                     redes_treinadas[k].camadas[i].b .= redes_treinadas[k-1].camadas[i].b
                 end
 
-            end=#
+            end
 
             # Avisa que vamos treinar a rede k 
             println("\n Treinando Modo ", k)
@@ -192,7 +192,7 @@ function Roda()
     ativ = [TANH_GEN, LINEAR_GEN]
 
     # Número de épocas dos otimizadores
-    rounds = 25
+    rounds = 60
     epochs_ADAM = 30
     epochs_LBFGS = 50
 
