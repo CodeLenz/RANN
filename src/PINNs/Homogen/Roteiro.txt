@@ -1,0 +1,17 @@
+
+Roteiro para a formulação/implementação da homogeneização usando PIINs
+
+1. Apresentação (breve) de PINNS -> conceito de resíduo;
+2. Discussão sobre homogeneização (periódica/assintótica) --> C^H
+2,5. Obtenção das propriedades homogeneizadas <CH> casos de deformação 
+3. Obtenção das propriedades homogeneizadas por energia (puxando a sardinha para a simetria do tensor)
+4. Amostragem dos pontos para treino (Sobol)
+5. Discussão sobre função de perda para o problema 
+6. Discussão sobre a imposição/garantia da periodicidade -> camada de entrada por Série de Fourier
+7. Estudo de casos e comparação com FEM/Regra das misturas
+
+
+Detalhes de implementação 
+ 
+2. Shift
+3. Rounds 
