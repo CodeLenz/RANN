@@ -23,7 +23,7 @@ function Refinamento(f::Function, Θ::Vector{T}, d::Vector{T},
                      tol_α::T=T(1e-8)) where {T<:AbstractFloat}
 
     # Valor da função e inclinação no começo do intervalo
-    _, _, _, ∇L_A = f(Θ .+ α_A .* d)
+    _, ∇L_A = f(Θ .+ α_A .* d)
     m_A = dot(∇L_A, d)
 
     # Valor da função e inclinação no final do intervalo
@@ -48,7 +48,7 @@ function Refinamento(f::Function, Θ::Vector{T}, d::Vector{T},
         
         # Avança o ponto e o valor da função 
         Θ_j = Θ .+ α_j .* d
-        f_j, _, _, ∇L_j = f(Θ_j)
+        f_j, ∇L_j = f(Θ_j)
         
         # Primeiro teste é por Armijo (primeira condição de Wolfe)
         # Se o valor novo está acima da estimativa linear ou se 

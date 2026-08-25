@@ -11,15 +11,14 @@
 # ϵ_g, ϵ_x, ϵ_f     -> Tolerâncias para gradiente, espaço e função
 # max_iter          -> Número máximo de iterações permitidas
 #
-function L_BFGS!(obj_fn::F, rede::Rede{T}, historico::Vector{T}, historico_energia::Vector{T},
-                 historico_avg::Vector{T}, nepoch::Int; m::Int=10,
-                 ϵ_g::T=T(1e-6), ϵ_x::T=T(1e-8), ϵ_f::T=T(1e-8), N_SHOW::Int=50, verbose::Bool=true) where {F<:Function, T<:AbstractFloat}
+function L_BFGS!(obj_fn::F, rede::Rede{T}, historico::Vector{T}, nepoch::Int; m::Int=10, ϵ_g::T=T(1e-6), ϵ_x::T=T(1e-8),
+                 ϵ_f::T=T(1e-8), N_SHOW::Int=50, verbose::Bool=true) where {F<:Function, T<:AbstractFloat}
 
     # Transforma pesos e bias em vetor flat para o L-BFGS
     Θ_0 = vcat([vec(c.W) for c in rede.camadas]..., [vec(c.b) for c in rede.camadas]...)
 
     # Chama função objetivo e recupera termos de custo e gradiente 
-    custo_prev, L_energia, L_avg, ∇L = obj_fn(Θ_0)
+    custo_prev, ∇L = obj_fn(Θ_0)
     
     # Inicialização das variáveis de estado
     Θ_n  = similar(Θ_0)
@@ -30,8 +29,6 @@ function L_BFGS!(obj_fn::F, rede::Rede{T}, historico::Vector{T}, historico_energ
 
     # Já guardamos o custo aqui
     push!(historico, custo_prev)
-    push!(historico_energia, L_energia)
-    push!(historico_avg, L_avg) 
 
     # Inicia a fila de memória vazia
     # como um vetor de tuplas contendo os conjuntos (s, y, ρ)
@@ -59,15 +56,13 @@ function L_BFGS!(obj_fn::F, rede::Rede{T}, historico::Vector{T}, historico_energ
         
         # Avaliação dos termos da secante
         s .= Θ_n - Θ_0
-        custo, L_energia, L_avg, ∇L_n = obj_fn(Θ_n)
+        custo, ∇L_n = obj_fn(Θ_n)
         y .= ∇L_n .- ∇L
 
         sy = dot(s, y)
 
         # Já guardamos o custo aqui
         push!(historico, custo)
-        push!(historico_energia, L_energia)
-        push!(historico_avg, L_avg)
 
         # Impede estagnação
         if norm(s) < ϵ_x * (one(T) + norm(Θ_0)) || abs(custo - custo_prev) < ϵ_f * (one(T) + abs(custo_prev))

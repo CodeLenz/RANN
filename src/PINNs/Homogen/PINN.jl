@@ -47,7 +47,9 @@ end
 #  dimensão 4N (número de modos)
 # -----------------------------------------------------------------------------
 function Camada_Periodica(y1::T, y2::T, N::Int) where {T<:AbstractFloat}
+
     reduce(vcat, [[sin(2π * k * y1), cos(2π * k * y1), sin(2π * k * y2), cos(2π * k * y2)] for k in 1:N])
+
 end
 
 # -----------------------------------------------------------------------------
@@ -58,7 +60,7 @@ end
 #
 # -----------------------------------------------------------------------------
 function Perda_Energia_Alvo(AL::Matrix{T}, pontos::Matrix{T}, ε_macro::Matrix{T}, prob::String,
-                            mat_params::NamedTuple, λ_avg::T) where {T<:AbstractFloat}
+                            mat_params::NamedTuple) where {T<:AbstractFloat}
 
     # Número de pontos Sobol no lote
     N_pts = size(pontos, 1)
@@ -70,29 +72,34 @@ function Perda_Energia_Alvo(AL::Matrix{T}, pontos::Matrix{T}, ε_macro::Matrix{T
     y1 = pontos[:, 1]
     y2 = pontos[:, 2]
 
+    # Estima o valor médio dos deslocamentos centrais para aplicação da restrição de corpo rígido (valor médio nulo)
+    AL_C = AL[:, 1:5:end]
+    media = sum(AL_C, dims = 2) / size(AL_C, 2)
+    AL_projetada = AL .- media
+
     #
     # Vetorização da extração de deslocamentos
     #
 
     # Centro
-    u1_C = AL[1, 1:5:end]
-    u2_C = AL[2, 1:5:end]
+    u1_C = AL_projetada[1, 1:5:end]
+    u2_C = AL_projetada[2, 1:5:end]
 
     # Leste (y1​+h)
-    u1_E = AL[1, 2:5:end] 
-    u2_E = AL[2, 2:5:end]
+    u1_E = AL_projetada[1, 2:5:end] 
+    u2_E = AL_projetada[2, 2:5:end]
 
     # Oeste (y1​−h)
-    u1_W = AL[1, 3:5:end] 
-    u2_W = AL[2, 3:5:end]
+    u1_W = AL_projetada[1, 3:5:end] 
+    u2_W = AL_projetada[2, 3:5:end]
 
     # Norte (y2​+h)
-    u1_N = AL[1, 4:5:end] 
-    u2_N = AL[2, 4:5:end]
+    u1_N = AL_projetada[1, 4:5:end] 
+    u2_N = AL_projetada[2, 4:5:end]
 
     # Sul (y2​−h)
-    u1_S = AL[1, 5:5:end] 
-    u2_S = AL[2, 5:5:end]
+    u1_S = AL_projetada[1, 5:5:end] 
+    u2_S = AL_projetada[2, 5:5:end]
     
     #
     # Diferenças finitas centrais do gradiente de deslocamentos (em lote)
@@ -138,16 +145,11 @@ function Perda_Energia_Alvo(AL::Matrix{T}, pontos::Matrix{T}, ε_macro::Matrix{T
                                  T(2.0) .* ε11 .* C12 .* ε22 .+ 
                                  T(4.0) .* ε12 .* C33 .* ε12)
     
-    # Estimativa por Monte Carlo (Média do lote)
+    # Estimativa da perda física por Monte Carlo (Média do lote)
     L_energia = sum(energia_pontual) / N_pts
-    
-    # Restrição de corpo rígido (valor médio nulo)
-    L_avg = (sum(u1_C) / N_pts)^2 + (sum(u2_C) / N_pts)^2
-
-    perda = L_energia + λ_avg * L_avg
-    
+        
     # Retorna a perda total da PINN
-    return perda, L_energia, L_avg
+    return L_energia
 
 end
 

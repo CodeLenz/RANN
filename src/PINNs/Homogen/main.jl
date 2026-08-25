@@ -33,10 +33,10 @@ include("resultados.jl")
 # =============================================================================
 function Main_Homogenizacao(mat_params::NamedTuple, prob::String, modos::Vector{Matrix{T}}, N_modos_fourier::Int, 
                             N_colocacao::Int, N_eval::Int, topologia::Vector{Int}, ativ::Vector, rounds::Int, epochs_ADAM::Int,  
-                            epochs_LBFGS::Int, λ_avg::T; treina::Bool = true) where {T<:AbstractFloat}
+                            epochs_LBFGS::Int; treina::Bool = true) where {T<:AbstractFloat}
 
     # Amostragem QMC
-    pontos = Gera_Pontos_Sobol(N_colocacao, Float32)
+    pontos = Gera_Pontos_Sobol(N_colocacao, Float64)
 
     # Avalia módulo de Elasticidade nos pontos de Sobol para geração de gráfico
     props_simbolo = Symbol("Propriedades_Material_"*prob)
@@ -49,11 +49,11 @@ function Main_Homogenizacao(mat_params::NamedTuple, prob::String, modos::Vector{
     savefig(plot_Y, "Resultados/pontos_colocação.pdf")
 
     # Vetor de redes para guardar cada rede (são 3) que vamos treinar
-    redes_treinadas = Rede{Float32}[]
+    redes_treinadas = Rede{Float64}[]
 
     # Inicializa as redes
     for k in 1:3
-        rede = Inicializa_Rede(topologia, ativ, Float32)
+        rede = Inicializa_Rede(topologia, ativ, Float64)
         push!(redes_treinadas, rede)
     end
 
@@ -91,22 +91,17 @@ function Main_Homogenizacao(mat_params::NamedTuple, prob::String, modos::Vector{
             println("\n Treinando Modo ", k)
             
             # Treina a rede
-            hist_ADAM_k, hist_energ_ADAM_k, hist_avg_ADAM_k, 
-            hist_LBFGS_k, hist_energ_LBFGS_k, hist_avg_LBFGS_k = Treina_Rede_PINN_Energia!(redes_treinadas[k], pontos, modos[k], N_modos_fourier, prob, mat_params; 
-                                                                                       η = T(0.005), rounds, epochs_ADAM, epochs_LBFGS, λ_avg)
+            hist_ADAM_k, hist_LBFGS_k = Treina_Rede_PINN_Energia!(redes_treinadas[k], pontos, modos[k], N_modos_fourier, prob, mat_params; 
+                                                                  η = T(0.005), rounds, epochs_ADAM, epochs_LBFGS)
 
             # Guarda os valores do treino da rede
             push!(hists_ADAM, hist_ADAM_k)
-            push!(hists_energ_ADAM, hist_energ_ADAM_k)
-            push!(hists_avg_ADAM, hist_avg_ADAM_k)
             push!(hists_LBFGS, hist_LBFGS_k)
-            push!(hists_energ_LBFGS, hist_energ_LBFGS_k)
-            push!(hists_avg_LBFGS, hist_avg_LBFGS_k)
 
         end
 
         # Gera os gráficos do objetivo
-        Resultados!(redes_treinadas, hists_ADAM, hists_energ_ADAM, hists_avg_ADAM, hists_LBFGS, hists_energ_LBFGS, hists_avg_LBFGS)
+        Resultados!(redes_treinadas, hists_ADAM, hists_LBFGS)
 
     # Se treina = false, vamos ler as redes treinadas de arquivos diretamente para fazer o pós-processamento
     else
@@ -114,8 +109,8 @@ function Main_Homogenizacao(mat_params::NamedTuple, prob::String, modos::Vector{
         # Lê as redes treinadas de arquivos para fazer o pós-processamento
         for k in 1:3
             for (l, c) in enumerate(redes_treinadas[k].camadas)
-                c.W .= readdlm("Resultados/Params/rede_$(k)_camada_$(l)_W.txt", Float32)
-                c.b .= vec(readdlm("Resultados/Params/rede_$(k)_camada_$(l)_b.txt", Float32))
+                c.W .= readdlm("Resultados/Params/rede_$(k)_camada_$(l)_W.txt", Float64)
+                c.b .= vec(readdlm("Resultados/Params/rede_$(k)_camada_$(l)_b.txt", Float64))
             end
         end
 
@@ -145,35 +140,35 @@ function Roda()
     mat_params = Dict(
         # Problema circular, raio e centro da fibra
         "Circular" => (
-        E_m = 1.0f0, ν_m = 0.3f0,
-        E_f = 10.0f0, ν_f = 0.3f0,
-        r0 = 0.3568f0, yc1 = 0.5f0, yc2 = 0.5f0
+        E_m = 1.0, ν_m = 0.3,
+        E_f = 10.0, ν_f = 0.3,
+        r0 = 0.2523, yc1 = 0.5, yc2 = 0.5
     ),
         # Problema retangular, altura da fibra (simétrica ao centro da célula)
         "Retangular" => (
-        E_m = 1.0f0, ν_m = 0.3f0,
-        E_f = 10.0f0, ν_f = 0.3f0,
-        hf = 0.2f0
+        E_m = 1.0, ν_m = 0.3,
+        E_f = 10.0, ν_f = 0.3,
+        hf = 0.2
     ),
         # Problema retangular com inclinação α, altura da fibra (simétrica ao centro da célula)
         "Inclinada" => (
-        E_m = 1.0f0, ν_m = 0.3f0,
-        E_f = 10.0f0, ν_f = 0.3f0,
-        hf = 0.4f0, α = 30
+        E_m = 1.0, ν_m = 0.3,
+        E_f = 10.0, ν_f = 0.3,
+        hf = 0.2, α = 30
     )
     )
-    # r0 = Float32(0.2523)
+
     # Define problema de cálculo
-    prob = "Circular"
+    prob = "Circular"  
 
     # Modos fundamentais para cada caso de "carga" 
     # da homogeneização
-    ε_1 = Float32[1.0 0.0; 
-                  0.0 0.0]
-    ε_2 = Float32[0.0 0.0; 
-                  0.0 1.0]
-    ε_3 = Float32[0.0 0.5; 
-                  0.5 0.0]
+    ε_1 = [1.0 0.0; 
+           0.0 0.0]
+    ε_2 = [0.0 0.0; 
+           0.0 1.0]
+    ε_3 = [0.0 0.5; 
+           0.5 0.0]
     modos = [ε_1, ε_2, ε_3]
 
     # Número de modos para a camada periódica
@@ -192,16 +187,13 @@ function Roda()
     ativ = [TANH_GEN, LINEAR_GEN]
 
     # Número de épocas dos otimizadores
-    rounds = 60
+    rounds = 20
     epochs_ADAM = 30
     epochs_LBFGS = 50
 
-    # Hiperparâmetro de regularização para o valor médio dos deslocamentos
-    λ_avg = Float32(1E4)
-
     # Testa
     CH = Main_Homogenizacao(mat_params[prob], prob, modos, N_modos_fourier, N_colocacao, N_eval, topologia, ativ, rounds, 
-                            epochs_ADAM, epochs_LBFGS, λ_avg; treina = true)
+                            epochs_ADAM, epochs_LBFGS; treina = true)
 
 end
 

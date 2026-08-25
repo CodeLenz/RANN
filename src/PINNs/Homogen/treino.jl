@@ -4,12 +4,11 @@
 
 function Treina_Rede_PINN_Energia!(rede::Rede{T}, base_pontos::Matrix{T}, ε_macro::Matrix{T},
                                    N_modos::Int, prob::String, mat_params::NamedTuple; 
-                                   η = T(0.005), rounds::Int = 15, epochs_ADAM = 1000, epochs_LBFGS = 1000, λ_avg = T(1E3),
+                                   η = T(0.005), rounds::Int = 15, epochs_ADAM = 1000, epochs_LBFGS = 1000,
                                    verbose = true) where {T<:AbstractFloat}
 
     # Aloca histórico da perda
-    hist_ADAM, hist_energ_ADAM, hist_avg_ADAM = T[], T[], T[]
-    hist_LBFGS, hist_energ_LBFGS, hist_avg_LBFGS = T[], T[], T[]
+    hist_ADAM, hist_LBFGS = T[], T[]
 
     # Número de pontos para o Sobol
     N_pts = size(base_pontos, 1)
@@ -70,7 +69,6 @@ function Treina_Rede_PINN_Energia!(rede::Rede{T}, base_pontos::Matrix{T}, ε_mac
 
         # Malha com  5 pontos: Centro, Leste, Oeste, Norte, Sul
         # Vamos montar com push! no loop abaixo 
-        #X_list = Matrix{T}[]
         X_all = Matrix{T}(undef, 4 * N_modos, N_pts * 5)
 
         # Coordenadas dos pontos do stencil, aplicando a camada periódica
@@ -88,9 +86,6 @@ function Treina_Rede_PINN_Energia!(rede::Rede{T}, base_pontos::Matrix{T}, ε_mac
             end
 
         end
-
-        # Concatenamos horizontalmente para ficarmos com uma matriz só
-        #X_all = hcat(X_list...)
     
         # Pré-aloca o histórico de ativações para o backward
         As = [Matrix{T}(undef, size(rede.camadas[1].W, 2), N_pts * 5)]
@@ -118,14 +113,13 @@ function Treina_Rede_PINN_Energia!(rede::Rede{T}, base_pontos::Matrix{T}, ε_mac
             # Zygote.pullback calcula a função custo, e também realiza o pullback em relação a AL
             # Nesse caso, gradiente é a sensibilidade da perda em relação à ultima camada (saída da rede)
             # A segunda chamada (sem gradiente) recupera os termos de monitoramento de perda sem custo de AD
-            custo, back = Zygote.pullback(al -> Perda_Energia_Alvo(al, pontos, ε_macro, prob, mat_params, λ_avg)[1], AL)
+            custo, back = Zygote.pullback(al -> Perda_Energia_Alvo(al, pontos, ε_macro, prob, mat_params), AL)
             dL_dAL = back(T(1.0))[1]
-            _, L_energia, L_avg = Perda_Energia_Alvo(AL, pontos, ε_macro, prob, mat_params, λ_avg)
 
             # Calcula o resto dos gradientes "manualmente" (estes são os gradientes puros da função de perda)
             ∇W, ∇b = Backward_Rede(W, rede, As, dL_dAL)
 
-            return custo, L_energia, L_avg, ∇W, ∇b
+            return custo, ∇W, ∇b
 
         end
 
@@ -147,12 +141,12 @@ function Treina_Rede_PINN_Energia!(rede::Rede{T}, base_pontos::Matrix{T}, ε_mac
             end
 
             # Chama a função objetivo normal para calcular o custo e os gradientes
-            custo, L_energia, L_avg, ∇W, ∇b = obj_fn(W_buffer, b_buffer)
+            custo, ∇W, ∇b = obj_fn(W_buffer, b_buffer)
 
             # Achata os gradientes de volta para vetor flat
             ∇L = vcat([vec(gW) for gW in ∇W]..., [vec(gb) for gb in ∇b]...)
 
-            return custo, L_energia, L_avg, ∇L
+            return custo, ∇L
 
         end
         
@@ -161,18 +155,18 @@ function Treina_Rede_PINN_Energia!(rede::Rede{T}, base_pontos::Matrix{T}, ε_mac
         println("*********************************")
 
         # Chama o otimizador AdamW (in-place)
-        AdamW!(obj_fn, rede, hist_ADAM, hist_energ_ADAM, hist_avg_ADAM, η, epochs_ADAM; verbose = false)
+        AdamW!(obj_fn, rede, hist_ADAM, η, epochs_ADAM; verbose = false)
 
         println("\n*********************************")
         println("Continuando Treino com L-BFGS...")
         println("*********************************")
 
         # Chama o otimizador L-BFGS (in-place)
-        L_BFGS!(obj_fn_LBFGS, rede, hist_LBFGS, hist_energ_LBFGS, hist_avg_LBFGS, epochs_LBFGS; verbose = false)
+        L_BFGS!(obj_fn_LBFGS, rede, hist_LBFGS, epochs_LBFGS; verbose = false)
     
     end
 
     # Retorna o histórico do objetivo
-    return hist_ADAM, hist_energ_ADAM, hist_avg_ADAM, hist_LBFGS, hist_energ_LBFGS, hist_avg_LBFGS
+    return hist_ADAM, hist_LBFGS
 
 end

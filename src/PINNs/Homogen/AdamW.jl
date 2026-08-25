@@ -1,6 +1,5 @@
 # Otimizador ADAM
-function AdamW!(obj_fn::F, rede::Rede{T}, historico::Vector{T}, historico_energia::Vector{T},
-                historico_avg::Vector{T}, η::T, epochs::Int; 
+function AdamW!(obj_fn::F, rede::Rede{T}, historico::Vector{T}, η::T, epochs::Int; 
                 λ_decay = T(1e-4), N_SHOW = 50, β1 = T(0.9), β2 = T(0.999), ϵ = T(1e-8),
                 verbose = true) where {F<:Function, T<:AbstractFloat}
 
@@ -21,12 +20,10 @@ function AdamW!(obj_fn::F, rede::Rede{T}, historico::Vector{T}, historico_energi
         b = [copy(c.b) for c in rede.camadas]
 
         # Chama função objetivo e recupera termos de custo e gradiente 
-        custo, L_energia, L_avg, ∇W, ∇b = obj_fn(W, b)
+        custo, ∇W, ∇b = obj_fn(W, b)
 
         # Já guardamos o custo aqui
         push!(historico, custo)
-        push!(historico_energia, L_energia)
-        push!(historico_avg, L_avg)
 
         # Otimização AdamW camada a camada com mutação In-Place
         for i in 1:L

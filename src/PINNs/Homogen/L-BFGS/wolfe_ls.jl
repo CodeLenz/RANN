@@ -19,7 +19,7 @@ function LS_Wolfe(f::F, Θ::Vector{T}, d::Vector{T};
 
     # Ponto inicial (atual)
     α_0 = zero(T)
-    f_0, _, _, ∇L_0 = f(Θ)
+    f_0, ∇L_0 = f(Θ)
     m_0 = dot(∇L_0, d)
 
     # Teste meio bobo, mas pode nos ajudar
@@ -44,7 +44,7 @@ function LS_Wolfe(f::F, Θ::Vector{T}, d::Vector{T};
 
         # Próximo passo 
         Θ_i = Θ .+ α_i .* d
-        f_i, _, _, ∇L_i = f(Θ_i)
+        f_i, ∇L_i = f(Θ_i)
 
         # Violação de Armijo confina o passo válido no intervalo anterior
         if (f_i > f_0 + c1 * α_i * m_0) || (f_i >= f_prev && iter > 1)
