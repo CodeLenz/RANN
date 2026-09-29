@@ -51,8 +51,8 @@ end
 # -----------------------------------------------------------------------------
 function Propriedades_Material_Inclinada(y1::T, y2::T, params::NamedTuple) where {T<:AbstractFloat}
     
-    # Se a altura y2 estiver entre (0.5 - hf/2 + (y1 - 0.5) sin(α)) e (0.5 + hf/2 + (y1 - 0.5) sin(α)) usamos as propriedades da fibra
-    if y2 >= (0.5 - params.hf/2 + (y1 - 0.5) * sind(params.α)) && y2 <= (0.5 + params.hf/2 + (y1 - 0.5) * sind(params.α))
+    # Se a altura y2 estiver entre (0.5 - hf/2 + (y1 - 0.5) tan(α)) e (0.5 + hf/2 + (y1 - 0.5) tan(α)) usamos as propriedades da fibra
+    if y2 >= (0.5 - params.hf/2 + (y1 - 0.5) * tand(params.α)) && y2 <= (0.5 + params.hf/2 + (y1 - 0.5) * tand(params.α))
        E = params.E_f
        ν = params.ν_f
     else 

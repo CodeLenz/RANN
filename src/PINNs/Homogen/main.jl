@@ -159,7 +159,7 @@ function Roda()
     )
 
     # Define problema de cálculo
-    prob = "Circular"  
+    prob = "Inclinada"  
 
     # Modos fundamentais para cada caso de "carga" 
     # da homogeneização
@@ -187,7 +187,7 @@ function Roda()
     ativ = [TANH_GEN, LINEAR_GEN]
 
     # Número de épocas dos otimizadores
-    rounds = 20
+    rounds = 80
     epochs_ADAM = 30
     epochs_LBFGS = 50
 
