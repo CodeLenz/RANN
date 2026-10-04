@@ -77,7 +77,6 @@ function Objetivo(rede::Rede, treino::NamedTuple, epoch::Int64, x::Vector{Float6
          error("Nan em u0 físico ") 
       end 
 
-
       # Obtém a primeira e segunda derivada - velocidade e aceleração
       DerivadasC2!(RNA, rede, pesos, bias, u0, du, d2u, t_i)
     
@@ -100,7 +99,6 @@ function Objetivo(rede::Rede, treino::NamedTuple, epoch::Int64, x::Vector{Float6
    perda[3] /= size(treino.t_fisica, 2)
 
    # Soma as componentes de perda
-   # TODO: utilizar fator_fis somente no ADAM
    fator_fis = min(epoch / 500, 1.0)
 
    # Soma as componentes de perda para valor do objetivo

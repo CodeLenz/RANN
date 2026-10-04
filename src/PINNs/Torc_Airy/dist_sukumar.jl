@@ -1,7 +1,7 @@
 # Função de distância do contorno para aplicação forte das condições de contorno
 # Proposta retirada de N. Sukumar, Ankit Srivastava
 # https://arxiv.org/abs/2104.08426
-
+#=
 # ADF para retângulo [-H/2, H/2] × [-B/2, B/2]
 # Segmentos seguem ordem anti-horária: baixo, direita, topo, esquerda
 function Distancia_Contorno_Retangular(XY::AbstractVector{T}) where T
@@ -110,4 +110,4 @@ function adf_requivalente(vetor_φ::AbstractVector{T}, m = 1) where T
     # Retorna φ equivalente
     return (1.0 / denominador)^(1/m)
 end
-
+=#

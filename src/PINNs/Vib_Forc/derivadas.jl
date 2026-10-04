@@ -5,7 +5,7 @@
 #
 #
 function Derivadas!(RNA::Function, rede::Rede, 
-                    pesos::Vector{Matrix{Float64}}, bias::Vector{Vector{Float64}},
+                    pesos::Vector{<:AbstractMatrix{Float64}}, bias::Vector{<:AbstractVector{Float64}},
                     u0::Vector{Float64}, du::Vector{Float64}, d2u::Vector{Float64},
                     t::Vector{Float64}, ϵ = 1E-8)
 
@@ -39,7 +39,7 @@ end
 # Detalhe que a perturbação não pode ser muito pequena, por causa da segunda derivada
 #
 function DerivadasC2!(RNA::Function, rede::Rede, 
-                    pesos::Vector{Matrix{Float64}}, bias::Vector{Vector{Float64}},
+                    pesos::Vector{<:AbstractMatrix{Float64}}, bias::Vector{<:AbstractVector{Float64}},
                     u0::Vector{Float64}, du::Vector{Float64}, d2u::Vector{Float64},
                     t::Vector{Float64}, ϵ = 1E-3)
 

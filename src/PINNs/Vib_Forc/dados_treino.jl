@@ -1,41 +1,5 @@
-# Struct Dados_Treino
-# Contém os dados para treino da rede neural: entradas e saídas
-struct Treino
-
-    # Ponto de condição inicial
-    t_inicial::Vector{Float64}
-
-    # Primeira condição incial - deslocamento
-    u_inicial::Vector{Float64}
-
-    # Segunda condição inicial - velocidade
-    du_inicial::Vector{Float64}
-
-    # Pontos de perda física
-    t_fisica::Matrix{Float64}
-
-    # Pontos de teste
-    t_teste::Matrix{Float64}
-
-    # Deslocamento analítico nos pontos de teste
-    u_an::Matrix{Float64}
-
-    # Constante de amortecimento
-    μ::Float64
-
-    # Rigidez
-    k::Float64
-
-    # Massa
-    m::Float64
-
-    # Intensidade da força
-    F::Float64
-
-    # Frequência da força
-    ωf::Float64
-    
-    # Função que inicializa todas as variáveis na struct
+    # Dados de Treino
+    # Contém os dados para treino da rede neural: entradas e saídas
     function Treino(m::Float64, ζ::Float64, ω0::Float64, F::Float64, ωf::Float64)
 
         # Define as constantes do problema
@@ -74,22 +38,37 @@ struct Treino
         # Pontos de teste
         t_teste = Matrix(collect(range(0.0, 1.0, 300))')
 
-        # Deslocamento analítico nos pontos de teste
-        u_an = Deslocamento(t_teste, ζ, ω0, ωd, ωf, ϕ, X, A, B)
+        # Define named tuple para guardar todos os dados do problema
+        treino = (t_inicial = t_inicial,
+                  u_inicial = u_inicial,
+                  du_inicial = du_inicial,
+                  t_fisica = t_fisica,
+                  t_teste = t_teste,
+                  r = r,
+                  ωd = ωd, 
+                  X = X,
+                  A = A,
+                  B = B,
+                  ϕ = ϕ,
+                  μ = μ,
+                  k = k,
+                  m = m,
+                  ζ = ζ,
+                  ω0 = ω0,
+                  F = F,
+                  ωf = ωf)
 
         # Returna os dados
-        new(t_inicial, u_inicial, du_inicial, t_fisica, t_teste, u_an, μ, k, m, F, ωf)
+        return treino
 
     end
 
-end
+    # Calcula o deslocamento no tempo t, baseado nos parâmetros do sistema
+    function Deslocamento(t::Matrix{Float64}, ζ::Float64, ω0::Float64, ωd::Float64, ωf::Float64,
+                          ϕ::Float64, X::Float64, A::Float64, B::Float64)
 
-# Calcula o deslocamento no tempo t, baseado nos parâmetros do sistema
-function Deslocamento(t::Matrix{Float64}, ζ::Float64, ω0::Float64, ωd::Float64, ωf::Float64,
-                      ϕ::Float64, X::Float64, A::Float64, B::Float64)
-
-    return exp.(-ζ .* ω0 .* t) .* (A .* cos.(ωd .* t) + B .* sin.(ωd .* t)) .+ X .* cos.(ωf .* t .- ϕ)
+        return exp.(-ζ .* ω0 .* t) .* (A .* cos.(ωd .* t) + B .* sin.(ωd .* t)) .+ X .* cos.(ωf .* t .- ϕ)
 
 
-end 
+    end 
 

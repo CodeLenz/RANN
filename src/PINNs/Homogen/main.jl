@@ -178,16 +178,16 @@ function Roda()
     N_colocacao = 4_000
 
     # Número de pontos para avaliação do tensor homogeneizado no pós-processamento
-    N_eval = 1000
+    N_eval = 1_000
 
     # Topologia da rede
-    topologia = [16, 64, 2]
+    topologia = [16, 32, 2]
 
     # Ativações para cada camada
     ativ = [TANH_GEN, LINEAR_GEN]
 
     # Número de épocas dos otimizadores
-    rounds = 80
+    rounds = 60
     epochs_ADAM = 30
     epochs_LBFGS = 50
 

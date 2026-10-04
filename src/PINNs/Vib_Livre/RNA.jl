@@ -1,51 +1,90 @@
-# Atualiza os vetores de pesos e bias utilizando o vetor de variáveis de projeto x
-function Atualiza_pesos_bias(rede::Rede, x::AbstractVector)
+# Atualiza os vetores de vetores de pesos e bias utilizando o vetor de variáveis de projeto x
+function Atualiza_pesos_bias(rede::Rede, x::Vector{Float64})
 
     # Acessa os termos em Rede por apelidos 
     n_camadas = rede.n_camadas
+    #conexoes = rede.conexoes
     topologia = rede.topologia
     pesos_ranges = rede.pesos_ranges
     bias_ranges  = rede.bias_ranges
     
-    # Cria vetores contendo VIEWS (@view) em vez de alocar novas matrizes.
-    # O reshape organiza a view em formato de matriz sem copiar dados.
-    pesos = [reshape(@view(x[pesos_ranges[i]]), topologia[i+1], topologia[i]) for i in 1:n_camadas]
-    bias  = [@view(x[bias_ranges[i]]) for i in 1:n_camadas]
+    # Aloca o vetor de Pesos: Vetor de matrizes com os pesos de cada camada da rede
+    pesos = [Matrix{Float64}(undef,topologia[i+1], topologia[i]) for i in 1:n_camadas]
 
-    # Retorna as matrizes (views) de pesos e bias
+    # Aloca o vetor de biases: vetor de vetores com os bias dos neurônios de cada camada
+    bias = [Vector{Float64}(undef,topologia[i+1]) for i in 1:n_camadas]
+
+    #
+    # Agora só usamos os valores pré-calculados de acessos e 
+    # também usamos @views para evitar alocação de memória
+    #
+    @inbounds for i in eachindex(pesos)
+        copyto!(pesos[i], reshape(@view(x[pesos_ranges[i]]), topologia[i+1], topologia[i]))
+        copyto!(bias[i], @view(x[bias_ranges[i]]))
+    end
+
+    # Retorna matrizes de pesos e bias
     return pesos, bias
 
 end
 
-# Forward da Rede neural otimizado e AD-Friendly
-function RNA(rede::Rede, pesos::Vector{<:AbstractMatrix{Float64}}, bias::Vector{<:AbstractVector{Float64}}, 
-             entrada_i::AbstractVector{T})::Vector{T} where T
+function _mul_add_layer!(destino::Vector{Complex{T}}, pesos::Matrix{Float64},
+                         entrada::Vector{Complex{T}}) where T
+    @inbounds for j in axes(pesos, 2), i in axes(pesos, 1)
+        destino[i] += pesos[i, j] * entrada[j]
+    end
+    return destino
+end
 
-    # Promove a entrada estática para um Vector padrão.
-    a = Vector{T}(entrada_i)
+function _mul_add_layer!(destino::Vector{Float64}, pesos::Matrix{Float64},
+                         entrada::Vector{Float64})
+    mul!(destino, pesos, entrada, 1.0, 1.0)
+    return destino
+end
+
+#
+# Forward da Rede neural
+#
+function RNA(rede::Rede, 
+             pesos::Vector{Matrix{Float64}}, bias::Vector{Vector{Float64}}, 
+             entrada_i::Vector{T})::Vector{T} where T
+
+    # Acessa os termos em Rede por apelidos 
+    n_camadas = rede.n_camadas
+    topologia = rede.topologia
+    ativ      = rede.ativ
+
+    # Aloca sinais aqui fora
+    sinais = [zeros(T,tt) for tt in topologia] 
+
+    # Inclui o vetor de entradas na primeira linha de sinais
+    sinais[1] .= entrada_i
 
     # Loop pelas camadas
-    for c in 1:rede.n_camadas
-        
-        # Aliases
-        W = pesos[c]
-        b = bias[c]
-        ϕ = rede.ativ[c]
+    for c = 2:(n_camadas+1)
 
-        # Calcula a combinação linear
-        z = W * a .+ b
+        # Recupera a camada anterior de sinais
+        camada_anterior = sinais[c-1]
 
-        # Aplica a função de ativação
-        for i in eachindex(z)
-            z[i] = ϕ(z[i])
-        end
+        # Aliases para a matriz de pesos e funções de ativação 
+        W = pesos[c-1] 
+        ϕ = ativ[c-1]
 
-        # Atualiza para a próxima camada
-        a = z
+        # Copia os bias diretamente para sinais[c]
+        sinais[c] .= bias[c-1]
+
+        # A multiplicação explícita no caso complexo evita o gemv! misto
+        # Float64/ComplexF64, que o Enzyme não consegue diferenciar.
+        _mul_add_layer!(sinais[c], W, camada_anterior)
+
+        #
+        # Aplica a função de ativação e armazena na mesma área de memória
+        #
+        sinais[c] .= ϕ.(sinais[c])
+
     end
 
-    return a
-
+    return sinais[end]
 end
 
 

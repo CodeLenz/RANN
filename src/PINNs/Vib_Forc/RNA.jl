@@ -28,6 +28,20 @@ function Atualiza_pesos_bias(rede::Rede, x::Vector{Float64})
 
 end
 
+function _mul_add_layer!(destino::Vector{Complex{T}}, pesos::Matrix{Float64},
+                         entrada::Vector{Complex{T}}) where T
+    @inbounds for j in axes(pesos, 2), i in axes(pesos, 1)
+        destino[i] += pesos[i, j] * entrada[j]
+    end
+    return destino
+end
+
+function _mul_add_layer!(destino::Vector{Float64}, pesos::Matrix{Float64},
+                         entrada::Vector{Float64})
+    mul!(destino, pesos, entrada, 1.0, 1.0)
+    return destino
+end
+
 #
 # Forward da Rede neural
 #
@@ -59,9 +73,9 @@ function RNA(rede::Rede,
         # Copia os bias diretamente para sinais[c]
         sinais[c] .= bias[c-1]
 
-        # Calcula W*camada_anterior + b usando o mul! de 5 parâmetros.
-        # O resultado é armazenado diretamente em sinais[c]
-        mul!(sinais[c],W,camada_anterior,1.0,1.0)
+        # A multiplicação explícita no caso complexo evita o gemv! misto
+        # Float64/ComplexF64, que o Enzyme não consegue diferenciar.
+        _mul_add_layer!(sinais[c], W, camada_anterior)
 
         #
         # Aplica a função de ativação e armazena na mesma área de memória
@@ -72,7 +86,6 @@ function RNA(rede::Rede,
 
     return sinais[end]
 end
-
 
 
 

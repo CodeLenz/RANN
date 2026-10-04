@@ -41,8 +41,31 @@ end
 #
 # f:: Função a derivar R^n -> R
 #
+function DerivadasPDE!(RNA_forte::Function, rede::Rede, x::AbstractVector{Float64},
+                      u0::Vector{Float64}, du_xy::Vector{Float64}, d2u_xy::Vector{Float64},
+                      point::Vector{Float64}, prob::String, ϵ = 1E-5)
+
+    h = ϵ * sqrt(im)
+    xc = MVector{2, ComplexF64}(point[1], point[2])
+
+    for i in 1:2
+        bx = xc[i]
+
+        xc[i] = bx + h
+        uf = RNA_forte(rede, x, xc, prob)
+
+        xc[i] = bx - h
+        ut = RNA_forte(rede, x, xc, prob)
+
+        du_xy[i] = real( (uf[1] - ut[1]) / (2 * h) )
+        d2u_xy[i] = real( (uf[1] - 2 * u0[1] + ut[1]) / h^2 )
+
+        xc[i] = bx
+    end
+end
+
 function DerivadasPDE!(RNA_forte::Function, rede::Rede, pesos::Vector{<:AbstractMatrix{Float64}}, bias::Vector{<:AbstractVector{Float64}},
-                      u0::Vector{Float64}, du_xy::Vector{Vector{Float64}}, d2u_xy::Vector{Vector{Float64}},  
+                      u0::Vector{Float64}, du_xy::Vector{Float64}, d2u_xy::Vector{Float64},  
                       x::Vector{Float64}, prob::String, ϵ = 1E-5)    
 
     # Valor escalar da perturbação complexa
@@ -66,12 +89,11 @@ function DerivadasPDE!(RNA_forte::Function, rede::Rede, pesos::Vector{<:Abstract
        ut = RNA_forte(rede, pesos, bias, xc, prob)
 
        # Primeira derivada em relação a x[i]
-       # Acessamos o índice [1] diretamente e usamos = em vez de .= 
-       # para evitar o broadcast e acelerar ainda mais
-       du_xy[i][1] = real( (uf[1] - ut[1]) / (2 * h) ) 
-    
+       # Acessamos diretamente o vetor plano para manter o formato AD-friendly.
+       du_xy[i] = real( (uf[1] - ut[1]) / (2 * h) )
+
        # Segunda derivada em relação a x[i]
-       d2u_xy[i][1] = real( (uf[1] - 2 * u0[1] + ut[1]) / h^2 )
+       d2u_xy[i] = real( (uf[1] - 2 * u0[1] + ut[1]) / h^2 )
 
        # Restaura a coordenada original para o próximo loop
        xc[i] = bx

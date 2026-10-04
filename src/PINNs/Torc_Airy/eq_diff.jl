@@ -1,9 +1,9 @@
 # Define a equação diferencial do problema e calcula o valor do resíduo no ponto
-function EqDiff(Φ::Vector{Float64}, dΦ::Vector{Vector{Float64}}, dΦ2::Vector{Vector{Float64}},
+function EqDiff(Φ::Vector{Float64}, dΦ::Vector{Float64}, dΦ2::Vector{Float64},
                 x::Vector{Float64})
 
     # Retorna o valor do resíduo no ponto
-    return dΦ2[1][1] + dΦ2[2][1] + 2.0
+    return dΦ2[1] + dΦ2[2] + 2.0
 
 end
 
@@ -23,9 +23,9 @@ function Φ_Analitico(prob::String, XY_teste::Matrix{Float64})
         for i = 1:size(XY_teste, 2)
 
             # Extrai o ponto para teste
-            x = treino.teste[1, i]
-            y = treino.teste[2, i]
-            
+            x = XY_teste[1, i]
+            y = XY_teste[2, i]
+
             # Calcula a resposta analítica
             Φ_analitico[1, i] = 0.5 * (R^2 - (x - a)^2 - (y - b)^2)
             
@@ -47,9 +47,9 @@ function Φ_Analitico(prob::String, XY_teste::Matrix{Float64})
         for i = 1:size(XY_teste, 2)
 
             # Extrai o ponto para teste
-            x = treino.teste[1, i]
-            y = treino.teste[2, i]
-            
+            x = XY_teste[1, i]
+            y = XY_teste[2, i]
+
             # Loop por N termos da série, a princípio deixaremos 20
             N = 20
 

@@ -6,35 +6,31 @@
 # ϵ (default 10^-8) 
 # nepoch (Número de épocas, default = 10)
 # δ (critério de convergência, default = 1E-8)
-function AdamW(rede::Rede, treino::Treino, nepoch::Int64; α = 1E-3, β1 = 0.9, β2 = 0.999,
+function AdamW(rede::Rede, treino::NamedTuple, nepoch::Int64; α = 1E-3, β1 = 0.9, β2 = 0.999,
               ϵ = 1E-8, w_decay = 0.0, conv = 1E-8, otimizador = "AdamW")
-              
+
+    # Intervalo para gerar as respostas (acompanhamento)
+    intervalo_monitor = 1000
+
     # Aloca objetivos
     obj_treino = 0.0
-    perda_inicial_u = 0.0
-    perda_inicial_du = 0.0
-    perda_fisica = 0.0
 
-    # Acessa os termos em Treino por apelidos
-    t_inicial = treino.t_inicial
-    u_inicial = treino.u_inicial
-    du_inicial = treino.du_inicial
-    t_fisica =  treino.t_fisica
+    # Aloca vetor para termos de perda
+    # Perda inicial em t, perda inicial em dt, perda física
+    perda = zeros(3)
 
     # Copia rede.x para uma outra memória
     x = copy(rede.x)
 
-    # Obtém o número de dados de treino
-    n_fisica = size(t_fisica, 2)
-
-    # Aloca um array para monitorar o objetivo
+    # Aloca um vetor para monitorar objetivo
     vetor_obj_treino = zeros(nepoch)
-    vetor_perda_inicial_u = zeros(nepoch)
-    vetor_perda_inicial_du = zeros(nepoch)
-    vetor_perda_fisica = zeros(nepoch)
+
+    # Aloca vetores para monitorar os termos de perda
+    # Perda inicial em t, perda inicial em dt, perda física
+    vetor_perda = [zeros(nepoch) for _ in 1:3]
 
     # Aloca a resposta estimada para os pontos de teste
-    u_test_pred = zeros(1, size(treino.u_an, 2))
+    u_test_pred = zeros(1, size(treino.t_teste, 2))
 
     # Aloca vetor gradiente - vazio, valores serão inputados posteriormente
     G = Vector{Float64}(undef,length(x))
@@ -47,7 +43,7 @@ function AdamW(rede::Rede, treino::Treino, nepoch::Int64; α = 1E-3, β1 = 0.9, 
     @showprogress "Otimizando com AdamW..." for epoch = 1:nepoch
 
         # Calcula o objetivo da rede para o treino 
-        obj_treino = ObjetivoFloat(rede, treino, t_inicial, u_inicial, du_inicial, n_fisica, t_fisica, epoch, x)
+        obj_treino = ObjetivoFloat(rede, treino, epoch, x)
 
         # Testa se a otimização convergiu ao longo das iterações
         if obj_treino <= conv
@@ -66,28 +62,24 @@ function AdamW(rede::Rede, treino::Treino, nepoch::Int64; α = 1E-3, β1 = 0.9, 
             ObjetivoFloat,
             Const(rede),
             Const(treino),
-            Const(t_inicial),
-            Const(u_inicial),
-            Const(du_inicial),
-            Const(n_fisica),
-            Const(t_fisica),
             Const(epoch),
-            Duplicated(x, G)
+            Duplicated(x, G),
             )
 
         # Calcula o objetivo da rede para o treino 
-        obj_treino, perda_inicial_u, perda_inicial_du, perda_fisica  = 
-            Objetivo(rede, treino, t_inicial, u_inicial, du_inicial, n_fisica, t_fisica, epoch, x)
+        obj_treino, perda  = Objetivo(rede, treino, epoch, x)
 
         # Armazena o objetivo
         vetor_obj_treino[epoch] = obj_treino
-        vetor_perda_inicial_u[epoch] = perda_inicial_u
-        vetor_perda_inicial_du[epoch] = perda_inicial_du
-        vetor_perda_fisica[epoch] = perda_fisica
+
+        # Armazena os termos de perda
+        for i in 1:3
+            vetor_perda[i][epoch] = perda[i]
+        end        
 
         # AdamW
         # Atualiza as variáveis de projeto antes dos passos tradicionais do Adam
-        x .= x .- α*w_decay*x
+        x .= x .- α * w_decay * x
 
         #
         # Atualiza os momentos
@@ -106,11 +98,11 @@ function AdamW(rede::Rede, treino::Treino, nepoch::Int64; α = 1E-3, β1 = 0.9, 
         x .= x .- α_t * m ./ (v.^(1/2) .+ ϵ)
 
         # A cada 1000 epochs vamos monitorar o comportamento da rede 
-        if (epoch % 1000 == 0) || (epoch == nepoch)
+        if (epoch % intervalo_monitor == 0) || (epoch == nepoch)
 
             # Obtém a resposta da rede neural para os pontos de teste
-            u_test_pred = Deslocamento_Teste(rede, x, treino.u_an, treino.t_teste, vetor_obj_treino, vetor_perda_inicial_u,
-                                             vetor_perda_inicial_du, vetor_perda_fisica, epoch, otimizador)
+            u_test_pred = Resposta_Teste(rede, x, treino, vetor_obj_treino, vetor_perda,
+                                         epoch, otimizador, intervalo_monitor)
 
         end
 
